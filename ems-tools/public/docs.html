@@ -378,7 +378,7 @@
     <header class="doc-header">
         <h1>EMS Integration Toolkit</h1>
         <p class="subtitle">User Guide & Documentation</p>
-        <p class="version">Version 1.0 | January 2025</p>
+        <p class="version">Version 1.1 | January 2025</p>
     </header>
 
     <div class="container">
@@ -410,7 +410,8 @@
                 <li><a href="#payload-transformer"><span class="section-num">5</span> Payload Transformer</a></li>
                 <li><a href="#snmp-oid"><span class="section-num">6</span> SNMP OID Browser</a></li>
                 <li><a href="#netconf-xml"><span class="section-num">7</span> NETCONF/XML Tools</a></li>
-                <li><a href="#tips"><span class="section-num">8</span> Tips & Best Practices</a></li>
+                <li><a href="#e2e-generator"><span class="section-num">8</span> E2E Integration Generator</a></li>
+                <li><a href="#tips"><span class="section-num">9</span> Tips & Best Practices</a></li>
             </ul>
         </nav>
 
@@ -439,6 +440,10 @@
                 <div class="tool-card">
                     <h4>NETCONF/XML Tools</h4>
                     <p>Validate XML, test XPath expressions, and format NETCONF configurations.</p>
+                </div>
+                <div class="tool-card">
+                    <h4>E2E Integration Generator</h4>
+                    <p>Design complete integration solutions with auto-generated code, diagrams, and deployment artifacts.</p>
                 </div>
             </div>
 
@@ -861,9 +866,236 @@ SNMPv2-MIB::sysLocation.0 = STRING: Data Center 1</code></pre>
             </div>
         </section>
 
-        <!-- Section 8: Tips & Best Practices -->
+        <!-- Section 8: E2E Integration Generator -->
+        <section id="e2e-generator" class="section">
+            <h2>8. E2E Integration Generator</h2>
+
+            <h3>Overview</h3>
+            <p>The E2E Integration Solution Generator is a comprehensive wizard that guides you through designing complete integration solutions. It automatically generates architecture diagrams, code artifacts, and deployment configurations based on your requirements.</p>
+
+            <h3>Four-Phase Approach</h3>
+            <table>
+                <tr>
+                    <th>Phase</th>
+                    <th>Description</th>
+                    <th>Output</th>
+                </tr>
+                <tr>
+                    <td>1. Requirements</td>
+                    <td>Define project, source, destination, mappings, and rules</td>
+                    <td>Captured specifications</td>
+                </tr>
+                <tr>
+                    <td>2. Design</td>
+                    <td>Auto-generated solution architecture</td>
+                    <td>Flow diagrams, architecture diagrams</td>
+                </tr>
+                <tr>
+                    <td>3. Development</td>
+                    <td>Generated code and configurations</td>
+                    <td>Code, database schemas, infrastructure configs</td>
+                </tr>
+                <tr>
+                    <td>4. Execution</td>
+                    <td>Deployment and testing artifacts</td>
+                    <td>Scripts, test suites, documentation</td>
+                </tr>
+            </table>
+
+            <h3>Phase 1: Requirements</h3>
+            <p>Capture all integration requirements through six sub-sections:</p>
+
+            <h4>1.1 Project Details</h4>
+            <ul>
+                <li><strong>Project Name</strong> - Unique identifier for your integration (required)</li>
+                <li><strong>Description</strong> - Brief description of the integration purpose</li>
+                <li><strong>Integration Type</strong> - ETL/Batch, Real-time Streaming, API Integration, or Hybrid</li>
+                <li><strong>Pattern</strong> - Point-to-Point, Hub-and-Spoke, Publish-Subscribe, or Event-Driven</li>
+                <li><strong>Tech Stack</strong> - Java/Spring Boot, Python, or Node.js</li>
+            </ul>
+
+            <h4>1.2 Source System</h4>
+            <ul>
+                <li><strong>System Type</strong> - Database, REST API, File System, Message Queue, FTP/SFTP</li>
+                <li><strong>System Name</strong> - Identifier for the source system (required)</li>
+                <li><strong>Data Format</strong> - JSON, XML, CSV, Avro, or Parquet</li>
+                <li><strong>Connection Details</strong> - Connection string or endpoint</li>
+                <li><strong>Schema Definition</strong> - Sample data or schema structure (required)</li>
+            </ul>
+
+            <h4>1.3 Destination System</h4>
+            <p>Same configuration options as Source System for the target endpoint.</p>
+
+            <h4>1.4 Data Mapping</h4>
+            <ul>
+                <li><strong>Source Field</strong> - Field name from source system</li>
+                <li><strong>Destination Field</strong> - Corresponding field in destination</li>
+                <li><strong>Transformation</strong> - Direct Copy, Concatenate, Split, Lookup, Format/Convert, or Custom Logic</li>
+            </ul>
+            <p>At least one field mapping is required.</p>
+
+            <h4>1.5 Business Rules (Optional)</h4>
+            <ul>
+                <li><strong>Rule Name</strong> - Descriptive name for the rule</li>
+                <li><strong>Action</strong> - Filter/Exclude, Transform, Route/Split, Aggregate, Enrich, or Validate</li>
+                <li><strong>Condition</strong> - Logic expression (e.g., WHERE status = 'ACTIVE')</li>
+            </ul>
+
+            <div class="note warning">
+                <p class="note-title">Warning</p>
+                <p>If no business rules are defined, a warning will be shown recommending you add validation or transformation rules.</p>
+            </div>
+
+            <h4>1.6 Technical Requirements</h4>
+            <ul>
+                <li><strong>Error Handling</strong> - Retry with Backoff, Dead Letter Queue, Alert & Skip, or Fail Fast</li>
+                <li><strong>Logging Level</strong> - Debug, Info, Warning, or Error Only</li>
+                <li><strong>Scheduling</strong> - Real-time, Hourly Batch, Daily Batch, or Custom Cron</li>
+                <li><strong>Performance Target</strong> - Records per second</li>
+                <li><strong>Security</strong> - Data Encryption, Authentication, Data Masking, Audit Logging</li>
+            </ul>
+
+            <div class="note warning">
+                <p class="note-title">Warning</p>
+                <p>If no security requirements are selected, a warning will be shown recommending you enable encryption, authentication, or data masking.</p>
+            </div>
+
+            <h3>Phase 2: Design</h3>
+            <p>After clicking "Generate Design", the system creates:</p>
+
+            <h4>Solution Flow Diagram</h4>
+            <p>A Mermaid.js flowchart showing the data flow from source through transformation to destination, including error handling paths.</p>
+
+            <h4>Architecture Diagram</h4>
+            <p>A component diagram showing the integration architecture with all layers and connections.</p>
+
+            <h4>Component Breakdown</h4>
+            <p>Table listing all components with their purpose, technology, and status.</p>
+
+            <h4>Dataflow Specification</h4>
+            <p>Step-by-step specification of data transformations and validations.</p>
+
+            <div class="note">
+                <p class="note-title">Tip</p>
+                <p>You can copy Mermaid diagram code to use in documentation tools like Notion, Confluence, or GitHub markdown.</p>
+            </div>
+
+            <h3>Phase 3: Development Artifacts</h3>
+            <p>Generated code artifacts based on your selected tech stack:</p>
+
+            <h4>Core Integration Code</h4>
+            <ul>
+                <li>Main application/service class</li>
+                <li>Source connector implementation</li>
+                <li>Destination connector implementation</li>
+                <li>Data transformer with mapping logic</li>
+                <li>Validator with business rules</li>
+            </ul>
+
+            <h4>Job Orchestration</h4>
+            <ul>
+                <li>Apache Airflow DAG definition</li>
+                <li>Kubernetes CronJob manifest</li>
+                <li>Shell script scheduler</li>
+            </ul>
+
+            <h4>Database Scripts</h4>
+            <ul>
+                <li>Staging tables DDL</li>
+                <li>Error logging tables</li>
+                <li>Audit trail tables</li>
+            </ul>
+
+            <h4>Infrastructure as Code</h4>
+            <ul>
+                <li>Terraform modules</li>
+                <li>Docker Compose configuration</li>
+                <li>Kubernetes deployment manifests</li>
+            </ul>
+
+            <h4>Monitoring Configuration</h4>
+            <ul>
+                <li>Prometheus metrics configuration</li>
+                <li>Grafana dashboard JSON</li>
+                <li>Alert rules</li>
+            </ul>
+
+            <h3>Phase 4: Execution Framework</h3>
+            <p>Final deployment and testing artifacts:</p>
+
+            <h4>Execution Scripts</h4>
+            <ul>
+                <li><code>run.sh</code> / <code>run.bat</code> - Main execution script</li>
+                <li><code>setup.sh</code> - Environment setup</li>
+                <li><code>health-check.sh</code> - Health verification</li>
+            </ul>
+
+            <h4>Test Suite</h4>
+            <ul>
+                <li>Unit test templates</li>
+                <li>Integration test templates</li>
+                <li>Sample test data</li>
+            </ul>
+
+            <h4>Deployment Guide</h4>
+            <p>Complete markdown documentation with prerequisites, step-by-step deployment instructions, and troubleshooting guide.</p>
+
+            <h3>Export Options</h3>
+            <ul>
+                <li><strong>Download All</strong> - Complete project as ZIP file with folder structure</li>
+                <li><strong>Copy Code</strong> - Copy individual artifacts to clipboard</li>
+                <li><strong>Copy Diagrams</strong> - Copy Mermaid code for use in other tools</li>
+            </ul>
+
+            <h3>Validation & Error Handling</h3>
+            <p>The generator includes built-in validation:</p>
+            <table>
+                <tr>
+                    <th>Validation</th>
+                    <th>Type</th>
+                    <th>Message</th>
+                </tr>
+                <tr>
+                    <td>Project Name empty</td>
+                    <td>Error</td>
+                    <td>Project Name is required</td>
+                </tr>
+                <tr>
+                    <td>Source Schema empty</td>
+                    <td>Error</td>
+                    <td>Source Schema is required</td>
+                </tr>
+                <tr>
+                    <td>Destination Schema empty</td>
+                    <td>Error</td>
+                    <td>Destination Schema is required</td>
+                </tr>
+                <tr>
+                    <td>No field mappings</td>
+                    <td>Error</td>
+                    <td>At least one field mapping is required</td>
+                </tr>
+                <tr>
+                    <td>No business rules</td>
+                    <td>Warning</td>
+                    <td>Consider adding validation or transformation rules</td>
+                </tr>
+                <tr>
+                    <td>No security options</td>
+                    <td>Warning</td>
+                    <td>Consider enabling encryption or authentication</td>
+                </tr>
+            </table>
+
+            <div class="note success">
+                <p class="note-title">Auto-Trim Feature</p>
+                <p>All text input fields automatically trim leading and trailing whitespace when you leave the field, ensuring clean data for code generation.</p>
+            </div>
+        </section>
+
+        <!-- Section 9: Tips & Best Practices -->
         <section id="tips" class="section">
-            <h2>8. Tips & Best Practices</h2>
+            <h2>9. Tips & Best Practices</h2>
 
             <h3>General Tips</h3>
             <ul>
