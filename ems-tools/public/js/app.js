@@ -1572,26 +1572,42 @@ const e2eState = {
     artifacts: {}
 };
 
-// Auto-trim whitespace on blur for text inputs and textareas
-const autoTrimFields = [
-    'e2eProjectName', 'e2eProjectDesc', 'e2eSourceName', 'e2eSourceConn', 'e2eSourceSchema',
-    'e2eDestName', 'e2eDestConn', 'e2eDestSchema'
-];
+// Initialize E2E Generator features when DOM is ready
+function initE2EGenerator() {
+    // Auto-trim whitespace on blur for text inputs and textareas
+    const autoTrimFields = [
+        'e2eProjectName', 'e2eProjectDesc', 'e2eSourceName', 'e2eSourceConn', 'e2eSourceSchema',
+        'e2eDestName', 'e2eDestConn', 'e2eDestSchema'
+    ];
 
-autoTrimFields.forEach(fieldId => {
-    const field = document.getElementById(fieldId);
-    if (field) {
-        field.addEventListener('blur', function() {
-            this.value = this.value.trim();
-            // Clear error highlight when user corrects the field
-            if (this.value && this.classList.contains('field-error')) {
-                this.classList.remove('field-error');
-                this.style.borderColor = '';
-                this.style.boxShadow = '';
-            }
-        });
-    }
-});
+    autoTrimFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            // Remove existing listener if any
+            field.removeEventListener('blur', field._trimHandler);
+            // Create and store handler
+            field._trimHandler = function() {
+                this.value = this.value.trim();
+                // Clear error highlight when user corrects the field
+                if (this.value && this.classList.contains('field-error')) {
+                    this.classList.remove('field-error');
+                    this.style.borderColor = '';
+                    this.style.boxShadow = '';
+                }
+            };
+            field.addEventListener('blur', field._trimHandler);
+        }
+    });
+
+    console.log('E2E Generator initialized with auto-trim on', autoTrimFields.length, 'fields');
+}
+
+// Call init when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initE2EGenerator);
+} else {
+    initE2EGenerator();
+}
 
 // Phase Navigation
 document.querySelectorAll('.phase-step').forEach(step => {
@@ -1902,33 +1918,45 @@ function validateRequirements() {
 }
 
 // Phase 1 -> Phase 2 (Generate Design)
-document.getElementById('e2eNextPhase1Btn')?.addEventListener('click', () => {
-    const { errors, warnings } = validateRequirements();
+const nextPhase1Btn = document.getElementById('e2eNextPhase1Btn');
+if (nextPhase1Btn) {
+    nextPhase1Btn.addEventListener('click', () => {
+        console.log('Generate Design button clicked');
 
-    // Show errors first - these block progression
-    if (errors.length > 0) {
-        ToastManager.error('Validation Error', errors.join('. '));
-        // Scroll to first error field
-        const firstErrorField = document.querySelector('.field-error');
-        if (firstErrorField) {
-            firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            firstErrorField.focus();
+        const validationResult = validateRequirements();
+        const errors = validationResult.errors || [];
+        const warnings = validationResult.warnings || [];
+
+        console.log('Validation errors:', errors);
+        console.log('Validation warnings:', warnings);
+
+        // Show errors first - these block progression
+        if (errors.length > 0) {
+            ToastManager.error('Validation Error', errors.join('. '));
+            // Scroll to first error field
+            const firstErrorField = document.querySelector('.field-error');
+            if (firstErrorField) {
+                firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstErrorField.focus();
+            }
+            return;
         }
-        return;
-    }
 
-    // Show warnings but allow progression
-    if (warnings.length > 0) {
-        warnings.forEach(warning => {
-            ToastManager.warning('Warning', warning);
-        });
-    }
+        // Show warnings but allow progression
+        if (warnings.length > 0) {
+            warnings.forEach(warning => {
+                ToastManager.warning('Warning', warning);
+            });
+        }
 
-    collectRequirements();
-    generateDesign();
-    goToPhase(2);
-    ToastManager.success('Design Generated', 'Solution architecture created based on your requirements.');
-});
+        collectRequirements();
+        generateDesign();
+        goToPhase(2);
+        ToastManager.success('Design Generated', 'Solution architecture created based on your requirements.');
+    });
+} else {
+    console.error('e2eNextPhase1Btn not found in DOM');
+}
 
 // Generate Design (Phase 2)
 function generateDesign() {
