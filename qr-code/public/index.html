@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Search Console Verification -->
+    <meta name="google-site-verification" content="rC566TkXS1KkvjXF3fZoZkchGi7Rp8eusZSbyLaI5nI" />
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-187S5HBKCX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-187S5HBKCX');
+    </script>
+
+    <!-- Primary Meta Tags -->
+    <title>Free QR Code Generator - Create QR Codes Online Instantly</title>
+    <meta name="title" content="Free QR Code Generator - Create QR Codes Online Instantly">
+    <meta name="description" content="Generate QR codes for free! Create custom QR codes for URLs, websites, and links. Download as PNG or send directly to your email. No signup required for basic use.">
+    <meta name="keywords" content="QR code generator, free QR code, create QR code, QR code maker, URL to QR code, online QR generator, QR code creator, custom QR code">
+    <meta name="author" content="Create Your QR">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://create-your-qr.web.app/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://create-your-qr.web.app/">
+    <meta property="og:title" content="Free QR Code Generator - Create QR Codes Online Instantly">
+    <meta property="og:description" content="Generate QR codes for free! Create custom QR codes for URLs, websites, and links. Download as PNG or send directly to your email.">
+    <meta property="og:image" content="https://create-your-qr.web.app/images/og-image.png">
+    <meta property="og:site_name" content="Create Your QR">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://create-your-qr.web.app/">
+    <meta name="twitter:title" content="Free QR Code Generator - Create QR Codes Online Instantly">
+    <meta name="twitter:description" content="Generate QR codes for free! Create custom QR codes for URLs, websites, and links. Download as PNG or send directly to your email.">
+    <meta name="twitter:image" content="https://create-your-qr.web.app/images/og-image.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#667eea">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Create Your QR - Free QR Code Generator",
+        "url": "https://create-your-qr.web.app",
+        "description": "Generate QR codes for free. Create custom QR codes for URLs and download as PNG or send to email.",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "featureList": [
+            "Free QR code generation",
+            "Download QR as PNG",
+            "Send QR to email",
+            "No signup required"
+        ]
+    }
+    </script>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <!-- Login Section -->
+    <div id="loginSection" class="section">
+        <div class="container login-container">
+            <div class="logo">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                    <rect x="14" y="14" width="3" height="3" fill="currentColor"/>
+                    <rect x="18" y="14" width="3" height="3" fill="currentColor"/>
+                    <rect x="14" y="18" width="3" height="3" fill="currentColor"/>
+                    <rect x="18" y="18" width="3" height="3" fill="currentColor"/>
+                </svg>
+            </div>
+            <h1>QR Code Generator</h1>
+            <p class="subtitle">Create QR codes for your URLs instantly</p>
+
+            <button id="googleLoginBtn" class="btn google-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
+            </button>
+
+            <p class="terms">By signing in, you agree to our Terms of Service</p>
+        </div>
+    </div>
+
+    <!-- App Section (shown after login) -->
+    <div id="appSection" class="section hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="brand">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="14" y="14" width="3" height="3" fill="currentColor"/>
+                        <rect x="18" y="14" width="3" height="3" fill="currentColor"/>
+                        <rect x="14" y="18" width="3" height="3" fill="currentColor"/>
+                        <rect x="18" y="18" width="3" height="3" fill="currentColor"/>
+                    </svg>
+                    <span>QR Generator</span>
+                </div>
+                <div class="user-info">
+                    <img id="userPhoto" src="" alt="User" class="user-avatar">
+                    <span id="userName"></span>
+                    <button id="logoutBtn" class="btn-logout">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container app-container">
+                <div class="generator-section">
+                    <h2>Generate QR Code</h2>
+                    <p class="section-subtitle">Enter any URL to create a scannable QR code</p>
+
+                    <div class="input-group">
+                        <label for="urlInput">URL</label>
+                        <input
+                            type="url"
+                            id="urlInput"
+                            placeholder="https://example.com"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <!-- Color Options -->
+                    <div class="options-group">
+                        <label>QR Code Color</label>
+                        <div class="color-options">
+                            <button class="color-btn active" data-color="#000000" style="background: #000000;" title="Black"></button>
+                            <button class="color-btn" data-color="#667eea" style="background: #667eea;" title="Purple"></button>
+                            <button class="color-btn" data-color="#e74c3c" style="background: #e74c3c;" title="Red"></button>
+                            <button class="color-btn" data-color="#27ae60" style="background: #27ae60;" title="Green"></button>
+                            <button class="color-btn" data-color="#2980b9" style="background: #2980b9;" title="Blue"></button>
+                            <button class="color-btn" data-color="#f39c12" style="background: #f39c12;" title="Orange"></button>
+                            <button class="color-btn" data-color="#8e44ad" style="background: #8e44ad;" title="Violet"></button>
+                            <button class="color-btn" data-color="#1abc9c" style="background: #1abc9c;" title="Teal"></button>
+                        </div>
+                    </div>
+
+                    <!-- Frame Options -->
+                    <div class="options-group">
+                        <label>Frame Style</label>
+                        <div class="frame-options">
+                            <button class="frame-btn active" data-frame="none">
+                                <span class="frame-preview no-frame">QR</span>
+                                <span class="frame-label">None</span>
+                            </button>
+                            <button class="frame-btn" data-frame="scan-me">
+                                <span class="frame-preview scan-frame">SCAN ME</span>
+                                <span class="frame-label">Scan Me</span>
+                            </button>
+                            <button class="frame-btn" data-frame="scan-here">
+                                <span class="frame-preview scan-frame">SCAN HERE</span>
+                                <span class="frame-label">Scan Here</span>
+                            </button>
+                            <button class="frame-btn" data-frame="point">
+                                <span class="frame-preview point-frame">&#9758;</span>
+                                <span class="frame-label">Point</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="error-message" id="errorMessage">Please enter a valid URL</p>
+
+                    <button class="btn btn-primary" onclick="generateQR()">
+                        Generate QR Code
+                    </button>
+
+                    <div class="qr-result" id="qrContainer">
+                        <div class="qr-frame-wrapper" id="qrFrameWrapper">
+                            <div class="qr-frame" id="qrFrame">
+                                <div class="frame-text top" id="frameTextTop"></div>
+                                <div id="qrcode"></div>
+                                <div class="frame-text bottom" id="frameTextBottom"></div>
+                            </div>
+                        </div>
+                        <div class="url-display" id="urlDisplay"></div>
+                        <div class="qr-buttons">
+                            <button class="btn btn-success" onclick="downloadQR()">
+                                Download PNG
+                            </button>
+                            <button class="btn btn-email" id="emailBtn" onclick="sendToEmail()">
+                                Send to Email
+                            </button>
+                        </div>
+                        <p class="email-status" id="emailStatus"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Support Section -->
+        <div class="support-section">
+            <div class="container">
+                <div class="support-card">
+                    <div class="support-content">
+                        <h3>Support This Project</h3>
+                        <p>If you find this tool useful, consider buying me a coffee!</p>
+                    </div>
+                    <div class="support-qr">
+                        <img id="paymentQR" src="images/payment-qr.png.png" alt="Payment QR Code">
+                        <span class="scan-text">Scan to Pay</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Notice -->
+        <div class="privacy-notice">
+            <div class="container">
+                <div class="privacy-content">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    <span><strong>Your Privacy Matters:</strong> We do not store any of your data. All QR codes are generated in your browser and never uploaded to our servers. Use freely!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Made with care | QR Code Generator | <a href="https://imgtools.web.app">Image Resizer</a> | <a href="https://emstools.web.app">EMS Tools</a></p>
+        </footer>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
