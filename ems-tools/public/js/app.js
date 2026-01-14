@@ -1572,6 +1572,27 @@ const e2eState = {
     artifacts: {}
 };
 
+// Auto-trim whitespace on blur for text inputs and textareas
+const autoTrimFields = [
+    'e2eProjectName', 'e2eProjectDesc', 'e2eSourceName', 'e2eSourceConn', 'e2eSourceSchema',
+    'e2eDestName', 'e2eDestConn', 'e2eDestSchema'
+];
+
+autoTrimFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.addEventListener('blur', function() {
+            this.value = this.value.trim();
+            // Clear error highlight when user corrects the field
+            if (this.value && this.classList.contains('field-error')) {
+                this.classList.remove('field-error');
+                this.style.borderColor = '';
+                this.style.boxShadow = '';
+            }
+        });
+    }
+});
+
 // Phase Navigation
 document.querySelectorAll('.phase-step').forEach(step => {
     step.addEventListener('click', () => {
@@ -1674,11 +1695,46 @@ document.getElementById('e2eAddRuleBtn')?.addEventListener('click', () => {
     container.appendChild(row);
 });
 
+// Helper function to trim whitespace from input fields
+function trimFieldValue(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.value = el.value.trim();
+        return el.value;
+    }
+    return '';
+}
+
+// Helper function to highlight field with error
+function highlightFieldError(elementId, hasError) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        if (hasError) {
+            el.classList.add('field-error');
+            el.style.borderColor = '#ef4444';
+            el.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
+        } else {
+            el.classList.remove('field-error');
+            el.style.borderColor = '';
+            el.style.boxShadow = '';
+        }
+    }
+}
+
+// Clear all field error highlights
+function clearFieldErrors() {
+    const fields = [
+        'e2eProjectName', 'e2eSourceName', 'e2eSourceConn', 'e2eSourceSchema',
+        'e2eDestName', 'e2eDestConn', 'e2eDestSchema'
+    ];
+    fields.forEach(id => highlightFieldError(id, false));
+}
+
 // Collect Requirements Data
 function collectRequirements() {
-    // Project Details
-    e2eState.project.name = document.getElementById('e2eProjectName')?.value || 'Integration-Project';
-    e2eState.project.description = document.getElementById('e2eProjectDesc')?.value || '';
+    // Project Details - auto-trim all text fields
+    e2eState.project.name = trimFieldValue('e2eProjectName') || 'Integration-Project';
+    e2eState.project.description = trimFieldValue('e2eProjectDesc') || '';
     e2eState.project.type = document.getElementById('e2eIntegrationType')?.value || 'etl';
     e2eState.project.pattern = document.getElementById('e2ePattern')?.value || 'point-to-point';
 
@@ -1688,19 +1744,19 @@ function collectRequirements() {
     if (document.getElementById('e2eTechNode')?.checked) e2eState.project.techStack.push('nodejs');
     if (e2eState.project.techStack.length === 0) e2eState.project.techStack.push('java');
 
-    // Source System
+    // Source System - auto-trim connection and schema fields
     e2eState.source.type = document.getElementById('e2eSourceType')?.value || 'database';
-    e2eState.source.name = document.getElementById('e2eSourceName')?.value || 'Source System';
+    e2eState.source.name = trimFieldValue('e2eSourceName') || 'Source System';
     e2eState.source.format = document.getElementById('e2eSourceFormat')?.value || 'json';
-    e2eState.source.connection = document.getElementById('e2eSourceConn')?.value || '';
-    e2eState.source.schema = document.getElementById('e2eSourceSchema')?.value || '';
+    e2eState.source.connection = trimFieldValue('e2eSourceConn') || '';
+    e2eState.source.schema = trimFieldValue('e2eSourceSchema') || '';
 
-    // Destination System
+    // Destination System - auto-trim connection and schema fields
     e2eState.destination.type = document.getElementById('e2eDestType')?.value || 'api';
-    e2eState.destination.name = document.getElementById('e2eDestName')?.value || 'Destination System';
+    e2eState.destination.name = trimFieldValue('e2eDestName') || 'Destination System';
     e2eState.destination.format = document.getElementById('e2eDestFormat')?.value || 'json';
-    e2eState.destination.connection = document.getElementById('e2eDestConn')?.value || '';
-    e2eState.destination.schema = document.getElementById('e2eDestSchema')?.value || '';
+    e2eState.destination.connection = trimFieldValue('e2eDestConn') || '';
+    e2eState.destination.schema = trimFieldValue('e2eDestSchema') || '';
 
     // Mappings
     e2eState.mappings = [];
@@ -1743,32 +1799,129 @@ function collectRequirements() {
 // Validate Requirements
 function validateRequirements() {
     const errors = [];
+    const warnings = [];
 
-    if (!document.getElementById('e2eProjectName')?.value) {
+    // Clear previous error highlights
+    clearFieldErrors();
+
+    // Project Name (mandatory)
+    const projectName = document.getElementById('e2eProjectName')?.value?.trim();
+    if (!projectName) {
         errors.push('Project Name is required');
+        highlightFieldError('e2eProjectName', true);
     }
+
+    // Integration Type (mandatory)
     if (!document.getElementById('e2eIntegrationType')?.value) {
         errors.push('Integration Type is required');
     }
+
+    // Integration Pattern (mandatory)
     if (!document.getElementById('e2ePattern')?.value) {
         errors.push('Integration Pattern is required');
     }
+
+    // Source System Type (mandatory)
     if (!document.getElementById('e2eSourceType')?.value) {
         errors.push('Source System Type is required');
     }
+
+    // Source Name (mandatory)
+    const sourceName = document.getElementById('e2eSourceName')?.value?.trim();
+    if (!sourceName) {
+        errors.push('Source System Name is required');
+        highlightFieldError('e2eSourceName', true);
+    }
+
+    // Source Schema (mandatory - highlight if blank)
+    const sourceSchema = document.getElementById('e2eSourceSchema')?.value?.trim();
+    if (!sourceSchema) {
+        errors.push('Source Schema is required - please define the source data structure');
+        highlightFieldError('e2eSourceSchema', true);
+    }
+
+    // Destination System Type (mandatory)
     if (!document.getElementById('e2eDestType')?.value) {
         errors.push('Destination System Type is required');
     }
 
-    return errors;
+    // Destination Name (mandatory)
+    const destName = document.getElementById('e2eDestName')?.value?.trim();
+    if (!destName) {
+        errors.push('Destination System Name is required');
+        highlightFieldError('e2eDestName', true);
+    }
+
+    // Destination Schema (mandatory - highlight if blank)
+    const destSchema = document.getElementById('e2eDestSchema')?.value?.trim();
+    if (!destSchema) {
+        errors.push('Destination Schema is required - please define the target data structure');
+        highlightFieldError('e2eDestSchema', true);
+    }
+
+    // Check for at least one mapping
+    const mappingRows = document.querySelectorAll('#e2eMappingRows .mapping-row');
+    let hasValidMapping = false;
+    mappingRows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        if (inputs[0]?.value?.trim() && inputs[1]?.value?.trim()) {
+            hasValidMapping = true;
+        }
+    });
+    if (!hasValidMapping) {
+        errors.push('At least one field mapping is required');
+    }
+
+    // Warning: Business Rules (optional but recommended)
+    const ruleRows = document.querySelectorAll('#e2eRulesRows .rule-row');
+    let hasValidRule = false;
+    ruleRows.forEach(row => {
+        const name = row.querySelector('input')?.value?.trim();
+        const condition = row.querySelector('textarea')?.value?.trim();
+        if (name && condition) {
+            hasValidRule = true;
+        }
+    });
+    if (!hasValidRule) {
+        warnings.push('No business rules defined - consider adding validation or transformation rules');
+    }
+
+    // Warning: Security Requirements (optional but recommended)
+    const securityChecks = [
+        document.getElementById('e2eSecEncrypt')?.checked,
+        document.getElementById('e2eSecAuth')?.checked,
+        document.getElementById('e2eSecMask')?.checked,
+        document.getElementById('e2eSecAudit')?.checked
+    ];
+    const hasSecurityEnabled = securityChecks.some(checked => checked === true);
+    if (!hasSecurityEnabled) {
+        warnings.push('No security requirements selected - consider enabling encryption, authentication, or data masking');
+    }
+
+    return { errors, warnings };
 }
 
 // Phase 1 -> Phase 2 (Generate Design)
 document.getElementById('e2eNextPhase1Btn')?.addEventListener('click', () => {
-    const errors = validateRequirements();
+    const { errors, warnings } = validateRequirements();
+
+    // Show errors first - these block progression
     if (errors.length > 0) {
         ToastManager.error('Validation Error', errors.join('. '));
+        // Scroll to first error field
+        const firstErrorField = document.querySelector('.field-error');
+        if (firstErrorField) {
+            firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstErrorField.focus();
+        }
         return;
+    }
+
+    // Show warnings but allow progression
+    if (warnings.length > 0) {
+        warnings.forEach(warning => {
+            ToastManager.warning('Warning', warning);
+        });
     }
 
     collectRequirements();
