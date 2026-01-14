@@ -3,12 +3,12 @@
 // Get these from: Firebase Console > Project Settings > Your Apps > Web App
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD-gOlFfhmIZRbcLppAew6f_51fmDdSNBI",
+  apiKey: "****",
   authDomain: "create-your-qr.firebaseapp.com",
   projectId: "create-your-qr",
   storageBucket: "create-your-qr.firebasestorage.app",
   messagingSenderId: "820217447050",
-  appId: "1:820217447050:web:267f56620bca712a2aa373",
+  appId: "******",
   measurementId: "G-187S5HBKCX"
 };
 
