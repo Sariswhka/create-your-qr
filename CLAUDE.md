@@ -1,7 +1,7 @@
 # Create Your QR - Project Context
 
 ## Project Overview
-A collection of three privacy-focused web tools hosted on Firebase:
+A collection of three web tools hosted on Firebase:
 
 | App | URL | Directory |
 |-----|-----|-----------|
@@ -16,11 +16,11 @@ A collection of three privacy-focused web tools hosted on Firebase:
 ## Tech Stack
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript
 - **Auth:** Firebase Authentication (Google Sign-In)
+- **Database:** Firebase Firestore (activity logging)
 - **Hosting:** Firebase Hosting
 - **Libraries:**
   - QRCode.js (QR generation)
   - Cropper.js (image cropping)
-  - Mermaid.js (diagrams in EMS Tools)
   - JSZip (file compression)
 
 ## Project Structure
@@ -30,9 +30,15 @@ create-your-qr/
 ├── qr-code/
 │   ├── firebase.json
 │   └── public/
-│       ├── index.html
+│       ├── index.html            # Main app (login + QR generator)
+│       ├── admin.html            # Owner-only analytics dashboard
+│       ├── privacy.html          # Privacy Policy page
 │       ├── css/style.css
-│       └── js/app.js, auth.js, config.js
+│       └── js/
+│           ├── app.js            # QR generation logic
+│           ├── auth.js           # Firebase auth
+│           ├── analytics.js      # Firestore activity logging
+│           └── config.js         # Firebase config (excluded from git)
 ├── image-resizer/
 │   ├── firebase.json
 │   └── public/
@@ -49,51 +55,89 @@ create-your-qr/
 └── README.md
 ```
 
+## QR Code App — Instrumentation (Firestore)
+
+### Collections
+| Collection | Description |
+|------------|-------------|
+| `/users/{uid}` | One doc per user — email, displayName, photoURL, firstSeen, lastSeen, loginCount |
+| `/events/{auto-id}` | One doc per action — type, userId, userEmail, timestamp, url, color, frame |
+
+### Event Types
+- `login` — user signed in
+- `generate_qr` — QR code generated (includes url, color, frame)
+- `download_qr` — QR code downloaded (includes url)
+- `email_qr` — QR code emailed (includes url)
+
+### Key Files
+- `js/analytics.js` — `trackLogin()`, `trackQRGenerated()`, `trackQRDownloaded()`, `trackQREmailed()`
+- `js/auth.js` — calls `trackLogin(user)` on every auth state change
+- `js/app.js` — calls track functions after each user action
+
+### Firestore Security Rules
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /events/{eventId} {
+      allow write: if request.auth != null;
+    }
+    match /{document=**} {
+      allow read: if request.auth != null && request.auth.token.email == 'parashar.sachin@gmail.com';
+    }
+  }
+}
+```
+
+## Admin Dashboard
+- **URL:** https://create-your-qr.web.app/admin.html
+- **Access:** Restricted to `parashar.sachin@gmail.com` only
+- **Shows:** Total users, QR generated, downloads, emails sent, total logins
+- **Tables:** User list (with firstSeen/lastSeen/loginCount) + filterable events feed (last 500)
+
+## Google AdSense
+- **Publisher ID:** `ca-pub-5537089551995149`
+- **Status:** Submitted for review (March 2026) — awaiting approval
+- **Script added to:** `qr-code/public/index.html` `<head>`
+- **Next step:** Once approved, add ad unit code to index.html in best placement spots
+- **Privacy Policy:** https://create-your-qr.web.app/privacy.html (required for AdSense)
+
 ## EMS Tools Features
 1. **TL1 Parser/Builder** - Parse and build TL1 commands
 2. **Alarm Mapper** - Map EMS alarms to OSS format
 3. **Payload Transformer** - Convert JSON/XML/CSV/YAML
 4. **SNMP OID Browser** - Decode OIDs, parse SNMP walks
 5. **NETCONF/XML Tools** - XML validation, XPath testing
-6. **E2E Integration Generator** - 4-phase wizard:
-   - Phase 1: Requirements (project, source, dest, mapping, rules, technical)
-   - Phase 2: Design (auto-generated diagrams)
-   - Phase 3: Development (code artifacts)
-   - Phase 4: Execution (deployment scripts)
-
-## E2E Generator Validation
-- **Errors (block progression):** Project name, source/dest schema, mappings required
-- **Warnings (allow progression):** No business rules, no security options
-- **Auto-trim:** All text fields trim whitespace on blur
+6. **YANG Parser** - Parse, compare, tree-view YANG modules
+7. **XML Modifier** - Batch XML edits via Excel/CSV operations file
+8. **Config Compare** - Side-by-side config diff
+9. **E2E Integration Generator** - 4-phase wizard
 
 ## Deployment Workflow
 ```bash
-# Make changes locally
-cd /path/to/create-your-qr
+# Manual deploy (from app subdirectory)
+cd qr-code && firebase deploy --only hosting:create-your-qr
+cd image-resizer && firebase deploy --only hosting:imageresizer-online
+cd ems-tools && firebase deploy --only hosting:emstools
 
-# Commit and push (auto-deploys via GitHub Actions)
+# Or commit and push for auto-deploy via GitHub Actions
 git add .
 git commit -m "Description"
 git push origin main
-
-# Or manual deploy
-cd ems-tools && firebase deploy
 ```
-
-## Key Files
-- `ems-tools/public/js/app.js` - Main application logic (~3000 lines)
-- `ems-tools/public/docs.html` - User documentation
-- `.github/workflows/deploy.yml` - CI/CD pipeline
 
 ## Firebase Projects
 - Project ID: `create-your-qr`
 - Hosting sites: `create-your-qr`, `imageresizer-online`, `emstools`
 
 ## Local Development Paths
-- Original: `C:\Users\Richa\OneDrive\Apps\EMS Tools\`
-- Git repo: `C:\Users\Richa\OneDrive\Apps\create-your-qr\`
+- EMS Tools standalone: `C:\Users\Richa\OneDrive\Apps\EMS Tools\`
+- Git repo (all apps): `C:\Users\Richa\OneDrive\Apps\create-your-qr\`
 
 ## Notes
-- `config.js` files contain Firebase API keys - excluded from git via `.gitignore`
-- All processing happens client-side (privacy-first design)
-- No backend/database required
+- `config.js` files contain Firebase API keys — excluded from git via `.gitignore`
+- Admin email: `parashar.sachin@gmail.com`
+- Google Analytics ID (QR app): `G-187S5HBKCX`
