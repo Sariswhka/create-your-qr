@@ -47,6 +47,7 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         // User is signed in
         showApp(user);
+        trackLogin(user);
     } else {
         // User is signed out
         showLogin();

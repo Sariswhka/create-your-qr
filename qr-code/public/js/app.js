@@ -119,6 +119,9 @@ function generateQR() {
         'color': selectedColor,
         'frame': selectedFrame
     });
+
+    // Track in Firestore
+    if (currentUser) trackQRGenerated(currentUser, url, selectedColor, selectedFrame);
 }
 
 function downloadQR() {
@@ -140,6 +143,9 @@ function downloadQR() {
                 'event_category': 'QR Code',
                 'event_label': currentQRUrl
             });
+
+            // Track in Firestore
+            if (currentUser) trackQRDownloaded(currentUser, currentQRUrl);
         });
     } else {
         // Fallback to simple QR download
@@ -156,6 +162,9 @@ function downloadQR() {
                 'event_category': 'QR Code',
                 'event_label': currentQRUrl
             });
+
+            // Track in Firestore
+            if (currentUser) trackQRDownloaded(currentUser, currentQRUrl);
         }
     }
 }
@@ -214,6 +223,9 @@ async function sendToEmail() {
             'event_category': 'QR Code',
             'event_label': currentQRUrl
         });
+
+        // Track in Firestore
+        if (currentUser) trackQREmailed(currentUser, currentQRUrl);
     } catch (error) {
         console.error('Email error:', error);
         emailStatus.textContent = 'Failed to send email. Please try again.';
