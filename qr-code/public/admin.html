@@ -228,7 +228,8 @@
     <div class="denied-card">
         <h2>Access Denied</h2>
         <p>This dashboard is restricted to the app owner.</p>
-        <button class="btn btn-outline" id="deniedLogoutBtn">Sign out</button>
+        <p style="font-size:.8rem;color:#999;margin-bottom:16px;">Signed in as: <strong id="deniedEmail"></strong></p>
+        <button class="btn btn-outline" id="deniedLogoutBtn">Sign out & try again</button>
     </div>
 </div>
 
@@ -342,6 +343,7 @@ auth.onAuthStateChanged(user => {
         return;
     }
     if (user.email !== ADMIN_EMAIL) {
+        document.getElementById('deniedEmail').textContent = user.email;
         document.getElementById('deniedScreen').style.display = 'flex';
         return;
     }
