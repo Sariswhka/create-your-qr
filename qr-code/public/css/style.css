@@ -742,3 +742,180 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ── WhatsApp QR ──────────────────────────────────────── */
+
+/* Type tabs */
+.qr-type-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    background: #f0f2f5;
+    padding: 4px;
+    border-radius: 12px;
+    width: fit-content;
+}
+
+.qr-type-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border: none;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: #666;
+    transition: all 0.15s;
+}
+.qr-type-tab.active {
+    background: #fff;
+    color: #1a1a2e;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.qr-type-tab:hover:not(.active) { color: #333; }
+
+/* WhatsApp form textarea */
+#wqMessage {
+    width: 100%;
+    border: 2px solid #e8eaed;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s;
+    color: #333;
+}
+#wqMessage:focus { border-color: #25d366; outline: none; }
+
+/* WhatsApp QR result */
+.wq-qr-code {
+    display: flex;
+    justify-content: center;
+    margin: 16px 0 12px;
+}
+
+.wq-link-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+.wq-link-label { font-size: 0.78rem; color: #888; }
+.wq-short-link {
+    font-size: 0.85rem;
+    color: #667eea;
+    word-break: break-all;
+    text-decoration: none;
+}
+.wq-short-link:hover { text-decoration: underline; }
+
+/* My QR Codes section */
+.my-qr-section {
+    background: #f8f9fb;
+    border-top: 1px solid #eee;
+    padding: 32px 0 40px;
+    margin-top: 8px;
+}
+
+.my-qr-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.my-qr-header h3 { font-size: 1.1rem; font-weight: 700; color: #1a1a2e; }
+.my-qr-count {
+    font-size: 0.8rem;
+    background: #25d366;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.my-qr-list { display: flex; flex-direction: column; gap: 14px; }
+
+/* QR card */
+.wq-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    padding: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.wq-card-qr { flex-shrink: 0; }
+.wq-card-qr img, .wq-card-qr canvas { border-radius: 8px; }
+
+.wq-card-body { flex: 1; min-width: 0; }
+.wq-card-name { font-weight: 700; font-size: 0.98rem; color: #1a1a2e; margin-bottom: 2px; }
+.wq-card-phone { font-size: 0.8rem; color: #25d366; font-weight: 600; margin-bottom: 6px; }
+.wq-card-msg {
+    font-size: 0.83rem;
+    color: #555;
+    margin-bottom: 8px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.wq-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.wq-scans { font-size: 0.78rem; color: #888; }
+.wq-card-link {
+    font-size: 0.75rem;
+    color: #667eea;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 220px;
+}
+.wq-card-link:hover { text-decoration: underline; }
+
+.wq-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.btn-wq-action {
+    border: none;
+    border-radius: 7px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+}
+.btn-wq-action:hover { opacity: 0.82; }
+.btn-wq-edit { background: #e8f0fe; color: #3367d6; }
+.btn-wq-dl   { background: #e6f4ea; color: #1e7e34; }
+.btn-wq-del  { background: #fce8e6; color: #c5221f; }
+
+.wq-loading, .wq-empty {
+    text-align: center;
+    color: #aaa;
+    font-size: 0.9rem;
+    padding: 24px;
+}
+
+@media (max-width: 560px) {
+    .wq-card { flex-wrap: wrap; }
+    .wq-card-actions { flex-direction: row; width: 100%; }
+    .btn-wq-action { flex: 1; text-align: center; }
+    .qr-type-tabs { width: 100%; }
+    .qr-type-tab { flex: 1; justify-content: center; }
+}

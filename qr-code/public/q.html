@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Message</title>
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px 36px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .wa-icon {
+            width: 72px;
+            height: 72px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #25d366;
+            margin-bottom: 24px;
+        }
+
+        .message-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 28px;
+            text-align: left;
+            position: relative;
+        }
+
+        .message-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #16a34a;
+            margin-bottom: 8px;
+        }
+
+        .message-text {
+            font-size: 0.95rem;
+            color: #374151;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .open-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            background: #25d366;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s, transform 0.1s;
+            margin-bottom: 16px;
+        }
+        .open-btn:hover { background: #20b859; transform: translateY(-1px); }
+        .open-btn:active { transform: translateY(0); }
+
+        .note {
+            font-size: 0.78rem;
+            color: #9ca3af;
+            margin-bottom: 24px;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #f0f0f0;
+            margin: 20px 0;
+        }
+
+        .powered {
+            font-size: 0.75rem;
+            color: #ccc;
+        }
+        .powered a { color: #667eea; text-decoration: none; }
+        .powered a:hover { text-decoration: underline; }
+
+        /* Loading / Error states */
+        .state-loading, .state-error { padding: 40px 20px; }
+        .state-loading p { color: #888; animation: pulse 1.2s infinite; }
+        .state-error h3 { color: #ef4444; margin-bottom: 8px; }
+        .state-error p { color: #888; font-size: 0.9rem; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+        }
+
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #25d366;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="card" id="cardContent">
+    <div class="state-loading">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script>
+    const db = firebase.firestore();
+
+    // Extract QR ID from URL path: /q/abc123 → abc123
+    const qrId = window.location.pathname.split('/').filter(Boolean).pop();
+
+    async function loadQR() {
+        const card = document.getElementById('cardContent');
+
+        if (!qrId) {
+            showError(card, 'Invalid QR code link.');
+            return;
+        }
+
+        try {
+            const doc = await db.collection('qr_codes').doc(qrId).get();
+
+            if (!doc.exists) {
+                showError(card, 'This QR code does not exist or has been deleted.');
+                return;
+            }
+
+            const data = doc.data();
+            const waLink = buildWhatsAppLink(data.phone, data.message);
+
+            card.innerHTML = `
+                <div class="wa-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.845L.057 23.571a.75.75 0 00.925.932l5.863-1.54A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.708 9.708 0 01-4.953-1.355l-.355-.212-3.68.966.984-3.595-.232-.37A9.71 9.71 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/>
+                    </svg>
+                </div>
+                <div class="label">WhatsApp Message</div>
+                <div class="name">${escHtml(data.name)}</div>
+
+                <div class="message-box">
+                    <div class="message-label">Message that will be sent</div>
+                    <div class="message-text">${escHtml(data.message)}</div>
+                </div>
+
+                <a class="open-btn" href="${waLink}" target="_blank" id="openBtn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.845L.057 23.571a.75.75 0 00.925.932l5.863-1.54A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.708 9.708 0 01-4.953-1.355l-.355-.212-3.68.966.984-3.595-.232-.37A9.71 9.71 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/>
+                    </svg>
+                    Open in WhatsApp
+                </a>
+                <p class="note">This will open WhatsApp with the message pre-filled. Just tap Send.</p>
+
+                <hr class="divider">
+                <p class="powered">Powered by <a href="https://create-your-qr.web.app" target="_blank">Create Your QR</a></p>
+            `;
+
+            // Increment scan count
+            db.collection('qr_codes').doc(qrId).update({
+                scans: firebase.firestore.FieldValue.increment(1),
+                lastScanned: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+
+        } catch (e) {
+            console.error(e);
+            showError(card, 'Failed to load QR code. Please try again.');
+        }
+    }
+
+    function buildWhatsAppLink(phone, message) {
+        const cleanPhone = phone.replace(/[\s\-\(\)\+]/g, '');
+        return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    }
+
+    function showError(card, msg) {
+        card.innerHTML = `
+            <div class="state-error">
+                <h3>Oops!</h3>
+                <p>${msg}</p>
+            </div>`;
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    loadQR();
+</script>
+</body>
+</html>
