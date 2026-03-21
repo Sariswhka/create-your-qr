@@ -141,6 +141,102 @@
             margin: 0 auto 16px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Attached image */
+        .msg-image-wrap {
+            margin-bottom: 20px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .msg-image {
+            width: 100%;
+            max-height: 260px;
+            object-fit: cover;
+            display: block;
+            border-radius: 16px;
+        }
+
+        /* PIN screen */
+        .pin-screen { padding: 8px 0; }
+        .pin-icon { font-size: 48px; margin-bottom: 12px; }
+        .pin-screen h3 { font-size: 1.3rem; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+        .pin-screen p  { font-size: 0.88rem; color: #888; margin-bottom: 24px; }
+
+        .pin-input {
+            width: 100%;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+        .pin-input:focus { border-color: #25d366; }
+        .pin-input.shake {
+            animation: shake 0.3s ease;
+            border-color: #ef4444;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .pin-error {
+            color: #ef4444;
+            font-size: 0.83rem;
+            margin-bottom: 12px;
+            min-height: 20px;
+        }
+
+        .pin-submit {
+            width: 100%;
+            background: #25d366;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .pin-submit:hover { background: #20b859; }
+
+        .request-divider {
+            border: none;
+            border-top: 1px solid #f0f0f0;
+            margin: 20px 0;
+        }
+
+        .request-access-btn {
+            width: 100%;
+            background: transparent;
+            color: #6b7280;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.93rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .request-access-btn:hover { border-color: #25d366; color: #25d366; }
+
+        .request-sent {
+            margin-top: 12px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.83rem;
+            color: #15803d;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -154,7 +250,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="js/config.js"></script>
+<script src="/js/config.js"></script>
 <script>
     const db = firebase.firestore();
 
@@ -178,9 +274,78 @@
             }
 
             const data = doc.data();
-            const waLink = buildWhatsAppLink(data.phone, data.message);
 
-            card.innerHTML = `
+            if (data.pin) {
+                showPinScreen(card, data);
+            } else {
+                showMessage(card, data);
+                incrementScan();
+            }
+
+        } catch (e) {
+            console.error(e);
+            showError(card, 'Failed to load QR code. Please try again.');
+        }
+    }
+
+    function showPinScreen(card, data) {
+        card.innerHTML = `
+            <div class="pin-screen">
+                <div class="pin-icon">🔒</div>
+                <h3>PIN Protected</h3>
+                <p>Enter the PIN to view this message</p>
+                <input class="pin-input" id="pinInput" type="tel" maxlength="12" placeholder="Enter PIN" autocomplete="off">
+                <div class="pin-error" id="pinError"></div>
+                <button class="pin-submit" id="pinSubmit">Unlock</button>
+                <hr class="request-divider">
+                <button class="request-access-btn" id="requestAccessBtn">Request Access</button>
+                <div class="request-sent" id="requestSent">
+                    Your email app should open with a pre-filled message. Send it to notify the creator.
+                </div>
+            </div>
+        `;
+
+        const input = document.getElementById('pinInput');
+        const submitBtn = document.getElementById('pinSubmit');
+        const errorEl = document.getElementById('pinError');
+
+        input.focus();
+
+        function tryPin() {
+            const entered = input.value.trim();
+            if (entered === String(data.pin)) {
+                showMessage(card, data);
+                incrementScan();
+            } else {
+                errorEl.textContent = 'Incorrect PIN. Please try again.';
+                input.classList.add('shake');
+                input.addEventListener('animationend', () => input.classList.remove('shake'), { once: true });
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        submitBtn.addEventListener('click', tryPin);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') tryPin(); });
+
+        document.getElementById('requestAccessBtn').addEventListener('click', () => {
+            const subject = encodeURIComponent(`Access Request: ${data.name}`);
+            const body = encodeURIComponent(
+                `Hi,\n\nI'm trying to access your PIN-protected WhatsApp QR code "${data.name}".\n\nLink: ${window.location.href}\n\nCould you please share the PIN with me?\n\nThank you`
+            );
+            window.location.href = `mailto:${data.userEmail}?subject=${subject}&body=${body}`;
+            document.getElementById('requestSent').style.display = 'block';
+        });
+    }
+
+    function showMessage(card, data) {
+        const waLink = buildWhatsAppLink(data.phone, data.message);
+        const hasImage = !!(data.imageUrl);
+        const imageHtml = hasImage
+            ? `<div class="msg-image-wrap"><img src="${data.imageUrl}" class="msg-image" alt=""></div>`
+            : '';
+        card.innerHTML = `
+                ${imageHtml}
                 <div class="wa-icon">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
@@ -195,29 +360,56 @@
                     <div class="message-text">${escHtml(data.message)}</div>
                 </div>
 
-                <a class="open-btn" href="${waLink}" target="_blank" id="openBtn">
+                <button class="open-btn" id="openBtn">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                         <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.845L.057 23.571a.75.75 0 00.925.932l5.863-1.54A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.708 9.708 0 01-4.953-1.355l-.355-.212-3.68.966.984-3.595-.232-.37A9.71 9.71 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/>
                     </svg>
                     Open in WhatsApp
-                </a>
-                <p class="note">This will open WhatsApp with the message pre-filled. Just tap Send.</p>
+                </button>
+                <p class="note" id="openNote">This will open WhatsApp with the message pre-filled. Just tap Send.</p>
 
                 <hr class="divider">
                 <p class="powered">Powered by <a href="https://create-your-qr.web.app" target="_blank">Create Your QR</a></p>
             `;
 
-            // Increment scan count
-            db.collection('qr_codes').doc(qrId).update({
-                scans: firebase.firestore.FieldValue.increment(1),
-                lastScanned: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(() => {});
+        // Wire up smart open button
+        document.getElementById('openBtn').addEventListener('click', () => openWhatsApp(data, waLink));
 
-        } catch (e) {
-            console.error(e);
-            showError(card, 'Failed to load QR code. Please try again.');
+        // Update note if image present but share API not available
+        if (hasImage && !navigator.canShare) {
+            document.getElementById('openNote').textContent =
+                'Image shown above. WhatsApp will open with the text message pre-filled.';
         }
+    }
+
+    async function openWhatsApp(data, waLink) {
+        // If image exists and Web Share API supports file sharing — use native share sheet
+        if (data.imageUrl && navigator.canShare) {
+            try {
+                const res  = await fetch(data.imageUrl);
+                const blob = await res.blob();
+                const file = new File([blob], 'image.jpg', { type: blob.type || 'image/jpeg' });
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        text:  data.message
+                    });
+                    return;
+                }
+            } catch (e) {
+                // fall through to wa.me link
+            }
+        }
+        // Fallback: open wa.me link (text only)
+        window.open(waLink, '_blank');
+    }
+
+    function incrementScan() {
+        db.collection('qr_codes').doc(qrId).update({
+            scans: firebase.firestore.FieldValue.increment(1),
+            lastScanned: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(() => {});
     }
 
     function buildWhatsAppLink(phone, message) {

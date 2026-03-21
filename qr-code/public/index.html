@@ -180,6 +180,8 @@
                 <div class="user-info">
                     <img id="userPhoto" src="" alt="User" class="user-avatar">
                     <span id="userName"></span>
+                    <span id="qrProBadge" class="pro-badge hidden">⭐ PRO</span>
+                    <button id="qrUpgradeBtn" class="upgrade-btn hidden">⭐ Upgrade</button>
                     <button id="logoutBtn" class="btn-logout">Logout</button>
                 </div>
             </div>
@@ -222,13 +224,18 @@
                         <label>QR Code Color</label>
                         <div class="color-options">
                             <button class="color-btn active" data-color="#000000" style="background: #000000;" title="Black"></button>
-                            <button class="color-btn" data-color="#667eea" style="background: #667eea;" title="Purple"></button>
-                            <button class="color-btn" data-color="#e74c3c" style="background: #e74c3c;" title="Red"></button>
-                            <button class="color-btn" data-color="#27ae60" style="background: #27ae60;" title="Green"></button>
-                            <button class="color-btn" data-color="#2980b9" style="background: #2980b9;" title="Blue"></button>
-                            <button class="color-btn" data-color="#f39c12" style="background: #f39c12;" title="Orange"></button>
-                            <button class="color-btn" data-color="#8e44ad" style="background: #8e44ad;" title="Violet"></button>
-                            <button class="color-btn" data-color="#1abc9c" style="background: #1abc9c;" title="Teal"></button>
+                            <button class="color-btn pro-color" data-color="#667eea" style="background: #667eea;" title="Purple — Pro" disabled></button>
+                            <button class="color-btn pro-color" data-color="#e74c3c" style="background: #e74c3c;" title="Red — Pro" disabled></button>
+                            <button class="color-btn pro-color" data-color="#27ae60" style="background: #27ae60;" title="Green — Pro" disabled></button>
+                            <button class="color-btn pro-color" data-color="#2980b9" style="background: #2980b9;" title="Blue — Pro" disabled></button>
+                            <button class="color-btn pro-color" data-color="#f39c12" style="background: #f39c12;" title="Orange — Pro" disabled></button>
+                            <button class="color-btn pro-color" data-color="#8e44ad" style="background: #8e44ad;" title="Violet — Pro" disabled></button>
+                            <button class="color-btn pro-color" data-color="#1abc9c" style="background: #1abc9c;" title="Teal — Pro" disabled></button>
+                        </div>
+                        <div class="pro-color-row" style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <span id="colorProLock" class="pro-lock-label">🔒 Custom colors — <a href="#" onclick="showQRUpgradeModal();return false;">Upgrade to Pro</a></span>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#555;">FG <input type="color" id="customColorFg" value="#000000" style="width:32px;height:28px;border:none;cursor:pointer;"></label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#555;">BG <input type="color" id="customColorBg" value="#ffffff" style="width:32px;height:28px;border:none;cursor:pointer;"></label>
                         </div>
                     </div>
 
@@ -280,6 +287,19 @@
                         </div>
                         <p class="email-status" id="emailStatus"></p>
                     </div>
+                    <div class="input-group">
+                        <label>Logo in Center <span class="optional-label">(optional — Pro)</span></label>
+                        <div id="logoProLock" class="pro-lock-label" style="margin-bottom:8px;">🔒 <a href="#" onclick="showQRUpgradeModal();return false;">Upgrade to Pro</a> to add a logo</div>
+                        <div class="img-upload-box" onclick="document.getElementById('logoUploadInput').click()" style="padding:14px;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            <span>Click to upload logo (PNG with transparency works best)</span>
+                        </div>
+                        <input type="file" id="logoUploadInput" accept="image/*" style="display:none" disabled>
+                        <div id="logoPreviewWrap" class="hidden" style="margin-top:8px;display:flex;align-items:center;gap:10px;">
+                            <img id="logoPreview" style="width:48px;height:48px;object-fit:contain;border-radius:6px;border:1px solid #e5e7eb;">
+                            <button type="button" id="logoRemoveBtn" class="btn btn-secondary" style="padding:4px 12px;font-size:0.8rem;">Remove</button>
+                        </div>
+                    </div>
                     </div><!-- end #urlForm -->
 
                     <!-- WhatsApp QR Form -->
@@ -297,7 +317,33 @@
                         </div>
                         <div class="input-group">
                             <label for="wqMessage">Pre-filled Message</label>
+                            <div class="fmt-toolbar" id="fmtToolbar">
+                                <button type="button" class="fmt-btn" title="Bold" onclick="wqFormat('bold')"><b>B</b></button>
+                                <button type="button" class="fmt-btn" title="Italic" onclick="wqFormat('italic')"><i>I</i></button>
+                                <button type="button" class="fmt-btn" title="Strikethrough" onclick="wqFormat('strike')"><s>S</s></button>
+                                <button type="button" class="fmt-btn" title="Monospace" onclick="wqFormat('mono')"><code>M</code></button>
+                                <span class="fmt-hint">Select text then click</span>
+                            </div>
                             <textarea id="wqMessage" rows="4" placeholder="Hi! I saw your QR code and would like to know more about..."></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Attach Image <span class="optional-label">(optional)</span></label>
+                            <div class="img-upload-box" id="imgUploadBox" onclick="document.getElementById('wqImage').click()">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                <span id="imgUploadLabel">Click to upload image (JPG, PNG — max 2MB)</span>
+                            </div>
+                            <input type="file" id="wqImage" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="wqImageSelected(this)">
+                            <div id="wqImagePreview" style="display:none;margin-top:10px;position:relative;">
+                                <img id="wqImgThumb" style="max-width:100%;max-height:160px;border-radius:10px;object-fit:contain;">
+                                <button type="button" onclick="wqRemoveImage()" style="position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;line-height:1;">✕</button>
+                            </div>
+                            <p class="input-hint">Image is shown on the QR landing page. WhatsApp only supports text in the pre-filled message.</p>
+                        </div>
+                        <div class="input-group">
+                            <label for="wqPin">Access PIN <span class="optional-label">(optional)</span></label>
+                            <input type="text" id="wqPin" placeholder="e.g. 1234 — leave blank for public access" maxlength="12" autocomplete="off">
+                            <span id="pinProLock" class="pro-lock-label">🔒 PIN protection is a <a href="#" onclick="showQRUpgradeModal();return false;">Pro feature</a></span>
+                            <p class="input-hint">If set, users must enter this PIN before they can view the message.</p>
                         </div>
 
                         <p class="error-message" id="wqError" style="display:none">Please fill in all fields.</p>
@@ -324,6 +370,56 @@
                 </div>
             </div>
 
+            <!-- How it works -->
+            <div class="how-it-works hidden" id="howItWorksSection">
+                <div class="container app-container">
+                    <button class="hiw-toggle" id="hiwToggle" onclick="toggleHowItWorks()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        How does this work?
+                        <svg class="hiw-chevron" id="hiwChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="hiw-body hidden" id="hiwBody">
+                        <div class="hiw-steps">
+                            <div class="hiw-step">
+                                <div class="hiw-step-num">1</div>
+                                <div class="hiw-step-content">
+                                    <strong>Fill in your details</strong>
+                                    <p>Enter your WhatsApp number, a display name, and the message you want pre-filled when someone scans your QR.</p>
+                                </div>
+                            </div>
+                            <div class="hiw-step">
+                                <div class="hiw-step-num">2</div>
+                                <div class="hiw-step-content">
+                                    <strong>Set an Access PIN (optional, Pro)</strong>
+                                    <p>Add a PIN to restrict who can view the message. Only people with the PIN can proceed to WhatsApp. Leave blank for public access.</p>
+                                </div>
+                            </div>
+                            <div class="hiw-step">
+                                <div class="hiw-step-num">3</div>
+                                <div class="hiw-step-content">
+                                    <strong>Share your QR or link</strong>
+                                    <p>Download the QR image and print it, or copy the shareable link. Anyone who scans or visits it lands on your WhatsApp message page.</p>
+                                </div>
+                            </div>
+                            <div class="hiw-step">
+                                <div class="hiw-step-num">4</div>
+                                <div class="hiw-step-content">
+                                    <strong>PIN screen &amp; Request Access</strong>
+                                    <p>If your QR has a PIN, visitors see a lock screen. If they don't have the PIN, they can click <em>Request Access</em> — this opens a pre-filled email to you so they can ask for the PIN directly.</p>
+                                </div>
+                            </div>
+                            <div class="hiw-step">
+                                <div class="hiw-step-num">5</div>
+                                <div class="hiw-step-content">
+                                    <strong>Update anytime</strong>
+                                    <p>Edit your QR's message, PIN, or image at any time from the <em>My WhatsApp QR Codes</em> list below — the same QR code and link keep working.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- My WhatsApp QR Codes -->
             <div class="my-qr-section hidden" id="myQRSection">
                 <div class="container app-container">
@@ -337,28 +433,81 @@
 
         </main>
 
-        <!-- Support Section -->
-        <div class="support-section">
-            <div class="container">
-                <div class="support-card">
-                    <div class="support-content">
-                        <h3>Support This Project</h3>
-                        <p>If you find this tool useful, consider buying me a coffee!</p>
-                    </div>
-                    <div class="support-qr">
-                        <img id="paymentQR" src="images/payment-qr.png.png" alt="Payment QR Code">
-                        <span class="scan-text">Scan to Pay</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
 
         <!-- Footer -->
         <footer class="footer">
             <p>Made with care | QR Code Generator | <a href="https://imgtools.web.app">Image Resizer</a> | <a href="https://emstools.web.app">EMS Tools</a> | <a href="/privacy.html">Privacy Policy</a></p>
         </footer>
     </div>
+
+    <!-- QR Upgrade Modal -->
+    <div id="qrUpgradeModal" class="upgrade-modal hidden">
+        <div class="upgrade-card upgrade-card-wide">
+            <button class="modal-close" id="closeQRUpgradeModal">✕</button>
+            <div class="upgrade-icon">⭐</div>
+            <h2>Unlock Pro Features</h2>
+            <p class="upgrade-sub">One-time payment · Use forever · No subscription</p>
+
+            <div class="pricing-grid">
+                <!-- QR Only -->
+                <div class="pricing-card">
+                    <div class="pricing-label">QR Generator</div>
+                    <div class="pricing-price">₹49</div>
+                    <div class="pricing-desc">one-time</div>
+                    <ul class="pricing-features">
+                        <li>✅ Custom QR colors</li>
+                        <li>✅ Logo in center</li>
+                        <li>✅ High-res download</li>
+                        <li>✅ Unlimited WhatsApp QRs</li>
+                        <li>✅ Text formatting</li>
+                        <li>✅ Image in QR message</li>
+                        <li>✅ PIN protection</li>
+                    </ul>
+                    <button class="btn btn-outline-upgrade" onclick="startPayment('qr')">Get QR Pro — ₹49</button>
+                </div>
+
+                <!-- Bundle — Best Value -->
+                <div class="pricing-card pricing-card-featured">
+                    <div class="pricing-best">⭐ Best Value</div>
+                    <div class="pricing-label">Bundle — Both Apps</div>
+                    <div class="pricing-price" id="bundlePriceQR">₹99</div>
+                    <div class="pricing-desc" id="bundleDescQR">one-time · save ₹38</div>
+                    <ul class="pricing-features">
+                        <li>✅ Everything in QR Pro</li>
+                        <li>✅ Everything in Image Resizer Pro</li>
+                        <li>✅ Crop with aspect ratios</li>
+                        <li>✅ PNG &amp; WebP export</li>
+                        <li>✅ AI Background Removal</li>
+                        <li>✅ Upload images up to 20 MB</li>
+                    </ul>
+                    <button class="btn btn-upgrade" id="bundleBtnQR" onclick="startPayment('bundle')">Get Bundle — ₹99</button>
+                </div>
+
+                <!-- Image Resizer Only -->
+                <div class="pricing-card">
+                    <div class="pricing-label">Image Resizer</div>
+                    <div class="pricing-price">₹89</div>
+                    <div class="pricing-desc">one-time</div>
+                    <ul class="pricing-features">
+                        <li>✅ Crop with aspect ratios</li>
+                        <li>✅ PNG &amp; WebP export</li>
+                        <li>✅ AI Background Removal</li>
+                        <li>✅ Upload images up to 20 MB</li>
+                    </ul>
+                    <button class="btn btn-outline-upgrade" onclick="startPayment('imgtools')">Get Image Resizer Pro — ₹89</button>
+                </div>
+            </div>
+
+            <p class="razorpay-note">Secure payment via Razorpay · UPI, Cards, Net Banking, Wallets</p>
+            <p class="sustain-note">💛 Your support helps keep these tools free and funds new features. Thank you!</p>
+        </div>
+    </div>
+
+    <!-- Pro Toast -->
+    <div id="qrProToast" class="pro-toast hidden">🎉 You're now a Pro user! All features unlocked.</div>
+
+    <!-- Razorpay -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -373,5 +522,6 @@
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script src="js/whatsapp-qr.js"></script>
+
 </body>
 </html>
