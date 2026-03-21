@@ -6,7 +6,7 @@ A collection of three web tools hosted on Firebase:
 | App | URL | Directory |
 |-----|-----|-----------|
 | QR Code Generator | https://create-your-qr.web.app | `/qr-code` |
-| Image Resizer | https://imgtools.web.app | `C:\Users\Richa\OneDrive\Apps\Image Resizer` (standalone, not in this repo) |
+| Image Resizer | https://imgtools.web.app | `/image-resizer` |
 | EMS Tools | https://emstools.web.app | `/ems-tools` |
 
 ## Repository
@@ -40,6 +40,15 @@ create-your-qr/
 │           ├── auth.js           # Firebase auth
 │           ├── analytics.js      # Firestore activity logging
 │           ├── whatsapp-qr.js    # WhatsApp QR create/edit/delete + How It Works
+│           └── config.js         # Firebase config (excluded from git)
+├── image-resizer/
+│   ├── firebase.json             # Hosting site: imgtools → imgtools.web.app
+│   └── public/
+│       ├── index.html            # Image resize, crop, background removal
+│       ├── css/style.css
+│       └── js/
+│           ├── app.js            # Resize/crop/bg-removal logic, Razorpay payments
+│           ├── auth.js           # Firebase auth + pro status check
 │           └── config.js         # Firebase config (excluded from git)
 ├── ems-tools/
 │   ├── firebase.json
@@ -125,6 +134,33 @@ service cloud.firestore {
 - **Next step:** Once approved, add ad unit code to index.html in best placement spots
 - **Privacy Policy:** https://create-your-qr.web.app/privacy.html (required for AdSense)
 
+## Image Resizer App (imgtools.web.app)
+
+- **Hosting site:** `imgtools` (Firebase project: `create-your-qr`)
+- **Directory:** `/image-resizer`
+- **Standalone mirror:** `C:\Users\Richa\OneDrive\Apps\Image Resizer\` (deploy from here too)
+
+### Features
+| Feature | Free | Pro |
+|---------|------|-----|
+| Resize by dimensions or % | ✅ | ✅ |
+| JPEG output | ✅ | ✅ |
+| Max upload size | 5 MB | 20 MB |
+| PNG / WebP output | — | ✅ |
+| Background removal (AI) | — | ✅ |
+| Fixed crop aspect ratios | — | ✅ |
+
+### Pro Pricing (Razorpay)
+- Image Resizer Pro: ₹89 one-time (`rzp_live_frEA3PTBCni695`)
+- Bundle (QR + Image): ₹99 one-time
+- Pro status stored in Firestore `/users/{uid}` — fields: `isPro`, `isProBundle`, `isProQR`
+
+### Key behaviours
+- `app.js` — resize/crop/bg-removal logic; estimated output size computed via real `canvas.toBlob()` (not formula)
+- `auth.js` — checks Firestore for pro status on login; exposes `window.isPro`, `window.userProData`
+- Background removal uses `@imgly/background-removal@1.5.1` loaded dynamically (CDN, ~5 MB AI model)
+- Razorpay redirect flow: on payment, redirects to `?rzp_success=<plan>` and saves pro status to Firestore
+
 ## EMS Tools Features
 1. **TL1 Parser/Builder** - Parse and build TL1 commands
 2. **Alarm Mapper** - Map EMS alarms to OSS format
@@ -140,10 +176,8 @@ service cloud.firestore {
 ```bash
 # Manual deploy (from app subdirectory)
 cd qr-code && firebase deploy --only hosting:create-your-qr
+cd image-resizer && firebase deploy --only hosting:imgtools
 cd ems-tools && firebase deploy --only hosting:emstools
-
-# Image Resizer (standalone — separate directory, not in this repo)
-cd "C:/Users/Richa/OneDrive/Apps/Image Resizer" && firebase deploy --only hosting:imgtools
 
 # Or commit and push for auto-deploy via GitHub Actions
 git add .
@@ -156,8 +190,9 @@ git push origin main
 - Hosting sites: `create-your-qr`, `imgtools`, `emstools`
 
 ## Local Development Paths
-- EMS Tools standalone: `C:\Users\Richa\OneDrive\Apps\EMS Tools\`
 - Git repo (all apps): `C:\Users\Richa\OneDrive\Apps\create-your-qr\`
+- EMS Tools standalone: `C:\Users\Richa\OneDrive\Apps\EMS Tools\`
+- Image Resizer standalone (mirrors repo): `C:\Users\Richa\OneDrive\Apps\Image Resizer\`
 
 ## Notes
 - `config.js` files contain Firebase API keys — excluded from git via `.gitignore`
