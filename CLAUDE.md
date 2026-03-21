@@ -6,7 +6,7 @@ A collection of three web tools hosted on Firebase:
 | App | URL | Directory |
 |-----|-----|-----------|
 | QR Code Generator | https://create-your-qr.web.app | `/qr-code` |
-| Image Resizer | https://imageresizer-online.web.app | `/image-resizer` |
+| Image Resizer | https://imgtools.web.app | `C:\Users\Richa\OneDrive\Apps\Image Resizer` (standalone, not in this repo) |
 | EMS Tools | https://emstools.web.app | `/ems-tools` |
 
 ## Repository
@@ -30,21 +30,17 @@ create-your-qr/
 ├── qr-code/
 │   ├── firebase.json
 │   └── public/
-│       ├── index.html            # Main app (login + QR generator)
+│       ├── index.html            # Main app (login + QR generator + WhatsApp QR)
+│       ├── q.html                # WhatsApp QR landing page (PIN screen, Request Access)
 │       ├── admin.html            # Owner-only analytics dashboard
 │       ├── privacy.html          # Privacy Policy page
 │       ├── css/style.css
 │       └── js/
-│           ├── app.js            # QR generation logic
+│           ├── app.js            # URL QR generation logic
 │           ├── auth.js           # Firebase auth
 │           ├── analytics.js      # Firestore activity logging
+│           ├── whatsapp-qr.js    # WhatsApp QR create/edit/delete + How It Works
 │           └── config.js         # Firebase config (excluded from git)
-├── image-resizer/
-│   ├── firebase.json
-│   └── public/
-│       ├── index.html
-│       ├── css/style.css
-│       └── js/app.js, auth.js, config.js
 ├── ems-tools/
 │   ├── firebase.json
 │   └── public/
@@ -62,6 +58,7 @@ create-your-qr/
 |------------|-------------|
 | `/users/{uid}` | One doc per user — email, displayName, photoURL, firstSeen, lastSeen, loginCount |
 | `/events/{auto-id}` | One doc per action — type, userId, userEmail, timestamp, url, color, frame |
+| `/qr_codes/{id}` | One doc per WhatsApp QR — userId, userEmail, name, phone, message, pin, imageUrl, scans, createdAt, updatedAt |
 
 ### Event Types
 - `login` — user signed in
@@ -73,6 +70,8 @@ create-your-qr/
 - `js/analytics.js` — `trackLogin()`, `trackQRGenerated()`, `trackQRDownloaded()`, `trackQREmailed()`
 - `js/auth.js` — calls `trackLogin(user)` on every auth state change
 - `js/app.js` — calls track functions after each user action
+- `js/whatsapp-qr.js` — WhatsApp QR CRUD, pro gating, how-it-works toggle
+- `q.html` — public landing page for WhatsApp QR links; handles PIN screen, Request Access, scan counter
 
 ### Firestore Security Rules
 ```
@@ -91,6 +90,27 @@ service cloud.firestore {
   }
 }
 ```
+
+## WhatsApp QR Feature
+
+### How it works
+1. Logged-in user fills in name, phone, message (+ optional PIN and image for Pro)
+2. A doc is saved to `/qr_codes/{id}` and a QR is generated pointing to `https://create-your-qr.web.app/q/{id}`
+3. Anyone scanning the QR lands on `q.html` which loads the doc from Firestore
+4. If `pin` is set, a PIN screen is shown — wrong PIN shows an error; no PIN shows a **Request Access** button
+5. **Request Access** opens a pre-filled `mailto:` to `data.userEmail` so the visitor can ask the creator for the PIN
+6. On successful unlock (or no PIN), the WhatsApp message page is shown and scan count is incremented
+
+### Pro gating (WhatsApp QR)
+| Feature | Free | Pro |
+|---------|------|-----|
+| WhatsApp QR codes | Max 2 | Unlimited |
+| PIN protection | — | ✅ |
+| Image attachment | — | ✅ |
+| Text formatting toolbar | — | ✅ |
+
+### Landing page URL pattern
+- `https://create-your-qr.web.app/q/{id}` — served by `q.html` via Firebase rewrite rule
 
 ## Admin Dashboard
 - **URL:** https://create-your-qr.web.app/admin.html
@@ -120,8 +140,10 @@ service cloud.firestore {
 ```bash
 # Manual deploy (from app subdirectory)
 cd qr-code && firebase deploy --only hosting:create-your-qr
-cd image-resizer && firebase deploy --only hosting:imageresizer-online
 cd ems-tools && firebase deploy --only hosting:emstools
+
+# Image Resizer (standalone — separate directory, not in this repo)
+cd "C:/Users/Richa/OneDrive/Apps/Image Resizer" && firebase deploy --only hosting:imgtools
 
 # Or commit and push for auto-deploy via GitHub Actions
 git add .
@@ -131,7 +153,7 @@ git push origin main
 
 ## Firebase Projects
 - Project ID: `create-your-qr`
-- Hosting sites: `create-your-qr`, `imageresizer-online`, `emstools`
+- Hosting sites: `create-your-qr`, `imgtools`, `emstools`
 
 ## Local Development Paths
 - EMS Tools standalone: `C:\Users\Richa\OneDrive\Apps\EMS Tools\`
