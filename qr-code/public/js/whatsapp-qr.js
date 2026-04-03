@@ -3,6 +3,8 @@ const wqDB = firebase.firestore();
 let wqEditingId = null;
 let wqImageFile = null;
 let wqExistingImageUrl = null;
+let wqExistingAiTagline = null;
+const AI_FREE_LIMIT = 2;
 
 const WQ_FREE_LIMIT = 2;
 
@@ -16,7 +18,7 @@ document.querySelectorAll('.qr-type-tab').forEach(tab => {
         document.getElementById('whatsappForm').classList.toggle('hidden', type !== 'whatsapp');
         document.getElementById('myQRSection').classList.toggle('hidden', type !== 'whatsapp');
         document.getElementById('howItWorksSection').classList.toggle('hidden', type !== 'whatsapp');
-        if (type === 'whatsapp') loadMyQRCodes();
+        if (type === 'whatsapp') { loadMyQRCodes(); loadAIUsageDisplay(); }
     });
 });
 
@@ -101,6 +103,114 @@ function compressImage(file) {
     });
 }
 
+// ── AI: Tagline Generator (runs at save time) ──────────────
+async function generateAITagline(name, message) {
+    try {
+        const prompt = `Generate a short professional tagline (max 8 words) for a WhatsApp contact card. Person: "${name}". Message context: "${message.substring(0, 200)}". Output only the tagline, nothing else.`;
+        const data = await callGemini(prompt, 0);
+        return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    } catch { return ''; }
+}
+
+// ── AI: Usage tracking ─────────────────────────────────────
+async function getAIUsageCount() {
+    if (!currentUser) return 0;
+    const doc = await wqDB.collection('users').doc(currentUser.uid).get();
+    return doc.exists ? (doc.data().aiUsageCount || 0) : 0;
+}
+
+async function incrementAIUsage() {
+    await wqDB.collection('users').doc(currentUser.uid).set(
+        { aiUsageCount: firebase.firestore.FieldValue.increment(1) },
+        { merge: true }
+    );
+}
+
+function updateAIUsageDisplay(count) {
+    const el = document.getElementById('aiUsageInfo');
+    if (!el) return;
+    if (wqIsPro()) {
+        el.textContent = 'Unlimited (Pro)';
+        el.style.color = '#667eea';
+    } else {
+        const remaining = Math.max(0, AI_FREE_LIMIT - count);
+        el.textContent = remaining > 0
+            ? `${remaining} free AI use${remaining !== 1 ? 's' : ''} remaining`
+            : 'Free limit reached — upgrade for more';
+        el.style.color = remaining > 0 ? '#6b7280' : '#ef4444';
+    }
+}
+
+async function loadAIUsageDisplay() {
+    const count = await getAIUsageCount();
+    updateAIUsageDisplay(count);
+}
+
+// ── AI: Improve message button ─────────────────────────────
+async function callGemini(prompt, retries = 2) {
+    const apiKey = window.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('NO_KEY');
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        const resp = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
+        );
+        if (resp.ok) return resp.json();
+        if (resp.status === 429 && attempt < retries) {
+            const wait = (attempt + 1) * 5000;
+            const btn = document.getElementById('aiImproveBtn');
+            if (btn) btn.innerHTML = `⏳ Rate limited — retrying in ${wait/1000}s…`;
+            await new Promise(r => setTimeout(r, wait));
+            continue;
+        }
+        if (resp.status === 429) throw new Error('RATE_LIMIT');
+        throw new Error('API_ERROR');
+    }
+}
+
+async function improveWithAI() {
+    const message = document.getElementById('wqMessage').value.trim();
+    const name    = document.getElementById('wqName').value.trim();
+    if (!message) { alert('Enter a message first.'); return; }
+
+    const usageCount = await getAIUsageCount();
+    if (usageCount >= AI_FREE_LIMIT && !wqIsPro()) {
+        showQRUpgradeModal();
+        return;
+    }
+
+    const btn  = document.getElementById('aiImproveBtn');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Improving…';
+
+    try {
+        const prompt = `Rewrite this WhatsApp pre-filled message to be friendly and professional. Keep it under 100 words. Name: "${name || 'the person'}". Message: "${message}". Output only the improved message, nothing else.`;
+        const data = await callGemini(prompt);
+        const improved = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (improved) {
+            document.getElementById('wqMessage').value = improved;
+            await incrementAIUsage();
+            updateAIUsageDisplay(usageCount + 1);
+        } else {
+            alert('AI returned an empty response. Please try again.');
+        }
+    } catch (e) {
+        console.error(e);
+        if (e.message === 'NO_KEY') {
+            alert('AI not configured. Please contact support.');
+        } else if (e.message === 'RATE_LIMIT') {
+            alert('AI is busy right now. Please wait a minute and try again.');
+        } else {
+            alert('AI improvement failed. Please try again.');
+        }
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
 // ── Save / Update WhatsApp QR ──────────────────────────────
 async function saveWhatsappQR() {
     const name    = document.getElementById('wqName').value.trim();
@@ -129,11 +239,13 @@ async function saveWhatsappQR() {
     try {
         const id = wqEditingId || genId();
 
-        let imageUrl = wqExistingImageUrl || '';
-        if (wqImageFile && wqIsPro()) {
-            saveBtn.textContent = 'Processing image...';
-            imageUrl = await compressImage(wqImageFile);
-        }
+        saveBtn.textContent = 'Processing…';
+        const [imageUrl, aiTagline] = await Promise.all([
+            (wqImageFile && wqIsPro())
+                ? compressImage(wqImageFile)
+                : Promise.resolve(wqExistingImageUrl || ''),
+            generateAITagline(name, message)
+        ]);
 
         const data = {
             userId:    currentUser.uid,
@@ -142,6 +254,8 @@ async function saveWhatsappQR() {
             name, phone, message,
             pin:       pin || '',
             imageUrl:  imageUrl,
+            allowEdit: document.getElementById('wqAllowEdit').checked,
+            aiTagline: aiTagline || (wqEditingId ? (wqExistingAiTagline || '') : ''),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         if (!wqEditingId) {
@@ -165,7 +279,9 @@ async function saveWhatsappQR() {
         wqEditingId = null;
         wqImageFile = null;
         wqExistingImageUrl = null;
+        wqExistingAiTagline = null;
         document.getElementById('wqImage').value = '';
+        document.getElementById('wqAllowEdit').checked = false;
         document.getElementById('wqImagePreview').style.display = 'none';
         document.getElementById('imgUploadLabel').textContent = 'Click to upload image (JPG, PNG — max 2MB)';
         saveBtn.textContent = 'Generate & Save QR';
@@ -234,6 +350,7 @@ async function loadMyQRCodes() {
                         <div class="wq-card-meta">
                             <span class="wq-scans">👁 ${d.scans || 0} scans</span>
                             ${d.pin ? '<span class="wq-pin-badge">🔒 PIN protected</span>' : '<span class="wq-public-badge">🌐 Public</span>'}
+                            ${d.allowEdit ? '<span class="wq-edit-badge">✏️ Editable</span>' : ''}
                             <a href="${url}" target="_blank" class="wq-card-link">${url}</a>
                         </div>
                     </div>
@@ -264,11 +381,13 @@ async function editQR(id) {
     if (!doc.exists) return;
     const d = doc.data();
 
-    document.getElementById('wqName').value    = d.name;
-    document.getElementById('wqPhone').value   = d.phone;
-    document.getElementById('wqMessage').value = d.message;
-    document.getElementById('wqPin').value     = d.pin || '';
+    document.getElementById('wqName').value      = d.name;
+    document.getElementById('wqPhone').value     = d.phone;
+    document.getElementById('wqMessage').value   = d.message;
+    document.getElementById('wqPin').value       = d.pin || '';
+    document.getElementById('wqAllowEdit').checked = d.allowEdit || false;
     document.getElementById('wqResult').classList.add('hidden');
+    wqExistingAiTagline = d.aiTagline || null;
 
     wqImageFile = null;
     wqExistingImageUrl = d.imageUrl || null;
@@ -291,8 +410,13 @@ async function deleteQR(id) {
     if (!confirm('Delete this QR code? Anyone using this link will see an error.')) return;
     try {
         await wqDB.collection('qr_codes').doc(id).delete();
+        const card = document.getElementById(`card-${id}`);
+        if (card) card.remove();
         loadMyQRCodes();
-    } catch (e) { alert('Failed to delete. Please try again.'); }
+    } catch (e) {
+        console.error('Delete error:', e);
+        alert('Failed to delete. Please try again.');
+    }
 }
 
 // ── Download from card ─────────────────────────────────────

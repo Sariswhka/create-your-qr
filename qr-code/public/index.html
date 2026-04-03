@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Google Search Console Verification -->
-    <meta name="google-site-verification" content="rC566TkXS1KkvjXF3fZoZkchGi7Rp8eusZSbyLaI5nI" />
+    <meta name="google-site-verification" content="K8M2GNpyYEiAXfHPdIKns55HgyR-ayDG_jpypeOUoTQ" />
 
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5537089551995149" crossorigin="anonymous"></script>
@@ -232,6 +232,14 @@
                             <button class="color-btn pro-color" data-color="#8e44ad" style="background: #8e44ad;" title="Violet — Pro" disabled></button>
                             <button class="color-btn pro-color" data-color="#1abc9c" style="background: #1abc9c;" title="Teal — Pro" disabled></button>
                         </div>
+                        <div class="dark-bg-label">Dark Background</div>
+                        <div class="color-options dark-bg-options">
+                            <button class="invert-btn" id="invertBtn" onclick="toggleInvert()" title="Invert Colors — swap QR dots and background">⇄ Invert</button>
+                            <button class="color-btn pro-color dark-bg-btn" data-color="#f5c518" data-bg-color="#000000" style="background:#000000;border:3px solid #f5c518;" title="Gold on Black — Pro" disabled></button>
+                            <button class="color-btn pro-color dark-bg-btn" data-color="#00d4ff" data-bg-color="#1a1a2e" style="background:#1a1a2e;border:3px solid #00d4ff;" title="Cyan on Dark — Pro" disabled></button>
+                            <button class="color-btn pro-color dark-bg-btn" data-color="#25d366" data-bg-color="#000000" style="background:#000000;border:3px solid #25d366;" title="Green on Black — Pro" disabled></button>
+                            <button class="color-btn pro-color dark-bg-btn" data-color="#ff6b9d" data-bg-color="#1a1a2e" style="background:#1a1a2e;border:3px solid #ff6b9d;" title="Pink on Dark — Pro" disabled></button>
+                        </div>
                         <div class="pro-color-row" style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                             <span id="colorProLock" class="pro-lock-label">🔒 Custom colors — <a href="#" onclick="showQRUpgradeModal();return false;">Upgrade to Pro</a></span>
                             <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#555;">FG <input type="color" id="customColorFg" value="#000000" style="width:32px;height:28px;border:none;cursor:pointer;"></label>
@@ -259,6 +267,17 @@
                                 <span class="frame-preview point-frame">&#9758;</span>
                                 <span class="frame-label">Point</span>
                             </button>
+                        </div>
+                        <div id="frameMsgGroup" class="frame-msg-group hidden">
+                            <label class="frame-msg-label">Custom Frame Message <span class="optional-label">(Pro)</span></label>
+                            <div class="frame-msg-row">
+                                <select id="frameMsgPos" class="frame-msg-pos">
+                                    <option value="top">Top</option>
+                                    <option value="bottom" selected>Bottom</option>
+                                </select>
+                                <input type="text" id="frameMsgText" class="frame-msg-input" maxlength="25" placeholder="e.g. Follow Us!, Menu Here">
+                            </div>
+                            <p class="input-hint">Replaces the default label. Pro only.</p>
                         </div>
                     </div>
 
@@ -325,6 +344,10 @@
                                 <span class="fmt-hint">Select text then click</span>
                             </div>
                             <textarea id="wqMessage" rows="4" placeholder="Hi! I saw your QR code and would like to know more about..."></textarea>
+                            <div class="ai-row">
+                                <button type="button" id="aiImproveBtn" class="btn-ai-improve" onclick="improveWithAI()">✨ Improve with AI</button>
+                                <span id="aiUsageInfo" class="ai-usage-info"></span>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label>Attach Image <span class="optional-label">(optional)</span></label>
@@ -344,6 +367,14 @@
                             <input type="text" id="wqPin" placeholder="e.g. 1234 — leave blank for public access" maxlength="12" autocomplete="off">
                             <span id="pinProLock" class="pro-lock-label">🔒 PIN protection is a <a href="#" onclick="showQRUpgradeModal();return false;">Pro feature</a></span>
                             <p class="input-hint">If set, users must enter this PIN before they can view the message.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="wq-toggle-label">
+                                <input type="checkbox" id="wqAllowEdit" class="wq-toggle-input">
+                                <span class="wq-toggle-track"></span>
+                                Allow visitors to edit message
+                            </label>
+                            <p class="input-hint">Visitors can personalise the message text before sending on WhatsApp.</p>
                         </div>
 
                         <p class="error-message" id="wqError" style="display:none">Please fill in all fields.</p>
@@ -446,14 +477,14 @@
             <button class="modal-close" id="closeQRUpgradeModal">✕</button>
             <div class="upgrade-icon">⭐</div>
             <h2>Unlock Pro Features</h2>
-            <p class="upgrade-sub">One-time payment · Use forever · No subscription</p>
+            <p class="upgrade-sub">Annual subscription · Renew each year · Cancel anytime</p>
 
             <div class="pricing-grid">
                 <!-- QR Only -->
                 <div class="pricing-card">
                     <div class="pricing-label">QR Generator</div>
                     <div class="pricing-price">₹49</div>
-                    <div class="pricing-desc">one-time</div>
+                    <div class="pricing-desc">/year</div>
                     <ul class="pricing-features">
                         <li>✅ Custom QR colors</li>
                         <li>✅ Logo in center</li>
@@ -471,7 +502,7 @@
                     <div class="pricing-best">⭐ Best Value</div>
                     <div class="pricing-label">Bundle — Both Apps</div>
                     <div class="pricing-price" id="bundlePriceQR">₹99</div>
-                    <div class="pricing-desc" id="bundleDescQR">one-time · save ₹38</div>
+                    <div class="pricing-desc" id="bundleDescQR">/year · save ₹38</div>
                     <ul class="pricing-features">
                         <li>✅ Everything in QR Pro</li>
                         <li>✅ Everything in Image Resizer Pro</li>
@@ -487,7 +518,7 @@
                 <div class="pricing-card">
                     <div class="pricing-label">Image Resizer</div>
                     <div class="pricing-price">₹89</div>
-                    <div class="pricing-desc">one-time</div>
+                    <div class="pricing-desc">/year</div>
                     <ul class="pricing-features">
                         <li>✅ Crop with aspect ratios</li>
                         <li>✅ PNG &amp; WebP export</li>

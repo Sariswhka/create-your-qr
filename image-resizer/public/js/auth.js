@@ -52,13 +52,16 @@ auth.onAuthStateChanged(async (user) => {
         try {
             const doc = await db.collection('users').doc(user.uid).get();
             const data = doc.exists ? doc.data() : {};
+            const isImgProActive    = checkProExpiry(data.isPro,       data.isProExpiresAt);
+            const isBundleActive    = checkProExpiry(data.isProBundle, data.isProBundleExpiresAt);
             window.userProData = {
-                isProQR:     !!(data.isProQR),
-                isPro:       !!(data.isPro),
-                isProBundle: !!(data.isProBundle)
+                isProQR:     checkProExpiry(data.isProQR, data.isProQRExpiresAt),
+                isPro:       isImgProActive,
+                isProBundle: isBundleActive
             };
-            const isPro = !!(data.isPro || data.isProBundle);
+            const isPro = isImgProActive || isBundleActive;
             if (typeof applyProStatus === 'function') applyProStatus(isPro);
+            showRenewalBanner(data, isPro);
         } catch (e) {
             window.userProData = { isProQR: false, isPro: false, isProBundle: false };
             if (typeof applyProStatus === 'function') applyProStatus(false);
@@ -68,6 +71,26 @@ auth.onAuthStateChanged(async (user) => {
         showLogin();
     }
 });
+
+function checkProExpiry(flag, expiresAt) {
+    if (!flag) return false;
+    if (!expiresAt) return true;
+    const expiry = expiresAt.toDate ? expiresAt.toDate() : new Date(expiresAt);
+    return expiry > new Date();
+}
+
+function showRenewalBanner(data, isPro) {
+    if (!isPro) return;
+    const expiry = data.isProExpiresAt || data.isProBundleExpiresAt;
+    if (!expiry) return;
+    const expiryDate = expiry.toDate ? expiry.toDate() : new Date(expiry);
+    const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+    if (daysLeft > 30) return;
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#fef3c7;color:#92400e;text-align:center;padding:10px 16px;font-size:0.85rem;font-weight:600;';
+    banner.innerHTML = `⚠️ Your Pro subscription expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} (${expiryDate.toLocaleDateString()}). <a href="#" onclick="showUpgradeModal();return false;" style="color:#b45309;text-decoration:underline;">Renew now</a>`;
+    document.body.prepend(banner);
+}
 
 function showApp(user) {
     loginSection.classList.add('hidden');

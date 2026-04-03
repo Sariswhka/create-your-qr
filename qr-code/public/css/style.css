@@ -1153,3 +1153,154 @@ body {
 .hiw-step-content strong { display: block; font-size: 0.9rem; color: #1a1a2e; margin-bottom: 3px; }
 .hiw-step-content p { font-size: 0.82rem; color: #6b7280; line-height: 1.5; margin: 0; }
 
+/* Input hint */
+.input-hint { font-size: 0.78rem; color: #9ca3af; margin-top: 6px; }
+
+/* Invert button */
+.invert-btn {
+    height: 32px;
+    padding: 0 12px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.invert-btn:hover { border-color: #667eea; color: #667eea; }
+.invert-btn.invert-active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+
+/* Dark background color section */
+.dark-bg-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 10px;
+    margin-bottom: 6px;
+}
+.dark-bg-options { margin-top: 0; }
+.dark-bg-btn {
+    box-sizing: border-box;
+}
+.dark-bg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Frame message input */
+.frame-msg-group { margin-top: 12px; }
+.frame-msg-label { font-size: 0.85rem; font-weight: 600; color: #374151; display: block; margin-bottom: 6px; }
+.frame-msg-row { display: flex; gap: 8px; align-items: center; }
+.frame-msg-pos {
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    color: #374151;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    flex-shrink: 0;
+}
+.frame-msg-input {
+    flex: 1;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: #374151;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.frame-msg-input:focus { border-color: #667eea; }
+
+/* Allow-edit toggle */
+.wq-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #374151;
+    user-select: none;
+}
+.wq-toggle-input { display: none; }
+.wq-toggle-track {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    background: #d1d5db;
+    border-radius: 11px;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+.wq-toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.wq-toggle-input:checked + .wq-toggle-track { background: #25d366; }
+.wq-toggle-input:checked + .wq-toggle-track::after { left: 21px; }
+
+/* AI improve row */
+.ai-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+.btn-ai-improve {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+}
+.btn-ai-improve:hover { opacity: 0.88; }
+.btn-ai-improve:disabled { opacity: 0.6; cursor: not-allowed; }
+.ai-usage-info { font-size: 0.76rem; color: #6b7280; }
+
+/* Editable badge on QR cards */
+.wq-edit-badge {
+    font-size: 0.72rem;
+    background: #eff6ff;
+    color: #3b82f6;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-weight: 600;
+}
+
+/* Badges */
+.wq-pin-badge {
+    font-size: 0.72rem;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-weight: 600;
+}
+.wq-public-badge {
+    font-size: 0.72rem;
+    background: #f0fdf4;
+    color: #15803d;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-weight: 600;
+}
+

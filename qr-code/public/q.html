@@ -142,6 +142,38 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* AI tagline */
+        .ai-tagline {
+            font-size: 0.82rem;
+            color: #667eea;
+            font-weight: 500;
+            margin-bottom: 20px;
+            letter-spacing: 0.01em;
+        }
+
+        /* Editable message textarea */
+        .msg-edit-area {
+            width: 100%;
+            min-height: 100px;
+            border: 1.5px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.95rem;
+            color: #374151;
+            line-height: 1.6;
+            font-family: inherit;
+            resize: vertical;
+            background: #f0fdf4;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .msg-edit-area:focus { border-color: #25d366; }
+        .edit-hint {
+            font-size: 0.75rem;
+            color: #16a34a;
+            margin-top: 6px;
+        }
+
         /* Attached image */
         .msg-image-wrap {
             margin-bottom: 20px;
@@ -339,11 +371,15 @@
     }
 
     function showMessage(card, data) {
-        const waLink = buildWhatsAppLink(data.phone, data.message);
         const hasImage = !!(data.imageUrl);
         const imageHtml = hasImage
             ? `<div class="msg-image-wrap"><img src="${data.imageUrl}" class="msg-image" alt=""></div>`
             : '';
+        const messageBodyHtml = data.allowEdit
+            ? `<textarea class="msg-edit-area" id="editableMessage">${escHtml(data.message)}</textarea>
+               <p class="edit-hint">✏️ You can personalise this message before sending</p>`
+            : `<div class="message-text">${escHtml(data.message)}</div>`;
+
         card.innerHTML = `
                 ${imageHtml}
                 <div class="wa-icon">
@@ -354,10 +390,11 @@
                 </div>
                 <div class="label">WhatsApp Message</div>
                 <div class="name">${escHtml(data.name)}</div>
+                ${data.aiTagline ? `<div class="ai-tagline">${escHtml(data.aiTagline)}</div>` : ''}
 
                 <div class="message-box">
                     <div class="message-label">Message that will be sent</div>
-                    <div class="message-text">${escHtml(data.message)}</div>
+                    ${messageBodyHtml}
                 </div>
 
                 <button class="open-btn" id="openBtn">
@@ -373,8 +410,13 @@
                 <p class="powered">Powered by <a href="https://create-your-qr.web.app" target="_blank">Create Your QR</a></p>
             `;
 
-        // Wire up smart open button
-        document.getElementById('openBtn').addEventListener('click', () => openWhatsApp(data, waLink));
+        // Wire up smart open button — uses edited message if allowEdit is on
+        document.getElementById('openBtn').addEventListener('click', () => {
+            const editEl = document.getElementById('editableMessage');
+            const messageToSend = editEl ? editEl.value : data.message;
+            const waLink = buildWhatsAppLink(data.phone, messageToSend);
+            openWhatsApp({ ...data, message: messageToSend }, waLink);
+        });
 
         // Update note if image present but share API not available
         if (hasImage && !navigator.canShare) {

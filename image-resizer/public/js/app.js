@@ -56,7 +56,7 @@ function getBundleLabelImg() {
     const d = window.userProData || {};
     if (d.isPro)   return { price: '₹10', desc: 'You already have Image Resizer Pro — pay just ₹10 more for the bundle' };
     if (d.isProQR) return { price: '₹50', desc: 'You already have QR Pro — pay just ₹50 more for the bundle' };
-    return { price: '₹99', desc: 'one-time · save ₹38' };
+    return { price: '₹99', desc: '/year · save ₹38' };
 }
 
 // ── Upgrade modal ─────────────────────────────────────────
@@ -90,9 +90,9 @@ function startImgPayment(plan) {
     if (!user) return;
 
     const plans = {
-        imgtools: { amount: 8900, name: 'Image Resizer Pro',      desc: 'Unlock all Image Resizer Pro features forever', cb: 'https://imgtools.web.app/?rzp_success=imgtools' },
-        bundle:   { amount: getBundleAmountImg(), name: 'Pro Bundle (Both Apps)', desc: 'Unlock Image Resizer + QR Generator Pro forever', cb: 'https://imgtools.web.app/?rzp_success=bundle' },
-        qr:       { amount: 4900, name: 'QR Generator Pro',       desc: 'Unlock all QR Generator Pro features forever',   cb: 'https://imgtools.web.app/?rzp_success=qr' }
+        imgtools: { amount: 8900, name: 'Image Resizer Pro',      desc: 'Image Resizer Pro — ₹89/year', cb: 'https://imgtools.web.app/?rzp_success=imgtools' },
+        bundle:   { amount: getBundleAmountImg(), name: 'Pro Bundle (Both Apps)', desc: 'QR + Image Resizer Pro Bundle — ₹99/year', cb: 'https://imgtools.web.app/?rzp_success=bundle' },
+        qr:       { amount: 4900, name: 'QR Generator Pro',       desc: 'QR Generator Pro — ₹49/year',   cb: 'https://imgtools.web.app/?rzp_success=qr' }
     };
 
     const p = plans[plan];
@@ -122,15 +122,16 @@ async function saveImgProAndUnlock(plan, paymentId) {
     const user = window.currentUser;
     if (!user) return;
     try {
+        const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
         const update = {
             email: user.email,
             displayName: user.displayName,
             proPaymentId: paymentId || 'redirect_flow',
             proUpgradeDate: firebase.firestore.FieldValue.serverTimestamp()
         };
-        if (plan === 'imgtools' || plan === 'bundle') update.isPro       = true;
-        if (plan === 'bundle')                         update.isProBundle = true;
-        if (plan === 'qr')                             update.isProQR     = true;
+        if (plan === 'imgtools' || plan === 'bundle') { update.isPro       = true; update.isProExpiresAt       = expiresAt; }
+        if (plan === 'bundle')                         { update.isProBundle = true; update.isProBundleExpiresAt = expiresAt; }
+        if (plan === 'qr')                             { update.isProQR     = true; update.isProQRExpiresAt     = expiresAt; }
 
         await db.collection('users').doc(user.uid).set(update, { merge: true });
     } catch (e) { console.error('Firestore write error:', e); }

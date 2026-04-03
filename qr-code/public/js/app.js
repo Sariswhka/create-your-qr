@@ -4,6 +4,8 @@ let currentUser = null;
 let currentQRUrl = null;
 let selectedColor = '#000000';
 let selectedBgColor = '#ffffff';
+let selectedDarkBgActive = false;
+let invertColors = false;
 let selectedFrame = 'none';
 let isQRPro = false;
 let logoDataUrl = null;
@@ -26,7 +28,7 @@ function applyQRProStatus(status) {
     // Color buttons
     document.querySelectorAll('.color-btn.pro-color').forEach(btn => {
         btn.disabled = !isQRPro;
-        btn.title = isQRPro ? (btn.dataset.label || '') : 'Pro feature — upgrade to use';
+        btn.title = isQRPro ? (btn.title.replace(' — Pro', '') || '') : (btn.title.includes('Pro') ? btn.title : btn.title + ' — Pro');
     });
     const colorLock = document.getElementById('colorProLock');
     if (colorLock) colorLock.classList.toggle('hidden', isQRPro);
@@ -52,7 +54,7 @@ function getBundleLabelQR() {
     const d = window.userProData || {};
     if (d.isProQR) return { price: '₹50', desc: 'You already have QR Pro — pay just ₹50 more for the bundle' };
     if (d.isPro)   return { price: '₹10', desc: 'You already have Image Resizer Pro — pay just ₹10 more for the bundle' };
-    return { price: '₹99', desc: 'one-time · save ₹38' };
+    return { price: '₹99', desc: '/year · save ₹38' };
 }
 
 // ── Upgrade modal ──────────────────────────────────────────
@@ -86,9 +88,9 @@ function startPayment(plan) {
     if (!user) return;
 
     const plans = {
-        qr:      { amount: 4900,  name: 'QR Generator Pro',      desc: 'Unlock all QR Pro features forever',               cb: 'https://create-your-qr.web.app/?rzp_success=qr' },
-        bundle:  { amount: getBundleAmountQR(), name: 'Pro Bundle (Both Apps)', desc: 'Unlock QR Generator + Image Resizer Pro forever', cb: 'https://create-your-qr.web.app/?rzp_success=bundle' },
-        imgtools:{ amount: 8900,  name: 'Image Resizer Pro',      desc: 'Unlock all Image Resizer Pro features forever',    cb: 'https://create-your-qr.web.app/?rzp_success=imgtools' }
+        qr:      { amount: 4900,  name: 'QR Generator Pro',      desc: 'QR Generator Pro — ₹49/year',               cb: 'https://create-your-qr.web.app/?rzp_success=qr' },
+        bundle:  { amount: getBundleAmountQR(), name: 'Pro Bundle (Both Apps)', desc: 'QR + Image Resizer Pro Bundle — ₹99/year', cb: 'https://create-your-qr.web.app/?rzp_success=bundle' },
+        imgtools:{ amount: 8900,  name: 'Image Resizer Pro',      desc: 'Image Resizer Pro — ₹89/year',    cb: 'https://create-your-qr.web.app/?rzp_success=imgtools' }
     };
 
     const p = plans[plan];
@@ -114,15 +116,16 @@ async function saveQRProAndUnlock(plan, paymentId) {
     const user = window.currentUser;
     if (!user) return;
     try {
+        const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
         const update = {
             email: user.email,
             displayName: user.displayName,
             proPaymentId: paymentId || 'redirect_flow',
             proUpgradeDate: firebase.firestore.FieldValue.serverTimestamp()
         };
-        if (plan === 'qr')       update.isProQR      = true;
-        if (plan === 'bundle')   update.isProBundle   = true;
-        if (plan === 'imgtools') update.isPro         = true;
+        if (plan === 'qr')       { update.isProQR      = true; update.isProQRExpiresAt      = expiresAt; }
+        if (plan === 'bundle')   { update.isProBundle   = true; update.isProBundleExpiresAt  = expiresAt; }
+        if (plan === 'imgtools') { update.isPro         = true; update.isProExpiresAt        = expiresAt; }
 
         await db.collection('users').doc(user.uid).set(update, { merge: true });
     } catch (e) { console.error('Firestore write error:', e); }
@@ -161,6 +164,17 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         selectedColor = btn.dataset.color;
+        if (btn.dataset.bgColor) {
+            selectedBgColor = btn.dataset.bgColor;
+            selectedDarkBgActive = true;
+            const fgPicker = document.getElementById('customColorFg');
+            const bgPicker = document.getElementById('customColorBg');
+            if (fgPicker) fgPicker.value = selectedColor;
+            if (bgPicker) bgPicker.value = selectedBgColor;
+        } else {
+            selectedDarkBgActive = false;
+            selectedBgColor = '#ffffff';
+        }
     });
 });
 
@@ -169,6 +183,7 @@ document.getElementById('customColorFg')?.addEventListener('input', (e) => {
     if (!isQRPro) { showQRUpgradeModal(); return; }
     document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
     selectedColor = e.target.value;
+    selectedDarkBgActive = false;
 });
 
 document.getElementById('customColorBg')?.addEventListener('input', (e) => {
@@ -182,8 +197,17 @@ document.querySelectorAll('.frame-btn').forEach(btn => {
         document.querySelectorAll('.frame-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         selectedFrame = btn.dataset.frame;
+        const msgGroup = document.getElementById('frameMsgGroup');
+        if (msgGroup) msgGroup.classList.toggle('hidden', selectedFrame === 'none');
     });
 });
+
+// Invert toggle
+function toggleInvert() {
+    invertColors = !invertColors;
+    const btn = document.getElementById('invertBtn');
+    if (btn) btn.classList.toggle('invert-active', invertColors);
+}
 
 // Logo upload
 document.getElementById('logoUploadInput')?.addEventListener('change', (e) => {
@@ -238,21 +262,35 @@ function generateQR() {
     emailStatus.className = 'email-status';
     qrcodeDiv.innerHTML = '';
 
-    const bgColor = isQRPro ? selectedBgColor : '#ffffff';
+    // Dark bg presets apply for all users; custom picker only for Pro
+    let resolvedFg = selectedColor;
+    let resolvedBg = selectedDarkBgActive ? selectedBgColor : (isQRPro ? selectedBgColor : '#ffffff');
+    if (invertColors) { const tmp = resolvedFg; resolvedFg = resolvedBg; resolvedBg = tmp; }
+    const bgColor = resolvedBg;
 
     qrcode = new QRCode(qrcodeDiv, {
         text: url,
         width: 200,
         height: 200,
-        colorDark:  selectedColor,
-        colorLight: bgColor,
+        colorDark:  resolvedFg,
+        colorLight: resolvedBg,
         correctLevel: QRCode.CorrectLevel.H
     });
 
     // Apply logo overlay after QR renders
     if (isQRPro && logoDataUrl) {
-        setTimeout(() => applyLogoToQR(qrcodeDiv, logoDataUrl), 100);
+        setTimeout(() => applyLogoToQR(qrcodeDiv, logoDataUrl), 300);
     }
+
+    // Apply bg to frame wrapper
+    const qrFrameWrapper = document.getElementById('qrFrameWrapper');
+    qrFrameWrapper.style.background = bgColor;
+    qrFrameWrapper.style.borderRadius = '12px';
+    qrFrameWrapper.style.padding = bgColor !== '#ffffff' ? '12px' : '';
+
+    // Custom frame message (Pro only)
+    const customMsg = isQRPro ? (document.getElementById('frameMsgText')?.value.trim() || '') : '';
+    const msgPos    = document.getElementById('frameMsgPos')?.value || 'bottom';
 
     // Frame
     qrFrame.className = 'qr-frame';
@@ -262,10 +300,16 @@ function generateQR() {
     frameTextTop.textContent = '';
     frameTextBottom.textContent = '';
 
-    switch(selectedFrame) {
-        case 'scan-me':   qrFrame.classList.add('has-frame'); frameTextTop.textContent = 'SCAN ME'; break;
-        case 'scan-here': qrFrame.classList.add('has-frame'); frameTextBottom.textContent = 'SCAN HERE'; break;
-        case 'point':     qrFrame.classList.add('has-frame', 'point-style'); break;
+    if (customMsg && selectedFrame !== 'none') {
+        qrFrame.classList.add('has-frame');
+        if (msgPos === 'top')    frameTextTop.textContent = customMsg;
+        if (msgPos === 'bottom') frameTextBottom.textContent = customMsg;
+    } else {
+        switch(selectedFrame) {
+            case 'scan-me':   qrFrame.classList.add('has-frame'); frameTextTop.textContent = 'SCAN ME'; break;
+            case 'scan-here': qrFrame.classList.add('has-frame'); frameTextBottom.textContent = 'SCAN HERE'; break;
+            case 'point':     qrFrame.classList.add('has-frame', 'point-style'); break;
+        }
     }
 
     currentQRUrl = url;
@@ -276,24 +320,33 @@ function generateQR() {
     if (currentUser) trackQRGenerated(currentUser, url, selectedColor, selectedFrame);
 }
 
-function applyLogoToQR(container, logoSrc) {
+function applyLogoToQR(container, logoSrc, attempt = 0) {
     const canvas = container.querySelector('canvas');
-    if (!canvas) return;
+    if (!canvas) {
+        if (attempt < 5) setTimeout(() => applyLogoToQR(container, logoSrc, attempt + 1), 100);
+        return;
+    }
     const ctx  = canvas.getContext('2d');
     const size = canvas.width;
-    const img  = new Image();
-    img.onload = () => {
+    const logoImg = new Image();
+    logoImg.onload = () => {
         const logoSize = size * 0.22;
         const x = (size - logoSize) / 2;
         const y = (size - logoSize) / 2;
-        // White background circle
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.roundRect(x - 4, y - 4, logoSize + 8, logoSize + 8, 6);
+        if (ctx.roundRect) {
+            ctx.roundRect(x - 4, y - 4, logoSize + 8, logoSize + 8, 6);
+        } else {
+            ctx.rect(x - 4, y - 4, logoSize + 8, logoSize + 8);
+        }
         ctx.fill();
-        ctx.drawImage(img, x, y, logoSize, logoSize);
+        ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+        // Update the display img if QRCode.js created one
+        const displayImg = container.querySelector('img');
+        if (displayImg) displayImg.src = canvas.toDataURL('image/png');
     };
-    img.src = logoSrc;
+    logoImg.src = logoSrc;
 }
 
 // ── Download ───────────────────────────────────────────────
