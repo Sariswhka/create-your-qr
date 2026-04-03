@@ -18,6 +18,7 @@ A collection of three web tools hosted on Firebase:
 - **Auth:** Firebase Authentication (Google Sign-In)
 - **Database:** Firebase Firestore (activity logging)
 - **Hosting:** Firebase Hosting
+- **AI:** Gemini API (`gemini-2.5-flash-lite`) — message improvement + tagline generation
 - **Libraries:**
   - QRCode.js (QR generation)
   - Cropper.js (image cropping)
@@ -117,6 +118,18 @@ service cloud.firestore {
 | PIN protection | — | ✅ |
 | Image attachment | — | ✅ |
 | Text formatting toolbar | — | ✅ |
+| AI improve uses | 2 total | Unlimited |
+| Editable message toggle | ✅ | ✅ |
+
+### New fields in `/qr_codes/{id}`
+- `allowEdit` — boolean, lets visitors edit the pre-filled message on q.html
+- `aiTagline` — AI-generated tagline shown on q.html landing page
+
+### New fields in `/users/{uid}`
+- `aiUsageCount` — tracks free AI improve uses (limit: 2)
+- `isProQRExpiresAt` — yearly expiry timestamp for QR Pro
+- `isProBundleExpiresAt` — yearly expiry timestamp for Bundle Pro
+- `isProExpiresAt` — yearly expiry timestamp for Image Resizer Pro
 
 ### Landing page URL pattern
 - `https://create-your-qr.web.app/q/{id}` — served by `q.html` via Firebase rewrite rule
@@ -151,9 +164,13 @@ service cloud.firestore {
 | Fixed crop aspect ratios | — | ✅ |
 
 ### Pro Pricing (Razorpay)
-- Image Resizer Pro: ₹89 one-time (`rzp_live_frEA3PTBCni695`)
-- Bundle (QR + Image): ₹99 one-time
+- QR Generator Pro: ₹49/year (`rzp_live_frEA3PTBCni695`)
+- Image Resizer Pro: ₹89/year
+- Bundle (QR + Image): ₹99/year
 - Pro status stored in Firestore `/users/{uid}` — fields: `isPro`, `isProBundle`, `isProQR`
+- Expiry tracked via `isProExpiresAt`, `isProQRExpiresAt`, `isProBundleExpiresAt`
+- Legacy one-time buyers (no expiry field) are kept as Pro forever
+- Renewal banner shown 30 days before expiry
 
 ### Key behaviours
 - `app.js` — resize/crop/bg-removal logic; estimated output size computed via real `canvas.toBlob()` (not formula)
@@ -194,7 +211,32 @@ git push origin main
 - EMS Tools standalone: `C:\Users\Richa\OneDrive\Apps\EMS Tools\`
 - Image Resizer standalone (mirrors repo): `C:\Users\Richa\OneDrive\Apps\Image Resizer\`
 
+## QR Generator — New Features (April 2026)
+- **Invert toggle** — swaps QR foreground/background colors
+- **Logo in center** (Pro) — overlays uploaded logo on QR canvas
+- **Custom frame message** (Pro) — personalized text on frame, top or bottom position
+- **Dark background Pro presets** — 4 dark color combos for Pro users
+- **AI improve button** — rewrites WhatsApp message using Gemini API (2 free uses, unlimited Pro)
+- **Editable message** — toggle on WhatsApp QR lets visitors edit the pre-filled message
+
+## SEO & Search Console
+- **create-your-qr.web.app** — verified in Google Search Console, sitemap submitted
+- **imgtools.web.app** — verified in Google Search Console, sitemap submitted
+- Sitemaps at `/sitemap.xml` on both sites
+- Google Analytics verification used for create-your-qr; HTML tag for imgtools
+
+## Deployment Notes
+- **GitHub Actions auto-deploy is broken** — FIREBASE_TOKEN secret is expired
+- **Manual deploy required** until token is refreshed:
+  ```bash
+  cd qr-code && firebase deploy --only hosting:create-your-qr
+  cd image-resizer && firebase deploy --only hosting:imgtools
+  ```
+- To fix auto-deploy: run `firebase login:ci` locally, copy token, update `FIREBASE_TOKEN` secret in GitHub repo settings
+
 ## Notes
 - `config.js` files contain Firebase API keys — excluded from git via `.gitignore`
+- `config.js` also contains `window.GEMINI_API_KEY` for Gemini API
+- Gemini model in use: `gemini-2.5-flash-lite` (free tier + billing enabled on GCP project)
 - Admin email: `parashar.sachin@gmail.com`
 - Google Analytics ID (QR app): `G-187S5HBKCX`
