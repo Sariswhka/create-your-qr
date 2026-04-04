@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Tadda</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+    <a href="/admin.html" class="brand">Tadd<span>a</span> <span style="font-size:0.7rem;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px">ADMIN</span></a>
+    <nav class="header-nav">
+        <span style="font-size:0.82rem;color:var(--muted)" id="adminEmailDisplay"></span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+    </nav>
+</header>
+
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-section">Admin</div>
+        <a href="#" class="sidebar-item active" onclick="showSection('orders')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+            All Orders
+        </a>
+        <a href="#" class="sidebar-item" onclick="showSection('customers')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Customers
+        </a>
+    </aside>
+
+    <main class="main-area">
+
+        <!-- Orders Section -->
+        <div id="sectionOrders">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+                <h2>All Orders</h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <select id="adminStatusFilter" onchange="filterAdminOrders()" style="font-size:0.82rem;padding:6px 10px;border:1px solid var(--border);border-radius:6px">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="production">In Production</option>
+                        <option value="dispatched">Dispatched</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <input type="text" id="adminSearch" placeholder="Search order ID or brand…" oninput="filterAdminOrders()" style="font-size:0.82rem;padding:6px 10px;border:1px solid var(--border);border-radius:6px;width:220px">
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value blue" id="aStatTotal">—</div></div>
+                <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value amber" id="aStatPending">—</div></div>
+                <div class="stat-card"><div class="stat-label">In Production</div><div class="stat-value" style="color:#7c3aed" id="aStatProduction">—</div></div>
+                <div class="stat-card"><div class="stat-label">Dispatched</div><div class="stat-value green" id="aStatDispatched">—</div></div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <strong id="adminOrdersTitle">Orders</strong>
+                </div>
+                <div id="adminOrdersBody"><div style="padding:32px;text-align:center;color:var(--muted)">Loading…</div></div>
+            </div>
+        </div>
+
+        <!-- Customers Section -->
+        <div id="sectionCustomers" class="hidden">
+            <h2 style="margin-bottom:20px">Customers</h2>
+            <div class="table-card">
+                <div id="customersBody"><div style="padding:32px;text-align:center;color:var(--muted)">Loading…</div></div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay hidden" id="orderModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modalOrderId">Order Details</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div id="modalContent"></div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+            <label style="margin-bottom:8px;display:block">Update Status</label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <select id="statusSelect" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.9rem">
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="production">In Production</option>
+                    <option value="dispatched">Dispatched</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <button class="btn btn-primary" onclick="updateOrderStatus()">Update Status</button>
+            </div>
+            <div style="margin-top:10px">
+                <label style="margin-bottom:6px;display:block">Admin Notes (optional)</label>
+                <textarea id="adminNotes" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85rem;resize:vertical;min-height:60px" placeholder="Internal notes…"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script>
+const auth = firebase.auth();
+const db   = firebase.firestore();
+let allOrders = [];
+let allCustomers = [];
+let activeOrderId = null;
+
+auth.onAuthStateChanged(async user => {
+    if (!user) { window.location.href = '/'; return; }
+    if (user.email !== window.ADMIN_EMAIL) { window.location.href = '/dashboard.html'; return; }
+    document.getElementById('adminEmailDisplay').textContent = user.email;
+    await Promise.all([loadOrders(), loadCustomers()]);
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));
+
+function showSection(name) {
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.getElementById('sectionOrders').classList.toggle('hidden', name !== 'orders');
+    document.getElementById('sectionCustomers').classList.toggle('hidden', name !== 'customers');
+}
+
+async function loadOrders() {
+    const snap = await db.collection('orders').orderBy('createdAt','desc').get();
+    allOrders = snap.docs.map(d => d.data());
+    const counts = { pending:0, confirmed:0, production:0, dispatched:0, delivered:0 };
+    allOrders.forEach(o => { if (counts[o.status] !== undefined) counts[o.status]++; });
+    document.getElementById('aStatTotal').textContent      = allOrders.length;
+    document.getElementById('aStatPending').textContent    = counts.pending;
+    document.getElementById('aStatProduction').textContent = counts.production;
+    document.getElementById('aStatDispatched').textContent = counts.dispatched;
+    renderAdminOrders(allOrders);
+}
+
+async function loadCustomers() {
+    const snap = await db.collection('users').orderBy('createdAt','desc').get();
+    allCustomers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const rows = allCustomers.map(u => `
+        <tr>
+            <td>${u.displayName || '—'}</td>
+            <td>${u.email}</td>
+            <td>${u.role || 'customer'}</td>
+            <td>₹${(u.walletBalance || 0).toFixed(2)}</td>
+            <td>${fmtDate(u.createdAt)}</td>
+        </tr>`).join('');
+    document.getElementById('customersBody').innerHTML = `
+        <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Wallet</th><th>Joined</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+function filterAdminOrders() {
+    const status = document.getElementById('adminStatusFilter').value;
+    const search = document.getElementById('adminSearch').value.toLowerCase();
+    const filtered = allOrders.filter(o =>
+        (!status || o.status === status) &&
+        (!search || o.orderId.toLowerCase().includes(search) || (o.brandName||'').toLowerCase().includes(search) || (o.userEmail||'').toLowerCase().includes(search))
+    );
+    renderAdminOrders(filtered);
+}
+
+function renderAdminOrders(orders) {
+    document.getElementById('adminOrdersTitle').textContent = `${orders.length} orders`;
+    if (!orders.length) { document.getElementById('adminOrdersBody').innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted)">No orders found.</div>'; return; }
+    const rows = orders.map(o => `
+        <tr style="cursor:pointer" onclick="openModal('${o.orderId}')">
+            <td><strong>${o.orderId}</strong></td>
+            <td>${o.brandName}</td>
+            <td>${o.userEmail}</td>
+            <td>${productLabel(o.product)}</td>
+            <td>${o.totalQty}</td>
+            <td><span class="badge badge-${o.status}">${statusLabel(o.status)}</span></td>
+            <td>${o.dispatchEta}</td>
+            <td>${fmtDate(o.createdAt)}</td>
+        </tr>`).join('');
+    document.getElementById('adminOrdersBody').innerHTML = `
+        <table>
+            <thead><tr><th>Order ID</th><th>Brand</th><th>Customer</th><th>Product</th><th>Qty</th><th>Status</th><th>ETA</th><th>Date</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+function openModal(orderId) {
+    const o = allOrders.find(x => x.orderId === orderId);
+    if (!o) return;
+    activeOrderId = orderId;
+    document.getElementById('modalOrderId').textContent = `Order: ${orderId}`;
+    document.getElementById('statusSelect').value = o.status;
+    document.getElementById('adminNotes').value = o.adminNotes || '';
+    document.getElementById('modalContent').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.85rem">
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Customer</span><br>${o.custName} · ${o.custPhone}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Email</span><br>${o.userEmail}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Brand</span><br>${o.brandName}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Product</span><br>${productLabel(o.product)}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Colour</span><br>${o.colour}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Total Qty</span><br>${o.totalQty}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Sizes</span><br>${Object.entries(o.sizes).filter(([,v])=>v>0).map(([k,v])=>`${k}:${v}`).join(', ')}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Dispatch ETA</span><br>${o.dispatchEta}</div>
+            <div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Placement</span><br>${o.placementDetails}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Design Size</span><br>${o.designSize}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Neck Label</span><br>${o.neckLabel === 'yes' ? 'Yes' : 'No'}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Shipping</span><br>${o.shipping === 'self' ? 'Customer managed' : 'Tadda arranges'}</div>
+            ${o.notes ? `<div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Notes</span><br>${o.notes}</div>` : ''}
+        </div>
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px">
+            ${o.designUrl ? `<a href="${o.designUrl}" target="_blank" class="btn btn-ghost btn-sm">🎨 Design File</a>` : ''}
+            ${o.mockupUrl ? `<a href="${o.mockupUrl}" target="_blank" class="btn btn-ghost btn-sm">🖼️ Mockup</a>` : ''}
+            ${o.neckLabelUrl ? `<a href="${o.neckLabelUrl}" target="_blank" class="btn btn-ghost btn-sm">👕 Neck Label</a>` : ''}
+            ${o.shippingLabelUrl ? `<a href="${o.shippingLabelUrl}" target="_blank" class="btn btn-ghost btn-sm">📦 Shipping Label</a>` : ''}
+        </div>`;
+    document.getElementById('orderModal').classList.remove('hidden');
+}
+
+async function updateOrderStatus() {
+    if (!activeOrderId) return;
+    const status = document.getElementById('statusSelect').value;
+    const notes  = document.getElementById('adminNotes').value.trim();
+    await db.collection('orders').doc(activeOrderId).update({ status, adminNotes: notes, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const idx = allOrders.findIndex(o => o.orderId === activeOrderId);
+    if (idx !== -1) { allOrders[idx].status = status; allOrders[idx].adminNotes = notes; }
+    closeModal();
+    renderAdminOrders(allOrders);
+    alert(`Order ${activeOrderId} updated to: ${statusLabel(status)}`);
+}
+
+function closeModal() { document.getElementById('orderModal').classList.add('hidden'); activeOrderId = null; }
+document.getElementById('orderModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+function productLabel(val) {
+    return { tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM' }[val] || val;
+}
+function statusLabel(val) {
+    return { pending:'Pending', confirmed:'Confirmed', production:'In Production', dispatched:'Dispatched', delivered:'Delivered', cancelled:'Cancelled' }[val] || val;
+}
+function fmtDate(ts) {
+    if (!ts) return '—';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+</script>
+</body>
+</html>

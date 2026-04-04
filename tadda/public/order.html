@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Order — Tadda</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+    <a href="/dashboard.html" class="brand">Tadd<span>a</span></a>
+    <nav class="header-nav">
+        <a href="/dashboard.html" class="nav-link">My Orders</a>
+        <a href="/order.html" class="nav-link active">New Order</a>
+        <div class="user-avatar" id="userAvatar">?</div>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+    </nav>
+</header>
+
+<div class="order-page">
+    <div class="order-header">
+        <h2>Place New Order</h2>
+        <p style="color:var(--muted);margin-top:4px;">Fill in the details below. All fields marked <span class="field-required">*</span> are required.</p>
+    </div>
+
+    <form id="orderForm" autocomplete="off">
+
+        <!-- Section 1: Customer Details -->
+        <div class="card order-section">
+            <div class="order-section-title">1. Customer Details</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name <span class="field-required">*</span></label>
+                    <input type="text" id="custName" placeholder="Your full name" required>
+                </div>
+                <div class="form-group">
+                    <label>Brand Name <span class="field-required">*</span></label>
+                    <input type="text" id="brandName" placeholder="Your brand / company name" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email <span class="field-required">*</span></label>
+                    <input type="email" id="custEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Contact Number <span class="field-required">*</span></label>
+                    <input type="tel" id="custPhone" placeholder="+91 9999999999" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Product Selection -->
+        <div class="card order-section">
+            <div class="order-section-title">2. Product Selection</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Product <span class="field-required">*</span></label>
+                    <select id="product" required>
+                        <option value="">— Select Product —</option>
+                        <option value="tshirt_regular">T-Shirt (Regular Fit) — 180 GSM</option>
+                        <option value="tshirt_oversized">T-Shirt (Oversized) — 220 GSM</option>
+                        <option value="hoodie">Hoodie — 350 GSM</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Colour <span class="field-required">*</span></label>
+                    <input type="text" id="colour" placeholder="e.g. Black, White, Navy Blue" required>
+                </div>
+            </div>
+
+            <!-- Size Breakdown -->
+            <div class="form-group">
+                <label>Size-wise Quantity <span class="field-required">*</span></label>
+                <table class="size-table">
+                    <thead>
+                        <tr>
+                            <th>Size</th>
+                            <th>S</th>
+                            <th>M</th>
+                            <th>L</th>
+                            <th>XL</th>
+                            <th>XXL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="size-label">Qty</td>
+                            <td><input type="number" id="qtyS"   min="0" value="0" onchange="updateTotalQty()"></td>
+                            <td><input type="number" id="qtyM"   min="0" value="0" onchange="updateTotalQty()"></td>
+                            <td><input type="number" id="qtyL"   min="0" value="0" onchange="updateTotalQty()"></td>
+                            <td><input type="number" id="qtyXL"  min="0" value="0" onchange="updateTotalQty()"></td>
+                            <td><input type="number" id="qtyXXL" min="0" value="0" onchange="updateTotalQty()"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="total-qty-display">Total Quantity: <strong id="totalQtyDisplay">0</strong></div>
+            </div>
+
+            <!-- Dispatch Timeline -->
+            <div class="dispatch-info" id="dispatchInfo" style="display:none">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="dispatchText"></span>
+            </div>
+        </div>
+
+        <!-- Section 3: Design & Artwork -->
+        <div class="card order-section">
+            <div class="order-section-title">3. Design & Artwork</div>
+
+            <div class="form-group">
+                <label>Upload Design File <span class="field-required">*</span></label>
+                <div class="upload-box" onclick="document.getElementById('designFile').click()">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom:8px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <div class="upload-box-label">Click to upload design (PNG only)</div>
+                    <input type="file" id="designFile" accept=".png" onchange="showFileName(this, 'designFileName')">
+                </div>
+                <div class="upload-preview hidden" id="designFileName"></div>
+                <div class="input-hint">Only PNG format accepted. Max 10MB.</div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Placement Details <span class="field-required">*</span></label>
+                    <textarea id="placementDetails" placeholder="e.g. Front chest center, Back full print, Left sleeve..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Mockup Upload (optional)</label>
+                    <div class="upload-box" onclick="document.getElementById('mockupFile').click()" style="height:102px;justify-content:center;display:flex;flex-direction:column;align-items:center">
+                        <div class="upload-box-label">Upload mockup (PNG/JPG)</div>
+                        <input type="file" id="mockupFile" accept=".png,.jpg,.jpeg" onchange="showFileName(this, 'mockupFileName')">
+                    </div>
+                    <div class="upload-preview hidden" id="mockupFileName"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Design Size <span class="field-required">*</span></label>
+                <input type="text" id="designSize" placeholder='e.g. Front: 10"×12", Back: 14"×16"' required>
+                <div class="input-hint">Mention size for each placement separately.</div>
+            </div>
+        </div>
+
+        <!-- Section 4: Neck Label -->
+        <div class="card order-section">
+            <div class="order-section-title">4. Neck Label</div>
+            <div class="form-group">
+                <label>Do you need a neck label?</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="neckLabel" value="no" checked onchange="toggleNeckLabel(this.value)">
+                        <div><div class="radio-label">No, not required</div></div>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="neckLabel" value="yes" onchange="toggleNeckLabel(this.value)">
+                        <div><div class="radio-label">Yes, I want a neck label</div></div>
+                    </label>
+                </div>
+            </div>
+            <div id="neckLabelUpload" class="form-group hidden">
+                <label>Upload Neck Label Design</label>
+                <div class="upload-box" onclick="document.getElementById('neckLabelFile').click()">
+                    <div class="upload-box-label">Upload neck label (PNG only)</div>
+                    <input type="file" id="neckLabelFile" accept=".png" onchange="showFileName(this, 'neckLabelFileName')">
+                </div>
+                <div class="upload-preview hidden" id="neckLabelFileName"></div>
+            </div>
+        </div>
+
+        <!-- Section 5: Shipping -->
+        <div class="card order-section">
+            <div class="order-section-title">5. Shipping</div>
+            <div class="form-group">
+                <label>Shipping Preference <span class="field-required">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="shipping" value="self" checked onchange="toggleShipping(this.value)">
+                        <div>
+                            <div class="radio-label">I will manage the shipping</div>
+                            <div class="radio-desc">We'll hand over packed order to your courier / you collect it</div>
+                        </div>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="shipping" value="arrange" onchange="toggleShipping(this.value)">
+                        <div>
+                            <div class="radio-label">Please arrange shipping</div>
+                            <div class="radio-desc">We'll ship on your behalf — provide shipping label below</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div id="shippingLabelUpload" class="form-group hidden">
+                <label>Upload Shipping Label</label>
+                <div class="upload-box" onclick="document.getElementById('shippingLabelFile').click()">
+                    <div class="upload-box-label">Upload shipping label (PNG/JPG/PDF)</div>
+                    <input type="file" id="shippingLabelFile" accept=".png,.jpg,.jpeg,.pdf" onchange="showFileName(this, 'shippingLabelFileName')">
+                </div>
+                <div class="upload-preview hidden" id="shippingLabelFileName"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Additional Notes (optional)</label>
+                <textarea id="additionalNotes" placeholder="Any special instructions, packaging requirements, etc."></textarea>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+            <a href="/dashboard.html" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Submit Order
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-overlay hidden" id="successModal">
+    <div class="modal-box" style="max-width:480px">
+        <div style="text-align:center;margin-bottom:20px">
+            <div style="font-size:3rem;margin-bottom:12px">🎉</div>
+            <h2>Order Submitted!</h2>
+            <p style="color:var(--muted);margin-top:6px;font-size:0.9rem">We'll review and confirm within a few hours.</p>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;font-size:0.85rem">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Order ID</span><br><strong id="successOrderId" style="color:var(--primary)"></strong></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Status</span><br><span class="badge badge-pending">Pending</span></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Brand</span><br><span id="successBrand"></span></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Product</span><br><span id="successProduct"></span></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Total Qty</span><br><span id="successQty"></span></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Est. Dispatch</span><br><span id="successEta"></span></div>
+            </div>
+        </div>
+        <a href="/dashboard.html" class="btn btn-primary btn-full">Go to Dashboard →</a>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="js/config.js"></script>
+<script>
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
+
+let currentUser = null;
+
+auth.onAuthStateChanged(user => {
+    if (!user) { window.location.href = '/'; return; }
+    currentUser = user;
+    document.getElementById('userAvatar').textContent = (user.displayName || user.email || '?')[0].toUpperCase();
+    document.getElementById('custName').value  = user.displayName || '';
+    document.getElementById('custEmail').value = user.email || '';
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));
+
+// ── Helpers ──
+function showFileName(input, previewId) {
+    const el = document.getElementById(previewId);
+    if (input.files[0]) {
+        el.innerHTML = `✅ ${input.files[0].name}`;
+        el.classList.remove('hidden');
+    }
+}
+
+function toggleNeckLabel(val) {
+    document.getElementById('neckLabelUpload').classList.toggle('hidden', val !== 'yes');
+}
+
+function toggleShipping(val) {
+    document.getElementById('shippingLabelUpload').classList.toggle('hidden', val !== 'arrange');
+}
+
+function updateTotalQty() {
+    const sizes = ['S','M','L','XL','XXL'];
+    const total = sizes.reduce((sum, s) => sum + (parseInt(document.getElementById('qty'+s).value) || 0), 0);
+    document.getElementById('totalQtyDisplay').textContent = total;
+    const info = document.getElementById('dispatchInfo');
+    const text = document.getElementById('dispatchText');
+    if (total > 0) {
+        info.style.display = 'flex';
+        text.textContent = total < 50
+            ? `Estimated dispatch: 24–72 hours (qty < 50)`
+            : `Estimated dispatch: 48–120 hours (qty 50+)`;
+    } else {
+        info.style.display = 'none';
+    }
+}
+
+// ── Upload file to Storage ──
+async function uploadFile(file, path) {
+    if (!file) return '';
+    const ref = storage.ref(`orders/${path}/${Date.now()}_${file.name}`);
+    await ref.put(file);
+    return await ref.getDownloadURL();
+}
+
+// ── Admin Notification via Web3Forms ──
+async function sendOrderEmails(order) {
+    const accessKey = window.WEB3FORMS_KEY;
+    console.log('sendOrderEmails called, key:', accessKey ? 'present' : 'MISSING');
+    if (!accessKey) return;
+
+    const productNames = { tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM' };
+    const sizesStr = Object.entries(order.sizes).filter(([,v])=>v>0).map(([k,v])=>`${k}:${v}`).join(', ');
+
+    const resp = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+            access_key: accessKey,
+            subject:    `New Order ${order.orderId} — ${order.brandName}`,
+            from_name:  'Tadda Portal',
+            message: `New order received!\n\nOrder ID: ${order.orderId}\nCustomer: ${order.custName} (${order.userEmail}, ${order.custPhone})\nBrand: ${order.brandName}\nProduct: ${productNames[order.product] || order.product} — ${order.colour}\nSizes: ${sizesStr} | Total: ${order.totalQty} pcs\nPlacement: ${order.placementDetails}\nDesign Size: ${order.designSize}\nNeck Label: ${order.neckLabel === 'yes' ? 'Yes' : 'No'}\nShipping: ${order.shipping === 'self' ? 'Customer managed' : 'Tadda arranges'}\nETA: ${order.dispatchEta}${order.notes ? '\nNotes: ' + order.notes : ''}\n\nView in admin: https://taddaportal.web.app/admin.html`,
+        })
+    });
+    const result = await resp.json();
+    console.log('Web3Forms response:', result);
+}
+
+// ── Generate Order ID ──
+function genOrderId() {
+    const now = new Date();
+    return `TAD-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${Math.random().toString(36).substr(2,5).toUpperCase()}`;
+}
+
+// ── Submit Order ──
+document.getElementById('orderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Submitting...';
+
+    try {
+        const orderId = genOrderId();
+        const sizes = { S: parseInt(document.getElementById('qtyS').value)||0, M: parseInt(document.getElementById('qtyM').value)||0, L: parseInt(document.getElementById('qtyL').value)||0, XL: parseInt(document.getElementById('qtyXL').value)||0, XXL: parseInt(document.getElementById('qtyXXL').value)||0 };
+        const totalQty = Object.values(sizes).reduce((a,b) => a+b, 0);
+        if (totalQty === 0) { alert('Please enter at least one quantity.'); btn.disabled = false; btn.innerHTML = 'Submit Order'; return; }
+
+        btn.innerHTML = '⏳ Uploading files...';
+        const designUrl      = await uploadFile(document.getElementById('designFile').files[0], orderId);
+        const mockupUrl      = await uploadFile(document.getElementById('mockupFile').files[0], orderId);
+        const neckLabelUrl   = await uploadFile(document.getElementById('neckLabelFile').files[0], orderId);
+        const shippingLblUrl = await uploadFile(document.getElementById('shippingLabelFile').files[0], orderId);
+
+        btn.innerHTML = '⏳ Saving order...';
+        const order = {
+            orderId,
+            userId:           currentUser.uid,
+            userEmail:        currentUser.email,
+            custName:         document.getElementById('custName').value.trim(),
+            brandName:        document.getElementById('brandName').value.trim(),
+            custPhone:        document.getElementById('custPhone').value.trim(),
+            product:          document.getElementById('product').value,
+            colour:           document.getElementById('colour').value.trim(),
+            sizes,
+            totalQty,
+            designUrl,
+            mockupUrl,
+            placementDetails: document.getElementById('placementDetails').value.trim(),
+            designSize:       document.getElementById('designSize').value.trim(),
+            neckLabel:        document.querySelector('input[name="neckLabel"]:checked').value,
+            neckLabelUrl,
+            shipping:         document.querySelector('input[name="shipping"]:checked').value,
+            shippingLabelUrl: shippingLblUrl,
+            notes:            document.getElementById('additionalNotes').value.trim(),
+            status:           'pending',
+            dispatchEta:      totalQty < 50 ? '24–72 hours' : '48–120 hours',
+            createdAt:        firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('orders').doc(orderId).set(order);
+
+        // Send email notifications (non-blocking)
+        sendOrderEmails(order).catch(err => console.error('Email error:', err));
+
+        const productNames = { tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM' };
+        document.getElementById('successOrderId').textContent = orderId;
+        document.getElementById('successBrand').textContent   = order.brandName;
+        document.getElementById('successProduct').textContent = productNames[order.product] || order.product;
+        document.getElementById('successQty').textContent     = order.totalQty + ' pcs';
+        document.getElementById('successEta').textContent     = order.dispatchEta;
+        document.getElementById('successModal').classList.remove('hidden');
+
+    } catch (err) {
+        console.error(err);
+        alert('Failed to submit order. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = 'Submit Order';
+    }
+});
+</script>
+</body>
+</html>
