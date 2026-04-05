@@ -9,7 +9,7 @@
 <body>
 
 <header class="app-header">
-    <a href="/dashboard.html" class="brand">Tadd<span>a</span></a>
+    <a href="/dashboard.html" class="brand">T-ADDA</a>
     <nav class="header-nav">
         <a href="/dashboard.html" class="nav-link active">My Orders</a>
         <a href="/order.html" class="nav-link">+ New Order</a>
@@ -172,22 +172,86 @@ auth.onAuthStateChanged(async user => {
     currentUser = user;
     document.getElementById('userAvatar').textContent = (user.displayName || user.email || '?')[0].toUpperCase();
     document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.displayName || user.email}!`;
-    await loadOrders(user.uid);
-    await checkBrandOwnerStatus(user.email);
+    await Promise.all([
+        loadOrders(user.uid),
+        checkBrandOwnerStatus(user.email),
+        trackUserSession(user),
+    ]);
 });
+
+async function trackUserSession(user) {
+    try {
+        const ref = db.collection('users').doc(user.uid);
+        const doc = await ref.get();
+        const provider = (user.providerData[0] && user.providerData[0].providerId === 'google.com') ? 'Google' : 'Email';
+        const isNewSession = !sessionStorage.getItem('tadda_session');
+        if (!doc.exists) {
+            await ref.set({
+                uid:         user.uid,
+                displayName: user.displayName || '',
+                email:       user.email,
+                photoURL:    user.photoURL || '',
+                provider,
+                firstSeen:   firebase.firestore.FieldValue.serverTimestamp(),
+                lastSeen:    firebase.firestore.FieldValue.serverTimestamp(),
+                loginCount:  1,
+            });
+        } else {
+            const updates = { lastSeen: firebase.firestore.FieldValue.serverTimestamp() };
+            if (user.displayName) updates.displayName = user.displayName;
+            if (isNewSession) updates.loginCount = firebase.firestore.FieldValue.increment(1);
+            await ref.update(updates);
+        }
+        sessionStorage.setItem('tadda_session', '1');
+    } catch (e) { /* non-critical */ }
+}
 
 async function checkBrandOwnerStatus(email) {
     if (!email) return;
     const emailKey = 'email_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     const check = await db.collection('reg_index').doc(emailKey).get();
-    if (check.exists) {
-        alreadyRegistered = true;
-        const sidebarItem = document.getElementById('sidebarBrandOwner');
-        sidebarItem.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Brand Owner Registered`;
-        sidebarItem.style.color = 'var(--success)';
+    if (!check.exists) return;
+
+    alreadyRegistered = true;
+    const regId = check.data().regId;
+
+    // Fetch full registration to get status + brandId
+    let status = 'new', brandId = '';
+    if (regId) {
+        try {
+            const regDoc = await db.collection('registrations').doc(regId).get();
+            if (regDoc.exists) {
+                status  = regDoc.data().status || 'new';
+                brandId = regDoc.data().brandId || '';
+            }
+        } catch (e) { /* rule may not allow read yet */ }
     }
+
+    const statusMap = {
+        new:       { label: 'Submitted — Under Review',        color: '#92400e', bg: '#fef3c7', icon: '⏳' },
+        contacted: { label: 'Registration Request Acknowledged', color: '#1d4ed8', bg: '#dbeafe', icon: '✅' },
+        converted: { label: 'Brand Registration Completed',     color: '#15803d', bg: '#dcfce7', icon: '🎉' },
+        rejected:  { label: 'Not Approved',                     color: '#991b1b', bg: '#fee2e2', icon: '✕'  },
+    };
+    const s = statusMap[status] || statusMap.new;
+
+    const sidebarItem = document.getElementById('sidebarBrandOwner');
+    sidebarItem.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Brand Owner`;
+    sidebarItem.style.color = 'var(--success)';
+
+    // Inject status card below stats
+    const statusCard = document.createElement('div');
+    statusCard.style.cssText = `background:${s.bg};border:1px solid ${s.color}33;border-radius:10px;padding:14px 16px;margin-bottom:20px`;
+    statusCard.innerHTML = `
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:${s.color};margin-bottom:4px">Brand Owner Registration</div>
+        <div style="font-size:0.95rem;font-weight:700;color:${s.color}">${s.icon} ${s.label}</div>
+        ${brandId ? `<div style="margin-top:8px;font-size:0.8rem;color:#374151">Brand ID: <strong style="letter-spacing:0.05em">${brandId}</strong></div>` : ''}`;
+
+    const mainArea = document.querySelector('.main-area');
+    const statsGrid = mainArea.querySelector('.stats-grid');
+    mainArea.insertBefore(statusCard, statsGrid);
 }
 
 document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));

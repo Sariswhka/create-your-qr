@@ -10,7 +10,7 @@
 <body>
 
 <header class="app-header">
-    <a href="/admin.html" class="brand">Tadd<span>a</span> <span style="font-size:0.7rem;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px">ADMIN</span></a>
+    <a href="/admin.html" class="brand">T-ADDA <span style="font-size:0.7rem;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px">ADMIN</span></a>
     <nav class="header-nav">
         <span style="font-size:0.82rem;color:var(--muted)" id="adminEmailDisplay"></span>
         <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
@@ -98,7 +98,10 @@
 
         <!-- Customers Section -->
         <div id="sectionCustomers" class="hidden">
-            <h2 style="margin-bottom:20px">Customers</h2>
+            <div style="margin-bottom:20px">
+                <h2>Customers</h2>
+                <p style="color:var(--muted);font-size:0.85rem;margin-top:4px">Everyone who has logged into the portal. Use for analytics and promotions.</p>
+            </div>
             <div class="table-card">
                 <div id="customersBody"><div style="padding:32px;text-align:center;color:var(--muted)">Loading…</div></div>
             </div>
@@ -142,6 +145,9 @@
             <div style="margin-top:10px">
                 <label style="margin-bottom:6px;display:block">Admin Notes (optional)</label>
                 <textarea id="regAdminNotes" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85rem;resize:vertical;min-height:60px" placeholder="Internal notes…"></textarea>
+            </div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+                <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteRegistrationFromModal()">Delete this registration</button>
             </div>
         </div>
     </div>
@@ -241,10 +247,11 @@ function renderRegistrations(regs) {
             <td>${r.source || '—'}</td>
             <td><span class="badge badge-${statusColors[r.status] || 'pending'}" style="${r.status==='contacted'?'background:#ede9fe;color:#5b21b6':r.status==='rejected'?'background:#fee2e2;color:#991b1b':''}">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span></td>
             <td>${fmtDate(r.createdAt)}</td>
+            <td><button class="btn btn-ghost btn-sm" style="color:#dc2626;font-size:0.75rem" onclick="deleteRegistration('${r.id}','${r.phone}','${r.email||''}',event)">Delete</button></td>
         </tr>`).join('');
     document.getElementById('registrationsBody').innerHTML = `
         <table>
-            <thead><tr><th>Name</th><th>WhatsApp</th><th>Email</th><th>City</th><th>Brand</th><th>Source</th><th>Status</th><th>Date</th></tr></thead>
+            <thead><tr><th>Name</th><th>WhatsApp</th><th>Email</th><th>City</th><th>Brand</th><th>Source</th><th>Status</th><th>Date</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
 }
@@ -265,6 +272,7 @@ function openRegModal(id) {
             <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Brand Name</span><br>${r.brand || '—'}</div>
             <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Source</span><br>${r.source || '—'}</div>
             ${r.message ? `<div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Message</span><br>${r.message}</div>` : ''}
+            ${r.brandId ? `<div style="grid-column:1/-1;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Brand ID</span><br><strong style="color:#16a34a;font-size:1rem;letter-spacing:0.05em">${r.brandId}</strong></div>` : ''}
         </div>`;
     document.getElementById('regModal').classList.remove('hidden');
 }
@@ -273,9 +281,19 @@ async function updateRegStatus() {
     if (!activeRegId) return;
     const status = document.getElementById('regStatusSelect').value;
     const notes  = document.getElementById('regAdminNotes').value.trim();
-    await db.collection('registrations').doc(activeRegId).update({ status, adminNotes: notes, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const r = allRegistrations.find(x => x.id === activeRegId);
+
+    const updates = { status, adminNotes: notes, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+
+    // Generate Brand ID when converting for the first time
+    if (status === 'converted' && r && !r.brandId) {
+        const randPart = Math.random().toString(36).substr(2, 6).toUpperCase();
+        updates.brandId = `T-${randPart}`;
+    }
+
+    await db.collection('registrations').doc(activeRegId).update(updates);
     const idx = allRegistrations.findIndex(r => r.id === activeRegId);
-    if (idx !== -1) { allRegistrations[idx].status = status; allRegistrations[idx].adminNotes = notes; }
+    if (idx !== -1) { Object.assign(allRegistrations[idx], updates); }
     closeRegModal();
     renderRegistrations(allRegistrations);
     loadRegistrations();
@@ -283,6 +301,40 @@ async function updateRegStatus() {
 
 function closeRegModal() { document.getElementById('regModal').classList.add('hidden'); activeRegId = null; }
 document.getElementById('regModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeRegModal(); });
+
+async function deleteRegistration(id, phone, email, e) {
+    if (e) e.stopPropagation();
+    if (!confirm('Delete this registration? This cannot be undone.')) return;
+    const batch = db.batch();
+    batch.delete(db.collection('registrations').doc(id));
+    if (phone) batch.delete(db.collection('reg_index').doc('phone_' + phone.replace(/\D/g, '')));
+    if (email) batch.delete(db.collection('reg_index').doc('email_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_')));
+    await batch.commit();
+    allRegistrations = allRegistrations.filter(r => r.id !== id);
+    renderRegistrations(allRegistrations);
+    loadRegistrations();
+}
+
+async function deleteRegistrationFromModal() {
+    if (!activeRegId) return;
+    const r = allRegistrations.find(x => x.id === activeRegId);
+    if (!r) return;
+    closeRegModal();
+    await deleteRegistration(r.id, r.phone, r.email || '', null);
+}
+
+async function deleteCustomer(uid, e) {
+    if (e) e.stopPropagation();
+    const customer = allCustomers.find(u => u.id === uid);
+    if (customer && customer.email === window.ADMIN_EMAIL) {
+        alert('Admin account cannot be deleted.');
+        return;
+    }
+    if (!confirm('Delete this customer record? This removes them from the portal directory but does not delete their Firebase Auth account.')) return;
+    await db.collection('users').doc(uid).delete();
+    allCustomers = allCustomers.filter(u => u.id !== uid);
+    loadCustomers();
+}
 
 async function loadOrders() {
     const snap = await db.collection('orders').orderBy('createdAt','desc').get();
@@ -297,19 +349,28 @@ async function loadOrders() {
 }
 
 async function loadCustomers() {
-    const snap = await db.collection('users').orderBy('createdAt','desc').get();
+    const snap = await db.collection('users').orderBy('firstSeen','desc').get();
     allCustomers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!allCustomers.length) {
+        document.getElementById('customersBody').innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted)">No customers yet. They appear here after first login.</div>';
+        return;
+    }
     const rows = allCustomers.map(u => `
         <tr>
-            <td>${u.displayName || '—'}</td>
+            <td><strong>${u.displayName || '—'}</strong></td>
             <td>${u.email}</td>
-            <td>${u.role || 'customer'}</td>
-            <td>₹${(u.walletBalance || 0).toFixed(2)}</td>
-            <td>${fmtDate(u.createdAt)}</td>
+            <td><span style="font-size:0.78rem;background:${u.provider==='Google'?'#e0f2fe':'#f3f4f6'};color:${u.provider==='Google'?'#0369a1':'#374151'};padding:2px 8px;border-radius:20px;font-weight:600">${u.provider || 'Email'}</span></td>
+            <td style="text-align:center">${u.loginCount || 1}</td>
+            <td>${fmtDate(u.firstSeen)}</td>
+            <td>${fmtDate(u.lastSeen)}</td>
+            <td>${u.email === window.ADMIN_EMAIL ? '' : `<button class="btn btn-ghost btn-sm" style="color:#dc2626;font-size:0.75rem" onclick="deleteCustomer('${u.id}', event)">Delete</button>`}</td>
         </tr>`).join('');
     document.getElementById('customersBody').innerHTML = `
+        <div style="padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-size:0.82rem;color:var(--muted)">
+            ${allCustomers.length} registered customer${allCustomers.length !== 1 ? 's' : ''}
+        </div>
         <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Wallet</th><th>Joined</th></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Sign-in</th><th>Logins</th><th>First Seen</th><th>Last Seen</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
 }
