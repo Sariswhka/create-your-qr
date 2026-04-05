@@ -70,6 +70,12 @@
                 </select>
             </div>
 
+            <!-- Product Photos -->
+            <div id="productPhotosGroup" style="display:none;margin-bottom:8px">
+                <div style="font-size:0.8rem;color:var(--muted);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Product Photos</div>
+                <div id="productPhotosScroll" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px"></div>
+            </div>
+
             <!-- Colour -->
             <div class="form-group" id="colourGroup" style="display:none">
                 <label>Colour <span class="field-required">*</span></label>
@@ -335,12 +341,27 @@ function onProductChange() {
     document.getElementById('colour').value = '';
     document.getElementById('selectedColourLabel').textContent = '';
 
+    // Clear photos
+    document.getElementById('productPhotosGroup').style.display = 'none';
+    document.getElementById('productPhotosScroll').innerHTML = '';
+
     if (!data) {
         document.getElementById('colourGroup').style.display = 'none';
         document.getElementById('sizeGroup').style.display = 'none';
         document.getElementById('dispatchInfo').style.display = 'none';
         return;
     }
+
+    // Load product photos from Firestore
+    db.collection('products').doc(val).get().then(doc => {
+        const imgs = (doc.exists && doc.data().images) ? doc.data().images : [];
+        if (imgs.length) {
+            document.getElementById('productPhotosScroll').innerHTML = imgs.map(url =>
+                `<img src="${url}" style="height:120px;width:auto;flex-shrink:0;border-radius:8px;border:1px solid var(--border);cursor:pointer;object-fit:cover" onclick="window.open('${url}','_blank')" title="Click to enlarge">`
+            ).join('');
+            document.getElementById('productPhotosGroup').style.display = 'block';
+        }
+    }).catch(() => {});
 
     // Render colour swatches
     document.getElementById('colourGroup').style.display = 'block';

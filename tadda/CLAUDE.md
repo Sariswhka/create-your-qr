@@ -397,19 +397,36 @@ window.WEB3FORMS_KEY = '1c16ff01-bc48-4d2a-8671-23bf96569cf2';
 ## Phase Status
 
 ### Phase 1 — COMPLETE ✅
+**Delivered: April 2026**
+
+**Order Portal (taddaportal.web.app)**
 - [x] Login (Google + Email/Password)
-- [x] Dynamic order form (7 products, colour swatches, dynamic size tables)
-- [x] File uploads to Firebase Storage (parallel — all files uploaded simultaneously)
+- [x] Dynamic order form — 7 products, colour swatches, dynamic size tables
+- [x] Auto-fill customer details (name, brand, phone) from last order for returning customers
+- [x] Order confirmation modal before submit — shows full summary + pricing breakdown
 - [x] Delivery address fields (shown when Tadda arranges shipping)
-- [x] Customer dashboard (own orders, status filter, order details modal)
-- [x] "Become a Brand Owner" in customer dashboard (with pre-fill + duplicate check + already-registered state)
-- [x] Admin dashboard (all orders, status management, admin notes)
-- [x] Registrations tab in admin (brand owner leads management)
+- [x] Design size field optional
+- [x] File uploads to Firebase Storage (parallel — all files uploaded simultaneously)
+- [x] Order saved first with `unpaid` status, then Razorpay payment attempted
+- [x] Customer dashboard — own orders only, status filter, order details modal
+- [x] Payment column in orders table (Paid / Unpaid)
+- [x] "Pay Now" button on dashboard for unpaid orders (works once Razorpay key is configured)
+- [x] "Become a Brand Owner" in customer dashboard (pre-fill + duplicate check + already-registered state)
+- [x] Admin dashboard — all orders, status management, admin notes, payment info
+- [x] Registrations tab in admin — brand owner leads management
+- [x] Product Photos tab in admin — upload/delete photos per product (stored in Firestore + Storage)
+- [x] Product photos shown to customers in order form when product is selected (horizontal scroll)
 - [x] Duplicate registration prevention via `reg_index` collection (phone + email)
-- [x] Firestore security rules (orders user-scoped, reg_index public, registrations admin-only read)
+- [x] Firestore security rules (orders user-scoped, products readable by auth, admin-write only)
 - [x] Firebase Storage + CORS
 - [x] Admin email notifications on new order + new registration
-- [x] Marketing website (tadda-web) with product viewer + registration modal + duplicate check
+
+**Marketing Website (tadda-web.web.app)**
+- [x] Full single-page marketing site (Hero, About, Why Us, How It Works, Products, Pricing, T&C, Contact)
+- [x] Actual Tadda logo in nav (full black brand text)
+- [x] Product viewer modal with 7 products (photos, GSM, price, features, sizes)
+- [x] Brand Owner registration modal with duplicate check (phone + email)
+- [x] Contact form via Web3Forms
 
 ### Phase 2 — Planned (see `plan.md` for full details)
 

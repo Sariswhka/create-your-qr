@@ -32,6 +32,10 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
             Registrations
         </a>
+        <a href="#" class="sidebar-item" onclick="showSection('products')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Product Photos
+        </a>
     </aside>
 
     <main class="main-area">
@@ -100,6 +104,19 @@
             </div>
         </div>
 
+        <!-- Products Section -->
+        <div id="sectionProducts" class="hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+                <div>
+                    <h2>Product Photos</h2>
+                    <p style="color:var(--muted);font-size:0.85rem;margin-top:4px">Upload photos for each product. Customers see these when placing orders.</p>
+                </div>
+            </div>
+            <div id="productCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
+                <div style="padding:40px;text-align:center;color:var(--muted)">Loading products…</div>
+            </div>
+        </div>
+
     </main>
 </div>
 
@@ -163,10 +180,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script src="js/config.js"></script>
 <script>
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
 let allOrders = [];
 let allCustomers = [];
 let allRegistrations = [];
@@ -188,6 +207,8 @@ function showSection(name) {
     document.getElementById('sectionOrders').classList.toggle('hidden', name !== 'orders');
     document.getElementById('sectionCustomers').classList.toggle('hidden', name !== 'customers');
     document.getElementById('sectionRegistrations').classList.toggle('hidden', name !== 'registrations');
+    document.getElementById('sectionProducts').classList.toggle('hidden', name !== 'products');
+    if (name === 'products') loadProducts();
 }
 
 async function loadRegistrations() {
@@ -375,6 +396,91 @@ async function updateOrderStatus() {
 
 function closeModal() { document.getElementById('orderModal').classList.add('hidden'); activeOrderId = null; }
 document.getElementById('orderModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// ── Product Photos Management ──
+const PRODUCTS_LIST = [
+    { key: 'regular_180',      label: 'T-Shirt Regular Fit — 180 GSM' },
+    { key: 'oversized_220',    label: 'T-Shirt Oversized — 220 GSM' },
+    { key: 'oversized_240',    label: 'T-Shirt Oversized Terry — 240 GSM' },
+    { key: 'polo_220',         label: 'Polo (Collar Tee) — 220 GSM' },
+    { key: 'sweatshirt_350',   label: 'Sweatshirt — 350 GSM' },
+    { key: 'hoodie_350',       label: 'Hoodie — 350 GSM' },
+    { key: 'kids_regular_180', label: 'Kids Regular Tee — 180 GSM' },
+];
+
+let productImages = {}; // { productKey: ['url1','url2',...] }
+
+async function loadProducts() {
+    const grid = document.getElementById('productCardsGrid');
+    grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
+    const snap = await db.collection('products').get();
+    snap.forEach(doc => { productImages[doc.id] = doc.data().images || []; });
+    renderProductCards();
+}
+
+function renderProductCards() {
+    const grid = document.getElementById('productCardsGrid');
+    grid.innerHTML = PRODUCTS_LIST.map(p => {
+        const imgs = productImages[p.key] || [];
+        const thumbs = imgs.map((url, idx) => `
+            <div style="position:relative;flex-shrink:0">
+                <img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" onerror="this.style.display='none'">
+                <button onclick="deleteProductImage('${p.key}',${idx})" title="Delete" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;border:none;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+            </div>`).join('');
+        return `
+        <div class="card" style="padding:20px">
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:4px">${p.label}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:14px">${imgs.length} photo${imgs.length !== 1 ? 's' : ''}</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;min-height:${imgs.length ? '88px' : '0'}">
+                ${thumbs}
+                ${!imgs.length ? '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0">No photos yet</div>' : ''}
+            </div>
+            <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:7px 14px;border-radius:8px;font-size:0.82rem;font-weight:600">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Photo
+                <input type="file" accept="image/*" multiple style="display:none" onchange="uploadProductImages('${p.key}', this)">
+            </label>
+            <span id="uploadStatus_${p.key}" style="font-size:0.78rem;color:var(--muted);margin-left:8px"></span>
+        </div>`;
+    }).join('');
+}
+
+async function uploadProductImages(productKey, input) {
+    const files = Array.from(input.files);
+    if (!files.length) return;
+    const statusEl = document.getElementById('uploadStatus_' + productKey);
+    statusEl.textContent = `Uploading ${files.length} file${files.length > 1 ? 's' : ''}…`;
+
+    try {
+        const uploads = files.map(file => {
+            const ref = storage.ref(`products/${productKey}/${Date.now()}_${file.name}`);
+            return ref.put(file).then(() => ref.getDownloadURL());
+        });
+        const newUrls = await Promise.all(uploads);
+
+        const existing = productImages[productKey] || [];
+        const merged = [...existing, ...newUrls];
+        await db.collection('products').doc(productKey).set({ images: merged, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        productImages[productKey] = merged;
+
+        statusEl.textContent = '✓ Saved';
+        setTimeout(() => { statusEl.textContent = ''; }, 2000);
+        renderProductCards();
+    } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Upload failed';
+    }
+    input.value = '';
+}
+
+async function deleteProductImage(productKey, idx) {
+    if (!confirm('Delete this photo?')) return;
+    const imgs = [...(productImages[productKey] || [])];
+    imgs.splice(idx, 1);
+    await db.collection('products').doc(productKey).set({ images: imgs, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    productImages[productKey] = imgs;
+    renderProductCards();
+}
 
 function productLabel(val) {
     return {
