@@ -102,6 +102,21 @@ input[type="file"] {
 .size-table td input { text-align: center; max-width: 80px; }
 .size-table .size-label { font-weight: 700; font-size: 0.9rem; color: var(--text); }
 
+/* ── Colour Swatches ── */
+.colour-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.colour-swatch {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; padding: 6px 10px; border-radius: 8px;
+    border: 2px solid transparent; transition: border-color 0.15s, background 0.15s;
+}
+.colour-swatch:hover { border-color: var(--primary); background: #eff6ff; }
+.colour-swatch.selected { border-color: var(--primary); background: #eff6ff; }
+.swatch-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0;
+}
+.swatch-label { font-size: 0.72rem; font-weight: 600; color: var(--text); white-space: nowrap; }
+
 /* ── Dispatch Timeline ── */
 .dispatch-info {
     background: #eff6ff; border: 1px solid #bfdbfe;

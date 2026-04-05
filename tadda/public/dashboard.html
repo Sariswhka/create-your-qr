@@ -30,6 +30,10 @@
             New Order
         </a>
         <div class="sidebar-section" style="margin-top:8px">Account</div>
+        <a href="#" class="sidebar-item" id="sidebarBrandOwner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            Become a Brand Owner
+        </a>
         <a href="#" class="sidebar-item" id="sidebarLogout">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Logout
@@ -86,6 +90,72 @@
     </div>
 </div>
 
+<!-- Brand Owner Registration Modal -->
+<div class="modal-overlay hidden" id="brandOwnerModal">
+    <div class="modal-box" style="max-width:520px">
+        <div class="modal-header">
+            <h3>Register as Brand Owner</h3>
+            <button class="modal-close" onclick="closeBrandOwnerModal()">✕</button>
+        </div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Get priority support, bulk discounts, and a dedicated account manager.</p>
+        <div id="brandOwnerSuccess" class="hidden" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
+            <div style="font-size:1.8rem;margin-bottom:6px">🎉</div>
+            <strong>Registration Submitted!</strong>
+            <p style="font-size:0.85rem;color:var(--muted);margin-top:4px">Our team will reach out to you on WhatsApp within 24 hours.</p>
+        </div>
+        <form id="brandOwnerForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name <span class="field-required">*</span></label>
+                    <input type="text" id="boName" required>
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp Number <span class="field-required">*</span></label>
+                    <input type="tel" id="boPhone" placeholder="+91 9999999999" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="boEmail">
+                </div>
+                <div class="form-group">
+                    <label>City <span class="field-required">*</span></label>
+                    <input type="text" id="boCity" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Brand Name</label>
+                    <input type="text" id="boBrand" placeholder="Your brand / company name">
+                </div>
+                <div class="form-group">
+                    <label>How did you hear about us?</label>
+                    <select id="boSource">
+                        <option value="">— Select —</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="friend">Friend / Referral</option>
+                        <option value="google">Google Search</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Message (optional)</label>
+                <textarea id="boMessage" placeholder="Tell us about your brand or requirements…"></textarea>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+                <button type="button" class="btn btn-ghost" onclick="closeBrandOwnerModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="boBtn">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Razorpay SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -103,7 +173,22 @@ auth.onAuthStateChanged(async user => {
     document.getElementById('userAvatar').textContent = (user.displayName || user.email || '?')[0].toUpperCase();
     document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.displayName || user.email}!`;
     await loadOrders(user.uid);
+    await checkBrandOwnerStatus(user.email);
 });
+
+async function checkBrandOwnerStatus(email) {
+    if (!email) return;
+    const emailKey = 'email_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const check = await db.collection('reg_index').doc(emailKey).get();
+    if (check.exists) {
+        alreadyRegistered = true;
+        const sidebarItem = document.getElementById('sidebarBrandOwner');
+        sidebarItem.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Brand Owner Registered`;
+        sidebarItem.style.color = 'var(--success)';
+    }
+}
 
 document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));
 document.getElementById('sidebarLogout').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));
@@ -147,12 +232,12 @@ function renderOrders(orders) {
             <td>${o.totalQty}</td>
             <td>${o.colour}</td>
             <td><span class="badge badge-${o.status}">${statusLabel(o.status)}</span></td>
-            <td>${o.dispatchEta}</td>
+            <td><span style="color:${o.paymentStatus==='advance_paid'?'#16a34a':'#dc2626'};font-weight:600;font-size:0.8rem">${o.paymentStatus==='advance_paid'?'Paid':'Unpaid'}</span></td>
             <td>${fmtDate(o.createdAt)}</td>
         </tr>`).join('');
     document.getElementById('ordersBody').innerHTML = `
         <table>
-            <thead><tr><th>Order ID</th><th>Brand</th><th>Product</th><th>Qty</th><th>Colour</th><th>Status</th><th>ETA</th><th>Date</th></tr></thead>
+            <thead><tr><th>Order ID</th><th>Brand</th><th>Product</th><th>Qty</th><th>Colour</th><th>Status</th><th>Payment</th><th>Date</th></tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
 }
@@ -171,10 +256,21 @@ function openModal(orderId) {
             <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Dispatch ETA</span><br>${o.dispatchEta}</div>
             <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Sizes</span><br>${Object.entries(o.sizes).filter(([,v])=>v>0).map(([k,v])=>`${k}:${v}`).join(', ')}</div>
             <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Shipping</span><br>${o.shipping === 'self' ? 'Self managed' : 'Arranged by Tadda'}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Order Total</span><br>Rs ${(o.orderTotal||0).toLocaleString('en-IN')}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Payment</span><br><span style="color:${o.paymentStatus==='advance_paid'?'#16a34a':'#dc2626'};font-weight:700">${o.paymentStatus==='advance_paid'?'Rs '+(o.advanceAmount||0).toLocaleString('en-IN')+' paid':'Pending'}</span></div>
+            ${o.balanceAmount ? `<div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Balance Due</span><br>Rs ${o.balanceAmount.toLocaleString('en-IN')}</div>` : ''}
             <div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Placement</span><br>${o.placementDetails}</div>
             <div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Design Size</span><br>${o.designSize}</div>
             ${o.notes ? `<div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Notes</span><br>${o.notes}</div>` : ''}
         </div>
+        ${(o.paymentStatus !== 'advance_paid' && o.status !== 'cancelled' && o.status !== 'delivered') ? `
+        <div style="margin-top:16px;background:#fef3c7;border:1px solid #fbbf24;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+                <strong style="color:#92400e">Advance payment pending</strong>
+                <div style="font-size:0.82rem;color:#92400e;margin-top:2px">Rs ${Math.ceil((o.orderTotal||0)*0.5).toLocaleString('en-IN')} (50% advance)</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="payForOrder('${o.orderId}')">Pay Now</button>
+        </div>` : ''}
         <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px">
             ${o.designUrl ? `<a href="${o.designUrl}" target="_blank" class="btn btn-ghost btn-sm">🎨 View Design</a>` : ''}
             ${o.mockupUrl ? `<a href="${o.mockupUrl}" target="_blank" class="btn btn-ghost btn-sm">🖼️ View Mockup</a>` : ''}
@@ -188,8 +284,187 @@ function closeModal() { document.getElementById('orderModal').classList.add('hid
 document.getElementById('orderModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
 function productLabel(val) {
-    return { tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM' }[val] || val;
+    return {
+        regular_180: 'T-Shirt Regular 180GSM', oversized_220: 'T-Shirt Oversized 220GSM',
+        oversized_240: 'T-Shirt Oversized Terry 240GSM', polo_220: 'Polo (Collar Tee) 220GSM',
+        sweatshirt_350: 'Sweatshirt 350GSM', hoodie_350: 'Hoodie 350GSM', kids_regular_180: 'Kids Regular Tee 180GSM',
+        // legacy keys
+        tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM'
+    }[val] || val;
 }
+
+// ── Brand Owner Registration ──
+let alreadyRegistered = false;
+
+document.getElementById('sidebarBrandOwner').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (alreadyRegistered) {
+        alert('You are already registered as a Brand Owner! Our team will reach out to you on WhatsApp. Meanwhile, you can start placing orders.');
+        return;
+    }
+    // Pre-fill from logged-in user
+    if (currentUser) {
+        document.getElementById('boName').value  = currentUser.displayName || '';
+        document.getElementById('boEmail').value = currentUser.email || '';
+    }
+    document.getElementById('brandOwnerModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+});
+
+function closeBrandOwnerModal() {
+    document.getElementById('brandOwnerModal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+document.getElementById('brandOwnerModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('brandOwnerModal')) closeBrandOwnerModal();
+});
+
+document.getElementById('brandOwnerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('boBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+        const phone = document.getElementById('boPhone').value.trim();
+        const email = document.getElementById('boEmail').value.trim() || '';
+
+        // Check duplicate phone
+        const phoneKey = 'phone_' + phone.replace(/\D/g, '');
+        const phoneCheck = await db.collection('reg_index').doc(phoneKey).get();
+        if (phoneCheck.exists) {
+            alert('This phone number is already registered as a brand owner. Please WhatsApp us at 7042828078 if you need help.');
+            btn.disabled = false;
+            btn.textContent = 'Submit Request';
+            return;
+        }
+
+        // Check duplicate email (if provided)
+        if (email) {
+            const emailKey = 'email_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const emailCheck = await db.collection('reg_index').doc(emailKey).get();
+            if (emailCheck.exists) {
+                alert('This email is already registered as a brand owner. Please WhatsApp us at 7042828078 if you need help.');
+                btn.disabled = false;
+                btn.textContent = 'Submit Request';
+                return;
+            }
+        }
+
+        const data = {
+            name:      document.getElementById('boName').value.trim(),
+            phone,
+            email,
+            city:      document.getElementById('boCity').value.trim(),
+            brand:     document.getElementById('boBrand').value.trim() || '',
+            source:    document.getElementById('boSource').value || '',
+            message:   document.getElementById('boMessage').value.trim() || '',
+            status:    'new',
+            registeredFrom: 'portal',
+            userId:    currentUser ? currentUser.uid : '',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // Save registration + index atomically
+        const batch = db.batch();
+        const regRef = db.collection('registrations').doc();
+        batch.set(regRef, data);
+        batch.set(db.collection('reg_index').doc(phoneKey), { type: 'phone', regId: regRef.id });
+        if (email) {
+            const emailKey = 'email_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            batch.set(db.collection('reg_index').doc(emailKey), { type: 'email', regId: regRef.id });
+        }
+        await batch.commit();
+
+        // Email notification (non-blocking)
+        if (window.WEB3FORMS_KEY) {
+            fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    access_key: window.WEB3FORMS_KEY,
+                    subject: `New Brand Owner Registration (Portal) — ${data.name}`,
+                    from_name: 'Tadda Portal',
+                    message: `New brand owner registration from portal!\n\nName: ${data.name}\nWhatsApp: ${data.phone}\nEmail: ${data.email || '—'}\nCity: ${data.city}\nBrand: ${data.brand || '—'}\nSource: ${data.source || '—'}\nMessage: ${data.message || '—'}\n\nView in admin: https://taddaportal.web.app/admin.html`,
+                })
+            }).catch(() => {});
+        }
+
+        document.getElementById('brandOwnerSuccess').classList.remove('hidden');
+        document.getElementById('brandOwnerForm').querySelectorAll('input,select,textarea,button[type=submit]').forEach(el => el.disabled = true);
+        btn.textContent = '✓ Submitted';
+
+    } catch (err) {
+        console.error(err);
+        alert('Failed to submit. Please WhatsApp us directly at 7042828078.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Request';
+    }
+});
+// ── Pay for unpaid order from dashboard ──
+async function payForOrder(orderId) {
+    const o = allOrders.find(x => x.orderId === orderId);
+    if (!o) return;
+    if (!window.RAZORPAY_KEY) {
+        alert('Payment gateway is being set up. Please contact us on WhatsApp at 7042828078 to make your advance payment.');
+        return;
+    }
+
+    const advanceAmount = Math.ceil((o.orderTotal || 0) * 0.5);
+    if (advanceAmount <= 0) return;
+
+    try {
+        const payment = await new Promise((resolve, reject) => {
+            const options = {
+                key: window.RAZORPAY_KEY,
+                amount: advanceAmount * 100,
+                currency: 'INR',
+                name: 'Tadda',
+                description: `Advance for Order ${orderId}`,
+                prefill: {
+                    name: o.custName,
+                    email: currentUser.email,
+                    contact: o.custPhone,
+                },
+                theme: { color: '#1e40af' },
+                handler: function (response) {
+                    resolve({ razorpayPaymentId: response.razorpay_payment_id });
+                },
+                modal: {
+                    ondismiss: function () { reject(new Error('Payment cancelled')); }
+                }
+            };
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                reject(new Error(response.error.description || 'Payment failed'));
+            });
+            rzp.open();
+        });
+
+        // Update order in Firestore
+        await db.collection('orders').doc(orderId).update({
+            paymentStatus: 'advance_paid',
+            advanceAmount: advanceAmount,
+            balanceAmount: (o.orderTotal || 0) - advanceAmount,
+            razorpayPaymentId: payment.razorpayPaymentId,
+            paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Update local data and refresh
+        o.paymentStatus = 'advance_paid';
+        o.advanceAmount = advanceAmount;
+        o.razorpayPaymentId = payment.razorpayPaymentId;
+
+        alert('Payment successful! Rs ' + advanceAmount.toLocaleString('en-IN') + ' advance paid.');
+        closeModal();
+        renderOrders(allOrders);
+    } catch (err) {
+        if (err.message !== 'Payment cancelled') {
+            alert('Payment failed: ' + err.message);
+        }
+    }
+}
+
 function statusLabel(val) {
     return { pending:'Pending', confirmed:'Confirmed', production:'In Production', dispatched:'Dispatched', delivered:'Delivered', cancelled:'Cancelled' }[val] || val;
 }

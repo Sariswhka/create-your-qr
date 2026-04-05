@@ -54,47 +54,34 @@
         <!-- Section 2: Product Selection -->
         <div class="card order-section">
             <div class="order-section-title">2. Product Selection</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Product <span class="field-required">*</span></label>
-                    <select id="product" required>
-                        <option value="">— Select Product —</option>
-                        <option value="tshirt_regular">T-Shirt (Regular Fit) — 180 GSM</option>
-                        <option value="tshirt_oversized">T-Shirt (Oversized) — 220 GSM</option>
-                        <option value="hoodie">Hoodie — 350 GSM</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Colour <span class="field-required">*</span></label>
-                    <input type="text" id="colour" placeholder="e.g. Black, White, Navy Blue" required>
-                </div>
+
+            <!-- Product -->
+            <div class="form-group">
+                <label>Product <span class="field-required">*</span></label>
+                <select id="product" required onchange="onProductChange()">
+                    <option value="">— Select Product —</option>
+                    <option value="regular_180">T-Shirt Regular Fit — 180 GSM — ₹200/pc</option>
+                    <option value="oversized_220">T-Shirt Oversized — 220 GSM — ₹260/pc</option>
+                    <option value="oversized_240">T-Shirt Oversized Terry — 240 GSM — ₹280/pc</option>
+                    <option value="polo_220">Polo (Collar Tee) — 220 GSM — ₹300/pc</option>
+                    <option value="sweatshirt_350">Sweatshirt — 350 GSM — ₹480/pc</option>
+                    <option value="hoodie_350">Hoodie — 350 GSM — ₹505/pc</option>
+                    <option value="kids_regular_180">Kids Regular Tee — 180 GSM — ₹145/pc</option>
+                </select>
+            </div>
+
+            <!-- Colour -->
+            <div class="form-group" id="colourGroup" style="display:none">
+                <label>Colour <span class="field-required">*</span></label>
+                <div class="colour-swatches" id="colourSwatches"></div>
+                <input type="hidden" id="colour" required>
+                <div class="input-hint" id="selectedColourLabel" style="margin-top:6px;font-weight:600;color:var(--primary)"></div>
             </div>
 
             <!-- Size Breakdown -->
-            <div class="form-group">
+            <div class="form-group" id="sizeGroup" style="display:none">
                 <label>Size-wise Quantity <span class="field-required">*</span></label>
-                <table class="size-table">
-                    <thead>
-                        <tr>
-                            <th>Size</th>
-                            <th>S</th>
-                            <th>M</th>
-                            <th>L</th>
-                            <th>XL</th>
-                            <th>XXL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="size-label">Qty</td>
-                            <td><input type="number" id="qtyS"   min="0" value="0" onchange="updateTotalQty()"></td>
-                            <td><input type="number" id="qtyM"   min="0" value="0" onchange="updateTotalQty()"></td>
-                            <td><input type="number" id="qtyL"   min="0" value="0" onchange="updateTotalQty()"></td>
-                            <td><input type="number" id="qtyXL"  min="0" value="0" onchange="updateTotalQty()"></td>
-                            <td><input type="number" id="qtyXXL" min="0" value="0" onchange="updateTotalQty()"></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <table class="size-table" id="sizeTable"></table>
                 <div class="total-qty-display">Total Quantity: <strong id="totalQtyDisplay">0</strong></div>
             </div>
 
@@ -102,6 +89,19 @@
             <div class="dispatch-info" id="dispatchInfo" style="display:none">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span id="dispatchText"></span>
+            </div>
+
+            <!-- Order Total & Advance -->
+            <div id="orderTotalGroup" style="display:none;margin-top:16px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px">
+                <div style="display:flex;justify-content:space-between;font-size:0.95rem;margin-bottom:8px">
+                    <span>Order Total</span>
+                    <strong id="orderTotalDisplay" style="font-size:1.1rem"></strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted)">
+                    <span>Advance (50%)</span>
+                    <strong id="advanceDisplay" style="color:#16a34a"></strong>
+                </div>
+                <div style="font-size:0.75rem;color:var(--muted);margin-top:8px">50% advance required at order placement. Balance due before dispatch.</div>
             </div>
         </div>
 
@@ -136,8 +136,8 @@
             </div>
 
             <div class="form-group">
-                <label>Design Size <span class="field-required">*</span></label>
-                <input type="text" id="designSize" placeholder='e.g. Front: 10"×12", Back: 14"×16"' required>
+                <label>Design Size (optional)</label>
+                <input type="text" id="designSize" placeholder='e.g. Front: 10"×12", Back: 14"×16"'>
                 <div class="input-hint">Mention size for each placement separately.</div>
             </div>
         </div>
@@ -191,6 +191,23 @@
                 </div>
             </div>
 
+            <div id="deliveryAddressGroup" class="hidden">
+                <div class="form-group">
+                    <label>Delivery Address <span class="field-required">*</span></label>
+                    <textarea id="deliveryAddress" placeholder="Full delivery address&#10;e.g. 12, MG Road, Sector 5, Gurgaon, Haryana — 122001" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City <span class="field-required">*</span></label>
+                        <input type="text" id="deliveryCity" placeholder="City">
+                    </div>
+                    <div class="form-group">
+                        <label>PIN Code <span class="field-required">*</span></label>
+                        <input type="text" id="deliveryPin" placeholder="6-digit PIN" maxlength="6" pattern="[0-9]{6}">
+                    </div>
+                </div>
+            </div>
+
             <div id="shippingLabelUpload" class="form-group hidden">
                 <label>Upload Shipping Label</label>
                 <div class="upload-box" onclick="document.getElementById('shippingLabelFile').click()">
@@ -218,6 +235,23 @@
     </form>
 </div>
 
+<!-- Order Confirmation Modal -->
+<div class="modal-overlay hidden" id="confirmModal">
+    <div class="modal-box" style="max-width:500px">
+        <div class="modal-header">
+            <h3>Confirm Your Order</h3>
+            <button class="modal-close" onclick="closeConfirmModal()">&#10005;</button>
+        </div>
+        <div id="confirmContent" style="font-size:0.85rem"></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+            <button class="btn btn-ghost" onclick="closeConfirmModal()">Go Back</button>
+            <button class="btn btn-primary btn-lg" id="confirmSubmitBtn" onclick="proceedWithOrder()">
+                Confirm & Pay Advance
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Success Modal -->
 <div class="modal-overlay hidden" id="successModal">
     <div class="modal-box" style="max-width:480px">
@@ -234,11 +268,15 @@
                 <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Product</span><br><span id="successProduct"></span></div>
                 <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Total Qty</span><br><span id="successQty"></span></div>
                 <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Est. Dispatch</span><br><span id="successEta"></span></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Payment</span><br><span id="successPayment" style="font-weight:700"></span></div>
             </div>
         </div>
         <a href="/dashboard.html" class="btn btn-primary btn-full">Go to Dashboard →</a>
     </div>
 </div>
+
+<!-- Razorpay SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -253,15 +291,82 @@ const storage = firebase.storage();
 
 let currentUser = null;
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
     if (!user) { window.location.href = '/'; return; }
     currentUser = user;
     document.getElementById('userAvatar').textContent = (user.displayName || user.email || '?')[0].toUpperCase();
     document.getElementById('custName').value  = user.displayName || '';
     document.getElementById('custEmail').value = user.email || '';
+
+    // Pre-fill brand + phone from most recent order
+    try {
+        const snap = await db.collection('orders')
+            .where('userId', '==', user.uid)
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
+        if (!snap.empty) {
+            const last = snap.docs[0].data();
+            if (last.custName)  document.getElementById('custName').value  = last.custName;
+            if (last.brandName) document.getElementById('brandName').value = last.brandName;
+            if (last.custPhone) document.getElementById('custPhone').value = last.custPhone;
+        }
+    } catch (e) { /* ignore — user may not have orders yet */ }
 });
 
 document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));
+
+// ── Product data ──
+const PRODUCT_DATA = {
+    regular_180:     { price: 200, colors: ['Sea Green','Maroon','Navy Blue','Black','White'],       sizes: ['S','M','L','XL'],                                      dots: ['#4CAF50','#8B0000','#1a237e','#1a1a1a','#f5f5f5'] },
+    oversized_220:   { price: 260, colors: ['Beige','White','Avocado Green','Brown','Black'],        sizes: ['S','M','L','XL'],                                      dots: ['#f5e6c8','#f5f5f5','#4a6741','#6B4226','#1a1a1a'] },
+    oversized_240:   { price: 280, colors: ['Black','Smokey Grey','Beige','White'],                 sizes: ['S','M','L','XL'],                                      dots: ['#1a1a1a','#6b7280','#f5e6c8','#f5f5f5'] },
+    polo_220:        { price: 300, colors: ['Black','White'],                                        sizes: ['S','M','L','XL'],                                      dots: ['#1a1a1a','#f5f5f5'] },
+    sweatshirt_350:  { price: 480, colors: ['Black','Navy Blue','Off-White','Maroon','Lavender'],    sizes: ['S','M','L','XL'],                                      dots: ['#1a1a1a','#1a237e','#f5f0e8','#8B0000','#c4b5e0'] },
+    hoodie_350:      { price: 505, colors: ['Black','Coffee Brown','Off-White','Olive Green','Beige'], sizes: ['S','M','L','XL'],                                   dots: ['#1a1a1a','#4a3728','#f5f0e8','#4a6741','#f5e6c8'] },
+    kids_regular_180:{ price: 145, colors: ['Black','Orange','White','Sea Green','Baby Pink'],       sizes: ['5-6 Yrs','7-8 Yrs','9-10 Yrs','11-12 Yrs','13-14 Yrs'], dots: ['#1a1a1a','#f97316','#f5f5f5','#4CAF50','#ec4899'] },
+};
+
+function onProductChange() {
+    const val = document.getElementById('product').value;
+    const data = PRODUCT_DATA[val];
+
+    // Reset colour
+    document.getElementById('colour').value = '';
+    document.getElementById('selectedColourLabel').textContent = '';
+
+    if (!data) {
+        document.getElementById('colourGroup').style.display = 'none';
+        document.getElementById('sizeGroup').style.display = 'none';
+        document.getElementById('dispatchInfo').style.display = 'none';
+        return;
+    }
+
+    // Render colour swatches
+    document.getElementById('colourGroup').style.display = 'block';
+    const swatchContainer = document.getElementById('colourSwatches');
+    swatchContainer.innerHTML = data.colors.map((c, i) => `
+        <div class="colour-swatch" onclick="selectColour(this, '${c}')" style="--swatch-bg:${data.dots[i]}" title="${c}">
+            <span class="swatch-dot" style="background:${data.dots[i]};${data.dots[i]==='#f5f5f5'?'border:1px solid #ddd':''}"></span>
+            <span class="swatch-label">${c}</span>
+        </div>`).join('');
+
+    // Render size table
+    document.getElementById('sizeGroup').style.display = 'block';
+    const sizeIds = data.sizes.map(s => 'qty_' + s.replace(/\s/g,'_').replace(/-/g,'_'));
+    document.getElementById('sizeTable').innerHTML = `
+        <thead><tr><th>Size</th>${data.sizes.map(s=>`<th>${s}</th>`).join('')}</tr></thead>
+        <tbody><tr><td class="size-label">Qty</td>${sizeIds.map(id=>`<td><input type="number" id="${id}" min="0" value="0" onchange="updateTotalQty()"></td>`).join('')}</tr></tbody>`;
+
+    updateTotalQty();
+}
+
+function selectColour(el, colour) {
+    document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('colour').value = colour;
+    document.getElementById('selectedColourLabel').textContent = `Selected: ${colour}`;
+}
 
 // ── Helpers ──
 function showFileName(input, previewId) {
@@ -277,22 +382,35 @@ function toggleNeckLabel(val) {
 }
 
 function toggleShipping(val) {
-    document.getElementById('shippingLabelUpload').classList.toggle('hidden', val !== 'arrange');
+    const isArrange = val === 'arrange';
+    document.getElementById('deliveryAddressGroup').classList.toggle('hidden', !isArrange);
+    document.getElementById('shippingLabelUpload').classList.toggle('hidden', !isArrange);
+    document.getElementById('deliveryAddress').required = isArrange;
+    document.getElementById('deliveryCity').required    = isArrange;
+    document.getElementById('deliveryPin').required     = isArrange;
 }
 
 function updateTotalQty() {
-    const sizes = ['S','M','L','XL','XXL'];
-    const total = sizes.reduce((sum, s) => sum + (parseInt(document.getElementById('qty'+s).value) || 0), 0);
+    const inputs = document.querySelectorAll('#sizeTable input[type=number]');
+    const total = Array.from(inputs).reduce((sum, el) => sum + (parseInt(el.value) || 0), 0);
     document.getElementById('totalQtyDisplay').textContent = total;
     const info = document.getElementById('dispatchInfo');
     const text = document.getElementById('dispatchText');
+    const totalGroup = document.getElementById('orderTotalGroup');
     if (total > 0) {
         info.style.display = 'flex';
-        text.textContent = total < 50
-            ? `Estimated dispatch: 24–72 hours (qty < 50)`
-            : `Estimated dispatch: 48–120 hours (qty 50+)`;
+        text.textContent = total < 50 ? `Estimated dispatch: 24-72 hours (qty < 50)` : `Estimated dispatch: 48-120 hours (qty 50+)`;
+        // Calculate order total
+        const productKey = document.getElementById('product').value;
+        const pricePerPc = PRODUCT_DATA[productKey] ? PRODUCT_DATA[productKey].price : 0;
+        const orderTotal = total * pricePerPc;
+        const advance = Math.ceil(orderTotal * 0.5);
+        document.getElementById('orderTotalDisplay').textContent = 'Rs ' + orderTotal.toLocaleString('en-IN');
+        document.getElementById('advanceDisplay').textContent = 'Rs ' + advance.toLocaleString('en-IN');
+        totalGroup.style.display = 'block';
     } else {
         info.style.display = 'none';
+        totalGroup.style.display = 'none';
     }
 }
 
@@ -310,7 +428,11 @@ async function sendOrderEmails(order) {
     console.log('sendOrderEmails called, key:', accessKey ? 'present' : 'MISSING');
     if (!accessKey) return;
 
-    const productNames = { tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM' };
+    const productNames = {
+        regular_180: 'T-Shirt Regular 180GSM', oversized_220: 'T-Shirt Oversized 220GSM',
+        oversized_240: 'T-Shirt Oversized Terry 240GSM', polo_220: 'Polo (Collar Tee) 220GSM',
+        sweatshirt_350: 'Sweatshirt 350GSM', hoodie_350: 'Hoodie 350GSM', kids_regular_180: 'Kids Regular Tee 180GSM'
+    };
     const sizesStr = Object.entries(order.sizes).filter(([,v])=>v>0).map(([k,v])=>`${k}:${v}`).join(', ');
 
     const resp = await fetch('https://api.web3forms.com/submit', {
@@ -320,7 +442,7 @@ async function sendOrderEmails(order) {
             access_key: accessKey,
             subject:    `New Order ${order.orderId} — ${order.brandName}`,
             from_name:  'Tadda Portal',
-            message: `New order received!\n\nOrder ID: ${order.orderId}\nCustomer: ${order.custName} (${order.userEmail}, ${order.custPhone})\nBrand: ${order.brandName}\nProduct: ${productNames[order.product] || order.product} — ${order.colour}\nSizes: ${sizesStr} | Total: ${order.totalQty} pcs\nPlacement: ${order.placementDetails}\nDesign Size: ${order.designSize}\nNeck Label: ${order.neckLabel === 'yes' ? 'Yes' : 'No'}\nShipping: ${order.shipping === 'self' ? 'Customer managed' : 'Tadda arranges'}\nETA: ${order.dispatchEta}${order.notes ? '\nNotes: ' + order.notes : ''}\n\nView in admin: https://taddaportal.web.app/admin.html`,
+            message: `New order received!\n\nOrder ID: ${order.orderId}\nCustomer: ${order.custName} (${order.userEmail}, ${order.custPhone})\nBrand: ${order.brandName}\nProduct: ${productNames[order.product] || order.product} — ${order.colour}\nSizes: ${sizesStr} | Total: ${order.totalQty} pcs\nPlacement: ${order.placementDetails}\nDesign Size: ${order.designSize}\nNeck Label: ${order.neckLabel === 'yes' ? 'Yes' : 'No'}\nShipping: ${order.shipping === 'self' ? 'Customer managed' : 'Tadda arranges'}${order.deliveryAddress ? `\nDelivery Address: ${order.deliveryAddress}, ${order.deliveryCity} - ${order.deliveryPin}` : ''}\nOrder Total: Rs ${(order.orderTotal||0).toLocaleString('en-IN')}\nPayment: ${order.paymentStatus === 'advance_paid' ? 'Rs ' + (order.advanceAmount||0).toLocaleString('en-IN') + ' advance paid (Razorpay: ' + order.razorpayPaymentId + ')' : 'Unpaid'}\nBalance Due: Rs ${(order.balanceAmount||0).toLocaleString('en-IN')}\nETA: ${order.dispatchEta}${order.notes ? '\nNotes: ' + order.notes : ''}\n\nView in admin: https://taddaportal.web.app/admin.html`,
         })
     });
     const result = await resp.json();
@@ -333,25 +455,142 @@ function genOrderId() {
     return `TAD-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${Math.random().toString(36).substr(2,5).toUpperCase()}`;
 }
 
-// ── Submit Order ──
-document.getElementById('orderForm').addEventListener('submit', async (e) => {
+// ── Razorpay Payment ──
+function collectPayment(orderId, amount, customerName, customerEmail, customerPhone) {
+    return new Promise((resolve, reject) => {
+        const options = {
+            key: window.RAZORPAY_KEY,
+            amount: amount * 100, // Razorpay expects paise
+            currency: 'INR',
+            name: 'Tadda',
+            description: `Advance for Order ${orderId}`,
+            prefill: {
+                name: customerName,
+                email: customerEmail,
+                contact: customerPhone,
+            },
+            theme: { color: '#1e40af' },
+            handler: function (response) {
+                resolve({
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpayOrderId: response.razorpay_order_id || '',
+                    razorpaySignature: response.razorpay_signature || '',
+                });
+            },
+            modal: {
+                ondismiss: function () {
+                    reject(new Error('Payment cancelled by user'));
+                }
+            }
+        };
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+            reject(new Error(response.error.description || 'Payment failed'));
+        });
+        rzp.open();
+    });
+}
+
+// ── Submit Order — Step 1: Show Confirmation ──
+const PRODUCT_NAMES = {
+    regular_180: 'T-Shirt Regular 180GSM', oversized_220: 'T-Shirt Oversized 220GSM',
+    oversized_240: 'T-Shirt Oversized Terry 240GSM', polo_220: 'Polo (Collar Tee) 220GSM',
+    sweatshirt_350: 'Sweatshirt 350GSM', hoodie_350: 'Hoodie 350GSM', kids_regular_180: 'Kids Regular Tee 180GSM'
+};
+
+document.getElementById('orderForm').addEventListener('submit', (e) => {
     e.preventDefault();
+
+    // Validate
+    if (!document.getElementById('colour').value) { alert('Please select a colour.'); return; }
+    const inputs = document.querySelectorAll('#sizeTable input[type=number]');
+    const totalQty = Array.from(inputs).reduce((sum, el) => sum + (parseInt(el.value) || 0), 0);
+    if (totalQty === 0) { alert('Please enter at least one quantity.'); return; }
+
+    // Calculate pricing
+    const productKey = document.getElementById('product').value;
+    const pricePerPc = PRODUCT_DATA[productKey] ? PRODUCT_DATA[productKey].price : 0;
+    const orderTotal = totalQty * pricePerPc;
+    const advanceAmount = Math.ceil(orderTotal * 0.5);
+    const balanceAmount = orderTotal - advanceAmount;
+    const sizesStr = Array.from(document.querySelectorAll('#sizeTable thead th')).slice(1)
+        .map((th, i) => { const v = parseInt(inputs[i].value) || 0; return v > 0 ? th.textContent + ': ' + v : ''; })
+        .filter(Boolean).join(', ');
+
+    // Show confirmation modal
+    const hasRazorpay = !!window.RAZORPAY_KEY;
+    document.getElementById('confirmContent').innerHTML = `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Product</span><br><strong>${PRODUCT_NAMES[productKey] || productKey}</strong></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Colour</span><br><strong>${document.getElementById('colour').value}</strong></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Sizes</span><br>${sizesStr}</div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Total Qty</span><br><strong>${totalQty} pcs</strong></div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Price/pc</span><br>Rs ${pricePerPc}</div>
+                <div><span style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;font-weight:700">Dispatch ETA</span><br>${totalQty < 50 ? '24-72 hours' : '48-120 hours'}</div>
+            </div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px">
+            <div style="display:flex;justify-content:space-between;font-size:1rem;margin-bottom:8px">
+                <span>Order Total</span>
+                <strong>Rs ${orderTotal.toLocaleString('en-IN')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted)">
+                <span>Advance (50%)</span>
+                <strong style="color:#16a34a">Rs ${advanceAmount.toLocaleString('en-IN')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted);margin-top:4px">
+                <span>Balance (before dispatch)</span>
+                <span>Rs ${balanceAmount.toLocaleString('en-IN')}</span>
+            </div>
+        </div>`;
+
+    document.getElementById('confirmSubmitBtn').textContent = hasRazorpay ? 'Confirm & Pay Rs ' + advanceAmount.toLocaleString('en-IN') : 'Confirm & Place Order';
+    document.getElementById('confirmModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+});
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+document.getElementById('confirmModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('confirmModal')) closeConfirmModal();
+});
+
+// ── Submit Order — Step 2: Save order first, then attempt payment ──
+async function proceedWithOrder() {
+    closeConfirmModal();
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '⏳ Submitting...';
 
     try {
         const orderId = genOrderId();
-        const sizes = { S: parseInt(document.getElementById('qtyS').value)||0, M: parseInt(document.getElementById('qtyM').value)||0, L: parseInt(document.getElementById('qtyL').value)||0, XL: parseInt(document.getElementById('qtyXL').value)||0, XXL: parseInt(document.getElementById('qtyXXL').value)||0 };
+        const sizes = {};
+        document.querySelectorAll('#sizeTable input[type=number]').forEach(el => {
+            const idx = Array.from(el.closest('tr').children).indexOf(el.closest('td'));
+            const header = document.querySelector('#sizeTable thead tr').children[idx];
+            sizes[header.textContent] = parseInt(el.value) || 0;
+        });
         const totalQty = Object.values(sizes).reduce((a,b) => a+b, 0);
-        if (totalQty === 0) { alert('Please enter at least one quantity.'); btn.disabled = false; btn.innerHTML = 'Submit Order'; return; }
+
+        // Calculate pricing
+        const productKey = document.getElementById('product').value;
+        const pricePerPc = PRODUCT_DATA[productKey] ? PRODUCT_DATA[productKey].price : 0;
+        const orderTotal = totalQty * pricePerPc;
+        const advanceAmount = Math.ceil(orderTotal * 0.5);
+        const balanceAmount = orderTotal - advanceAmount;
 
         btn.innerHTML = '⏳ Uploading files...';
-        const designUrl      = await uploadFile(document.getElementById('designFile').files[0], orderId);
-        const mockupUrl      = await uploadFile(document.getElementById('mockupFile').files[0], orderId);
-        const neckLabelUrl   = await uploadFile(document.getElementById('neckLabelFile').files[0], orderId);
-        const shippingLblUrl = await uploadFile(document.getElementById('shippingLabelFile').files[0], orderId);
+        const [designUrl, mockupUrl, neckLabelUrl, shippingLblUrl] = await Promise.all([
+            uploadFile(document.getElementById('designFile').files[0], orderId),
+            uploadFile(document.getElementById('mockupFile').files[0], orderId),
+            uploadFile(document.getElementById('neckLabelFile').files[0], orderId),
+            uploadFile(document.getElementById('shippingLabelFile').files[0], orderId),
+        ]);
 
+        // Save order FIRST with unpaid status
         btn.innerHTML = '⏳ Saving order...';
         const order = {
             orderId,
@@ -360,10 +599,16 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             custName:         document.getElementById('custName').value.trim(),
             brandName:        document.getElementById('brandName').value.trim(),
             custPhone:        document.getElementById('custPhone').value.trim(),
-            product:          document.getElementById('product').value,
+            product:          productKey,
             colour:           document.getElementById('colour').value.trim(),
             sizes,
             totalQty,
+            pricePerPc,
+            orderTotal,
+            advanceAmount,
+            balanceAmount,
+            paymentStatus:    'unpaid',
+            razorpayPaymentId: '',
             designUrl,
             mockupUrl,
             placementDetails: document.getElementById('placementDetails').value.trim(),
@@ -371,10 +616,13 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             neckLabel:        document.querySelector('input[name="neckLabel"]:checked').value,
             neckLabelUrl,
             shipping:         document.querySelector('input[name="shipping"]:checked').value,
+            deliveryAddress:  document.getElementById('deliveryAddress').value.trim(),
+            deliveryCity:     document.getElementById('deliveryCity').value.trim(),
+            deliveryPin:      document.getElementById('deliveryPin').value.trim(),
             shippingLabelUrl: shippingLblUrl,
             notes:            document.getElementById('additionalNotes').value.trim(),
             status:           'pending',
-            dispatchEta:      totalQty < 50 ? '24–72 hours' : '48–120 hours',
+            dispatchEta:      totalQty < 50 ? '24-72 hours' : '48-120 hours',
             createdAt:        firebase.firestore.FieldValue.serverTimestamp()
         };
 
@@ -383,12 +631,40 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
         // Send email notifications (non-blocking)
         sendOrderEmails(order).catch(err => console.error('Email error:', err));
 
-        const productNames = { tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM' };
+        // Now attempt Razorpay payment (order is already saved)
+        if (window.RAZORPAY_KEY && advanceAmount > 0) {
+            btn.innerHTML = '⏳ Opening payment...';
+            try {
+                const payment = await collectPayment(
+                    orderId, advanceAmount,
+                    document.getElementById('custName').value.trim(),
+                    currentUser.email,
+                    document.getElementById('custPhone').value.trim()
+                );
+                // Payment succeeded — update order doc
+                await db.collection('orders').doc(orderId).update({
+                    paymentStatus: 'advance_paid',
+                    razorpayPaymentId: payment.razorpayPaymentId,
+                    paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+                order.paymentStatus = 'advance_paid';
+                order.razorpayPaymentId = payment.razorpayPaymentId;
+            } catch (payErr) {
+                // Payment cancelled or failed — order stays unpaid, user can pay from dashboard
+                console.log('Payment skipped:', payErr.message);
+            }
+        }
+
+        // Show success
         document.getElementById('successOrderId').textContent = orderId;
         document.getElementById('successBrand').textContent   = order.brandName;
-        document.getElementById('successProduct').textContent = productNames[order.product] || order.product;
+        document.getElementById('successProduct').textContent = (PRODUCT_NAMES[order.product] || order.product) + (order.colour ? ' - ' + order.colour : '');
         document.getElementById('successQty').textContent     = order.totalQty + ' pcs';
         document.getElementById('successEta').textContent     = order.dispatchEta;
+        document.getElementById('successPayment').textContent = order.paymentStatus === 'advance_paid'
+            ? 'Rs ' + advanceAmount.toLocaleString('en-IN') + ' paid'
+            : 'Unpaid — pay from dashboard';
+        document.getElementById('successPayment').style.color = order.paymentStatus === 'advance_paid' ? '#16a34a' : '#dc2626';
         document.getElementById('successModal').classList.remove('hidden');
 
     } catch (err) {
@@ -397,7 +673,7 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
         btn.disabled = false;
         btn.innerHTML = 'Submit Order';
     }
-});
+}
 </script>
 </body>
 </html>

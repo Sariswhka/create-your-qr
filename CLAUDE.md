@@ -1,13 +1,15 @@
 # Create Your QR - Project Context
 
 ## Project Overview
-A collection of three web tools hosted on Firebase:
+A collection of web tools and portals hosted on Firebase:
 
 | App | URL | Directory |
 |-----|-----|-----------|
 | QR Code Generator | https://create-your-qr.web.app | `/qr-code` |
 | Image Resizer | https://imgtools.web.app | `/image-resizer` |
 | EMS Tools | https://emstools.web.app | `/ems-tools` |
+| Tadda Portal | https://taddaportal.web.app | `/tadda` |
+| Tadda Marketing | https://tadda-web.web.app | `/tadda-web` |
 
 ## Repository
 - **GitHub:** https://github.com/Sariswhka/create-your-qr

@@ -187,6 +187,24 @@
             </div>
         </header>
 
+        <!-- What's New Banner -->
+        <div id="whatsNewBanner" class="whats-new-banner">
+            <div class="whats-new-inner">
+                <div class="whats-new-left">
+                    <span class="whats-new-badge">🆕 What's New</span>
+                    <div class="whats-new-items">
+                        <span class="wn-item">✨ AI Message Improvement</span>
+                        <span class="wn-item">🎨 Invert QR Colors</span>
+                        <span class="wn-item">🖼️ Logo in Center <span class="wn-pro">Pro</span></span>
+                        <span class="wn-item">✏️ Custom Frame Text <span class="wn-pro">Pro</span></span>
+                        <span class="wn-item">📝 Editable WhatsApp Message</span>
+                        <span class="wn-item">📅 Yearly Pro Subscription</span>
+                    </div>
+                </div>
+                <button class="whats-new-close" onclick="dismissWhatsNew()" title="Dismiss">✕</button>
+            </div>
+        </div>
+
         <!-- Main Content -->
         <main class="main-content">
             <div class="container app-container">
@@ -465,6 +483,144 @@
         </main>
 
 
+        <!-- Guide & Features -->
+        <section class="guide-section">
+            <div class="container app-container">
+
+                <!-- Section Header -->
+                <div class="guide-header" onclick="toggleGuide()">
+                    <h3>📖 How to Use & Features</h3>
+                    <svg id="guideChevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+
+                <div id="guideBody" class="hidden">
+
+                    <!-- Tab Pills -->
+                    <div class="guide-tabs">
+                        <button class="guide-tab active" onclick="switchGuideTab('url', this)">🔗 URL QR Code</button>
+                        <button class="guide-tab" onclick="switchGuideTab('whatsapp', this)">💬 WhatsApp QR</button>
+                        <button class="guide-tab" onclick="switchGuideTab('compare', this)">⭐ Free vs Pro</button>
+                        <button class="guide-tab" onclick="switchGuideTab('usecases', this)">📚 Use Cases</button>
+                    </div>
+
+                    <!-- URL QR Guide -->
+                    <div id="guideUrl" class="guide-pane">
+                        <p class="guide-intro">Turn any link into a scannable QR code in seconds — no sign-in needed for basic use.</p>
+                        <ol class="guide-steps">
+                            <li><strong>Paste your URL</strong> — website, social media, payment link, Google Maps, anything.</li>
+                            <li><strong>Pick a color</strong> — choose from presets or use the color picker. <em>Tip: use high contrast for best scan rate.</em></li>
+                            <li><strong>Add a frame</strong> — optional. Adds "SCAN ME" or "SCAN HERE" text around the QR.</li>
+                            <li><strong>Custom frame message</strong> (Pro) — replace the default text with your own, positioned top or bottom.</li>
+                            <li><strong>Add a logo</strong> (Pro) — upload your brand logo to appear in the center of the QR.</li>
+                            <li><strong>Click Generate</strong> — your QR appears instantly.</li>
+                            <li><strong>Download or Email</strong> — save as PNG or send directly to your inbox.</li>
+                        </ol>
+                        <div class="guide-tip">💡 <strong>Pro tip:</strong> Use the <em>⇄ Invert</em> button to get a white QR on dark background — great for dark-themed print material.</div>
+                    </div>
+
+                    <!-- WhatsApp QR Guide -->
+                    <div id="guideWhatsapp" class="guide-pane hidden">
+                        <p class="guide-intro">Create a smart QR code that opens WhatsApp with a pre-filled message — perfect for businesses, freelancers, and events.</p>
+                        <ol class="guide-steps">
+                            <li><strong>Go to the WhatsApp tab</strong> — click the 💬 WhatsApp tab at the top.</li>
+                            <li><strong>Fill in your details</strong> — Name, WhatsApp number (with country code), and a pre-filled message.</li>
+                            <li><strong>Improve with AI</strong> — click ✨ to rewrite your message professionally in one click. Free users get 2 uses.</li>
+                            <li><strong>Allow visitors to edit</strong> — toggle <em>Editable Message</em> on if you want visitors to modify the message before sending.</li>
+                            <li><strong>Add a PIN</strong> (Pro) — lock your QR so only people with the PIN can access it.</li>
+                            <li><strong>Attach an image</strong> (Pro) — show a photo or product image on the landing page.</li>
+                            <li><strong>Save & Generate</strong> — your QR links to a personal landing page at <em>create-your-qr.web.app/q/...</em></li>
+                            <li><strong>Share the QR</strong> — print it, WhatsApp it, or add it to your business card.</li>
+                            <li><strong>Edit anytime</strong> — update your message, image, or PIN without changing the QR code.</li>
+                        </ol>
+                        <div class="guide-tip">💡 <strong>Pro tip:</strong> Share the link directly (not just QR) in your Instagram bio or email signature — it works as a link too.</div>
+                    </div>
+
+                    <!-- Free vs Pro Comparison -->
+                    <div id="guideCompare" class="guide-pane hidden">
+                        <p class="guide-intro">The free plan covers most everyday use. Pro unlocks power features for just <strong>₹49/year</strong>.</p>
+
+                        <table class="compare-table">
+                            <thead>
+                                <tr><th>Feature</th><th>Free</th><th>Pro ₹49/yr</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr class="compare-group"><td colspan="3">🔗 URL QR Generator</td></tr>
+                                <tr><td>Generate QR codes</td><td>✅</td><td>✅</td></tr>
+                                <tr><td>Color presets</td><td>✅</td><td>✅</td></tr>
+                                <tr><td>Invert colors</td><td>✅</td><td>✅</td></tr>
+                                <tr><td>Frames (Scan Me, Scan Here)</td><td>✅</td><td>✅</td></tr>
+                                <tr><td>Download as PNG</td><td>✅</td><td>✅</td></tr>
+                                <tr><td>Email QR to yourself</td><td>✅</td><td>✅</td></tr>
+                                <tr><td>Dark background presets</td><td>—</td><td>✅</td></tr>
+                                <tr><td>Custom frame message</td><td>—</td><td>✅</td></tr>
+                                <tr><td>Logo in center of QR</td><td>—</td><td>✅</td></tr>
+                                <tr class="compare-group"><td colspan="3">💬 WhatsApp QR</td></tr>
+                                <tr><td>WhatsApp QR codes</td><td>Up to 2</td><td>Unlimited</td></tr>
+                                <tr><td>AI message improvement</td><td>2 uses</td><td>Unlimited</td></tr>
+                                <tr><td>Editable message for visitors</td><td>✅</td><td>✅</td></tr>
+                                <tr><td>PIN protection</td><td>—</td><td>✅</td></tr>
+                                <tr><td>Image on landing page</td><td>—</td><td>✅</td></tr>
+                                <tr><td>Text formatting (bold, italic)</td><td>—</td><td>✅</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div style="text-align:center; margin-top:20px;">
+                            <button class="btn btn-primary" onclick="showQRUpgradeModal()">Upgrade to Pro — ₹49/year</button>
+                        </div>
+                    </div>
+
+                    <!-- Use Cases -->
+                    <div id="guideUsecases" class="guide-pane hidden">
+                        <p class="guide-intro">Real-world scenarios showing how Create Your QR solves everyday problems.</p>
+
+                        <!-- Use Case 1 -->
+                        <div class="usecase-card">
+                            <div class="usecase-header" onclick="toggleUseCase(this)">
+                                <div class="usecase-title"><span class="usecase-icon">📢</span><span>Dynamic QR Code Editing — No Reprinting Needed</span></div>
+                                <svg class="usecase-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div class="usecase-body hidden">
+                                <div class="usecase-block usecase-scenario"><strong>Scenario</strong><p>Priya, a marketing manager, prints brochures with a QR code linking to her company's product launch landing page.</p></div>
+                                <div class="usecase-block usecase-challenge"><strong>⚠️ Challenge</strong><p>A week before the event, the team decides to redirect users to a promotional video with a personalized thank-you message. Normally this means reprinting all brochures — costly and time-consuming.</p></div>
+                                <div class="usecase-block usecase-solution"><strong>✅ Solution</strong><p>Priya logs into Create Your QR and updates the destination link and message. The QR code printed on all brochures stays the same — but now directs users to the new video with the updated message.</p></div>
+                                <div class="usecase-block usecase-outcome"><strong>🎯 Outcome</strong><ul><li>No reprinting — zero extra cost</li><li>Campaign stays flexible and adaptive to last-minute changes</li><li>Customers always get the most relevant, updated content</li></ul></div>
+                            </div>
+                        </div>
+
+                        <!-- Use Case 2 -->
+                        <div class="usecase-card">
+                            <div class="usecase-header" onclick="toggleUseCase(this)">
+                                <div class="usecase-title"><span class="usecase-icon">🏏</span><span>AI-Enhanced Messaging for Cricket Fans</span></div>
+                                <svg class="usecase-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div class="usecase-body hidden">
+                                <div class="usecase-block usecase-scenario"><strong>Scenario</strong><p>Ankit manages his cricket team and shares match updates via QR codes on posters and social media. The QR links to the schedule with a short message like "Support us in the next match!"</p></div>
+                                <div class="usecase-block usecase-challenge"><strong>⚠️ Challenge</strong><p>While great at organizing matches, Ankit struggles to craft impactful messages. Writing and rewriting content takes time and messages often feel too plain or repetitive.</p></div>
+                                <div class="usecase-block usecase-solution"><strong>✅ Solution</strong><p>Using the AI Improve feature, Ankit types a simple note and the AI refines it instantly. <em>"Support us in the next match!"</em> becomes <em>"Cheer loud and proud as we battle for victory this Sunday — your energy makes the difference!"</em></p></div>
+                                <div class="usecase-block usecase-outcome"><strong>🎯 Outcome</strong><ul><li>Saves time — no need to brainstorm catchy wording</li><li>Messages have maximum emotional impact, boosting fan excitement</li><li>Communication stays fresh and professional, strengthening team brand</li></ul></div>
+                            </div>
+                        </div>
+
+                        <!-- Use Case 3 -->
+                        <div class="usecase-card">
+                            <div class="usecase-header" onclick="toggleUseCase(this)">
+                                <div class="usecase-title"><span class="usecase-icon">🎓</span><span>Secure & Engaging QR Codes for Alumni Events</span></div>
+                                <svg class="usecase-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div class="usecase-body hidden">
+                                <div class="usecase-block usecase-scenario"><strong>Scenario</strong><p>Rahul coordinates his university's alumni association and is organizing a reunion. He shares event details via QR codes on posters, emails, and social media.</p></div>
+                                <div class="usecase-block usecase-challenge"><strong>⚠️ Challenge</strong><p>Rahul wants QR codes to show nostalgic campus images and keep VIP content like dinner invitations and discount codes exclusive to registered alumni only.</p></div>
+                                <div class="usecase-block usecase-solution"><strong>✅ Solution</strong><p><strong>Image feature:</strong> Rahul uploads memorable campus photos displayed when alumni scan — creating an emotional connection instantly.</p><p style="margin-top:6px"><strong>PIN protection:</strong> Rahul enables a PIN for exclusive content. Verified alumni receive the PIN via email and unlock private RSVP links. Casual scanners only see the public reunion schedule.</p></div>
+                                <div class="usecase-block usecase-outcome"><strong>🎯 Outcome</strong><ul><li>Visually rich experience builds emotional connection with alumni</li><li>Exclusive content stays secure — only verified alumni can access it</li><li>Single QR handles both public and private content seamlessly</li></ul></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
         <!-- Footer -->
         <footer class="footer">
             <p>Made with care | QR Code Generator | <a href="https://imgtools.web.app">Image Resizer</a> | <a href="https://emstools.web.app">EMS Tools</a> | <a href="/privacy.html">Privacy Policy</a></p>
@@ -553,6 +709,37 @@
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script src="js/whatsapp-qr.js"></script>
+    <script>
+        function dismissWhatsNew() {
+            document.getElementById('whatsNewBanner').style.display = 'none';
+            localStorage.setItem('wnDismissed_v1', '1');
+        }
+        function initWhatsNew() {
+            if (localStorage.getItem('wnDismissed_v1')) {
+                document.getElementById('whatsNewBanner').style.display = 'none';
+            }
+        }
+        initWhatsNew();
+
+        function toggleGuide() {
+            const body = document.getElementById('guideBody');
+            const chevron = document.getElementById('guideChevron');
+            const open = body.classList.toggle('hidden');
+            chevron.classList.toggle('open', !open);
+        }
+        function switchGuideTab(tab, btn) {
+            document.querySelectorAll('.guide-pane').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.guide-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('guide' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
+            btn.classList.add('active');
+        }
+        function toggleUseCase(header) {
+            const body = header.nextElementSibling;
+            const chevron = header.querySelector('.usecase-chevron');
+            const open = body.classList.toggle('hidden');
+            chevron.classList.toggle('open', !open);
+        }
+    </script>
 
 </body>
 </html>

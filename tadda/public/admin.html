@@ -28,6 +28,10 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
             Customers
         </a>
+        <a href="#" class="sidebar-item" onclick="showSection('registrations')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Registrations
+        </a>
     </aside>
 
     <main class="main-area">
@@ -65,6 +69,29 @@
             </div>
         </div>
 
+        <!-- Registrations Section -->
+        <div id="sectionRegistrations" class="hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+                <h2>Brand Owner Registrations</h2>
+                <select id="regStatusFilter" onchange="filterRegistrations()" style="font-size:0.82rem;padding:6px 10px;border:1px solid var(--border);border-radius:6px">
+                    <option value="">All Status</option>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="converted">Converted</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="stats-grid" style="margin-bottom:20px">
+                <div class="stat-card"><div class="stat-label">Total Leads</div><div class="stat-value blue" id="rStatTotal">—</div></div>
+                <div class="stat-card"><div class="stat-label">New</div><div class="stat-value amber" id="rStatNew">—</div></div>
+                <div class="stat-card"><div class="stat-label">Contacted</div><div class="stat-value" style="color:#7c3aed" id="rStatContacted">—</div></div>
+                <div class="stat-card"><div class="stat-label">Converted</div><div class="stat-value green" id="rStatConverted">—</div></div>
+            </div>
+            <div class="table-card">
+                <div id="registrationsBody"><div style="padding:32px;text-align:center;color:var(--muted)">Loading…</div></div>
+            </div>
+        </div>
+
         <!-- Customers Section -->
         <div id="sectionCustomers" class="hidden">
             <h2 style="margin-bottom:20px">Customers</h2>
@@ -74,6 +101,33 @@
         </div>
 
     </main>
+</div>
+
+<!-- Registration Detail Modal -->
+<div class="modal-overlay hidden" id="regModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="regModalTitle">Registration Details</h3>
+            <button class="modal-close" onclick="closeRegModal()">✕</button>
+        </div>
+        <div id="regModalContent"></div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+            <label style="margin-bottom:8px;display:block">Update Status</label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <select id="regStatusSelect" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.9rem">
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="converted">Converted</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <button class="btn btn-primary" onclick="updateRegStatus()">Update Status</button>
+            </div>
+            <div style="margin-top:10px">
+                <label style="margin-bottom:6px;display:block">Admin Notes (optional)</label>
+                <textarea id="regAdminNotes" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85rem;resize:vertical;min-height:60px" placeholder="Internal notes…"></textarea>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Order Detail Modal -->
@@ -115,13 +169,15 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 let allOrders = [];
 let allCustomers = [];
+let allRegistrations = [];
+let activeRegId = null;
 let activeOrderId = null;
 
 auth.onAuthStateChanged(async user => {
     if (!user) { window.location.href = '/'; return; }
     if (user.email !== window.ADMIN_EMAIL) { window.location.href = '/dashboard.html'; return; }
     document.getElementById('adminEmailDisplay').textContent = user.email;
-    await Promise.all([loadOrders(), loadCustomers()]);
+    await Promise.all([loadOrders(), loadCustomers(), loadRegistrations()]);
 });
 
 document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));
@@ -131,7 +187,81 @@ function showSection(name) {
     event.currentTarget.classList.add('active');
     document.getElementById('sectionOrders').classList.toggle('hidden', name !== 'orders');
     document.getElementById('sectionCustomers').classList.toggle('hidden', name !== 'customers');
+    document.getElementById('sectionRegistrations').classList.toggle('hidden', name !== 'registrations');
 }
+
+async function loadRegistrations() {
+    const snap = await db.collection('registrations').orderBy('createdAt','desc').get();
+    allRegistrations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const counts = { new:0, contacted:0, converted:0, rejected:0 };
+    allRegistrations.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+    document.getElementById('rStatTotal').textContent     = allRegistrations.length;
+    document.getElementById('rStatNew').textContent       = counts.new;
+    document.getElementById('rStatContacted').textContent = counts.contacted;
+    document.getElementById('rStatConverted').textContent = counts.converted;
+    renderRegistrations(allRegistrations);
+}
+
+function filterRegistrations() {
+    const status = document.getElementById('regStatusFilter').value;
+    renderRegistrations(status ? allRegistrations.filter(r => r.status === status) : allRegistrations);
+}
+
+function renderRegistrations(regs) {
+    if (!regs.length) { document.getElementById('registrationsBody').innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted)">No registrations found.</div>'; return; }
+    const statusColors = { new:'amber', contacted:'', converted:'green', rejected:'' };
+    const rows = regs.map(r => `
+        <tr style="cursor:pointer" onclick="openRegModal('${r.id}')">
+            <td><strong>${r.name}</strong></td>
+            <td>${r.phone}</td>
+            <td>${r.email || '—'}</td>
+            <td>${r.city}</td>
+            <td>${r.brand || '—'}</td>
+            <td>${r.source || '—'}</td>
+            <td><span class="badge badge-${statusColors[r.status] || 'pending'}" style="${r.status==='contacted'?'background:#ede9fe;color:#5b21b6':r.status==='rejected'?'background:#fee2e2;color:#991b1b':''}">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span></td>
+            <td>${fmtDate(r.createdAt)}</td>
+        </tr>`).join('');
+    document.getElementById('registrationsBody').innerHTML = `
+        <table>
+            <thead><tr><th>Name</th><th>WhatsApp</th><th>Email</th><th>City</th><th>Brand</th><th>Source</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+function openRegModal(id) {
+    const r = allRegistrations.find(x => x.id === id);
+    if (!r) return;
+    activeRegId = id;
+    document.getElementById('regModalTitle').textContent = `Registration — ${r.name}`;
+    document.getElementById('regStatusSelect').value = r.status;
+    document.getElementById('regAdminNotes').value = r.adminNotes || '';
+    document.getElementById('regModalContent').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.85rem">
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Name</span><br>${r.name}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">WhatsApp</span><br><a href="https://wa.me/91${r.phone.replace(/\D/g,'')}" target="_blank" style="color:var(--primary)">📱 ${r.phone}</a></div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Email</span><br>${r.email || '—'}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">City</span><br>${r.city}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Brand Name</span><br>${r.brand || '—'}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Source</span><br>${r.source || '—'}</div>
+            ${r.message ? `<div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Message</span><br>${r.message}</div>` : ''}
+        </div>`;
+    document.getElementById('regModal').classList.remove('hidden');
+}
+
+async function updateRegStatus() {
+    if (!activeRegId) return;
+    const status = document.getElementById('regStatusSelect').value;
+    const notes  = document.getElementById('regAdminNotes').value.trim();
+    await db.collection('registrations').doc(activeRegId).update({ status, adminNotes: notes, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const idx = allRegistrations.findIndex(r => r.id === activeRegId);
+    if (idx !== -1) { allRegistrations[idx].status = status; allRegistrations[idx].adminNotes = notes; }
+    closeRegModal();
+    renderRegistrations(allRegistrations);
+    loadRegistrations();
+}
+
+function closeRegModal() { document.getElementById('regModal').classList.add('hidden'); activeRegId = null; }
+document.getElementById('regModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeRegModal(); });
 
 async function loadOrders() {
     const snap = await db.collection('orders').orderBy('createdAt','desc').get();
@@ -215,6 +345,11 @@ function openModal(orderId) {
             <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Design Size</span><br>${o.designSize}</div>
             <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Neck Label</span><br>${o.neckLabel === 'yes' ? 'Yes' : 'No'}</div>
             <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Shipping</span><br>${o.shipping === 'self' ? 'Customer managed' : 'Tadda arranges'}</div>
+            ${o.deliveryAddress ? `<div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Delivery Address</span><br>${o.deliveryAddress}, ${o.deliveryCity} - ${o.deliveryPin}</div>` : ''}
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Order Total</span><br>Rs ${(o.orderTotal||0).toLocaleString('en-IN')}</div>
+            <div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Payment</span><br><span style="color:${o.paymentStatus==='advance_paid'?'#16a34a':'#dc2626'};font-weight:700">${o.paymentStatus==='advance_paid'?'Rs '+(o.advanceAmount||0).toLocaleString('en-IN')+' paid':'Unpaid'}</span></div>
+            ${o.balanceAmount ? `<div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Balance Due</span><br>Rs ${o.balanceAmount.toLocaleString('en-IN')}</div>` : ''}
+            ${o.razorpayPaymentId ? `<div><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Razorpay ID</span><br><code style="font-size:0.8rem">${o.razorpayPaymentId}</code></div>` : ''}
             ${o.notes ? `<div style="grid-column:1/-1"><span style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;font-weight:700">Notes</span><br>${o.notes}</div>` : ''}
         </div>
         <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px">
@@ -242,7 +377,12 @@ function closeModal() { document.getElementById('orderModal').classList.add('hid
 document.getElementById('orderModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
 function productLabel(val) {
-    return { tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM' }[val] || val;
+    return {
+        regular_180: 'T-Shirt Regular 180GSM', oversized_220: 'T-Shirt Oversized 220GSM',
+        oversized_240: 'T-Shirt Oversized Terry 240GSM', polo_220: 'Polo (Collar Tee) 220GSM',
+        sweatshirt_350: 'Sweatshirt 350GSM', hoodie_350: 'Hoodie 350GSM', kids_regular_180: 'Kids Regular Tee 180GSM',
+        tshirt_regular: 'T-Shirt Regular 180GSM', tshirt_oversized: 'T-Shirt Oversized 220GSM', hoodie: 'Hoodie 350GSM'
+    }[val] || val;
 }
 function statusLabel(val) {
     return { pending:'Pending', confirmed:'Confirmed', production:'In Production', dispatched:'Dispatched', delivered:'Delivered', cancelled:'Cancelled' }[val] || val;

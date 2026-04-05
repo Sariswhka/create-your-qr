@@ -32,6 +32,7 @@ auth.onAuthStateChanged(async (user) => {
         window.currentUser = user;
         showApp(user);
         trackLogin(user);
+        fetchAndSaveLocation(user.uid);
         try {
             const doc = await db.collection('users').doc(user.uid).get();
             const data = doc.exists ? doc.data() : {};
@@ -54,6 +55,19 @@ auth.onAuthStateChanged(async (user) => {
         showLogin();
     }
 });
+
+async function fetchAndSaveLocation(uid) {
+    try {
+        const resp = await fetch('https://ipapi.co/json/');
+        if (!resp.ok) return;
+        const geo = await resp.json();
+        const city = geo.city || '';
+        const country = geo.country_name || '';
+        if (city || country) {
+            await db.collection('users').doc(uid).set({ city, country }, { merge: true });
+        }
+    } catch (e) { /* silent fail */ }
+}
 
 // Returns true if pro flag is set AND not expired (no expiry = legacy one-time = keep active)
 function checkProExpiry(flag, expiresAt) {
