@@ -134,27 +134,25 @@
 <!-- PAGE 1 — COVER -->
 <div class="page">
   <div class="cover">
-    <div class="cover-tag">Product Pitch — April 2026</div>
+    <div class="cover-tag">Product Pitch — T-ADDA</div>
     <h1>Order<span>Flow</span></h1>
     <p class="cover-tagline">End-to-End Order Management for Print &amp; Manufacturing Businesses</p>
     <p class="cover-sub">A complete digital operations platform — customer portal, admin dashboard, mockup builder, vendor management, and team collaboration. Built for businesses that take custom orders and need one system to run everything.</p>
     <div class="cover-divider"></div>
     <div class="cover-stats">
       <div class="cover-stat">
-        <div class="num">2</div>
-        <div class="lbl">Live Properties</div>
-      </div>
-      <div class="cover-stat">
         <div class="num">100%</div>
         <div class="lbl">Cloud-Based</div>
       </div>
-      <div class="cover-stat">
-        <div class="num">₹0</div>
-        <div class="lbl">Monthly Fee to Start</div>
-      </div>
-      <div class="cover-stat">
-        <div class="num">1</div>
-        <div class="lbl">Live Client</div>
+    </div>
+    <div style="margin-top:32px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.4);margin-bottom:12px">Built on</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.8)">🔥 Firebase (Auth, Firestore, Storage, Hosting)</span>
+        <span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.8)">💳 Razorpay Payments</span>
+<span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.8)">🌐 HTML / CSS / Vanilla JS</span>
+        <span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.8)">📧 Web3Forms Notifications</span>
+        <span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.8)">☁️ Google Cloud Infrastructure</span>
       </div>
     </div>
     <div class="cover-badge">
@@ -164,7 +162,177 @@
   </div>
 </div>
 
-<!-- PAGE 2 — THE PROBLEM & SOLUTION -->
+<!-- PAGE 2 — E2E USER JOURNEY -->
+<div class="page">
+  <div class="inner" style="padding-top:36px">
+    <div class="section-tag">End-to-End Platform Flow</div>
+    <h2 class="page-title">How It All Works Together</h2>
+    <p class="page-subtitle">Three actors. One connected system. Every step tracked and managed in real time.</p>
+    <div class="rule"></div>
+
+    <style>
+      /* ── Journey diagram ── */
+      .journey-wrap { display: flex; flex-direction: column; gap: 0; }
+      .swim-lane { display: flex; align-items: stretch; min-height: 72px; }
+      .lane-label {
+        width: 88px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+        writing-mode: horizontal-tb; font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.08em; border-radius: 8px 0 0 8px; padding: 8px 6px; text-align: center;
+      }
+      .lane-label.customer { background: #dbeafe; color: #1e40af; }
+      .lane-label.admin    { background: #dcfce7; color: #15803d; }
+      .lane-label.vendor   { background: #f3e8ff; color: #7c3aed; }
+      .lane-label.system   { background: #fef3c7; color: #92400e; }
+      .lane-steps { flex: 1; display: flex; align-items: center; gap: 0; padding: 8px 0 8px 10px; border-left: 2px solid #f1f5f9; }
+      .jstep {
+        display: flex; flex-direction: column; align-items: center; position: relative;
+        min-width: 80px; flex-shrink: 0;
+      }
+      .jbox {
+        border-radius: 8px; padding: 7px 10px; font-size: 10.5px; font-weight: 600;
+        text-align: center; line-height: 1.35; min-width: 76px; max-width: 88px;
+      }
+      .jbox.c { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1e40af; }
+      .jbox.a { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; }
+      .jbox.v { background: #faf5ff; border: 1.5px solid #e9d5ff; color: #7c3aed; }
+      .jbox.s { background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; }
+      .jbox.ghost { background: transparent; border: 1.5px dashed #e2e8f0; color: #cbd5e1; }
+      .jarrow {
+        display: flex; align-items: center; color: #94a3b8; font-size: 14px;
+        padding: 0 3px; flex-shrink: 0; align-self: center; margin-top: -18px;
+      }
+      .jdown {
+        font-size: 13px; color: #94a3b8; margin-top: 3px; line-height: 1;
+      }
+      .jlabel { font-size: 9px; color: #94a3b8; margin-top: 3px; text-align: center; max-width: 80px; line-height: 1.3; }
+      .lane-divider { height: 1px; background: #f1f5f9; margin: 2px 0 2px 98px; }
+      .phase-tag {
+        display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.07em; padding: 2px 8px; border-radius: 20px; margin-right: 6px;
+      }
+      .phase-tag.p1 { background: #dcfce7; color: #15803d; }
+      .phase-tag.p2 { background: #f3e8ff; color: #7c3aed; }
+    </style>
+
+    <!-- Phase legend -->
+    <div style="display:flex;gap:12px;margin-bottom:14px;align-items:center">
+      <span class="phase-tag p1">● Phase 1 — Live</span>
+      <span class="phase-tag p2">● Phase 2 — Planned</span>
+      <span style="font-size:10px;color:#94a3b8">Dashed = Phase 2 feature</span>
+    </div>
+
+    <div class="journey-wrap">
+
+      <!-- CUSTOMER ROW -->
+      <div class="swim-lane">
+        <div class="lane-label customer">Customer</div>
+        <div class="lane-steps">
+          <div class="jstep"><div class="jbox c">Visits Marketing<br>Website</div><div class="jlabel">tadda-web.web.app</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox c">Registers /<br>Logs In</div><div class="jlabel">Google or Email</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox c">Places Order<br>+ Upload Design</div><div class="jlabel">order.html</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox c">Pays 50%<br>Advance</div><div class="jlabel">Razorpay</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox c">Tracks Order<br>Status</div><div class="jlabel">dashboard.html</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox c">Pays Balance<br>&amp; Receives</div><div class="jlabel">Before dispatch</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox c ghost">Raises<br>Support Ticket</div><div class="jlabel">Phase 2</div></div>
+        </div>
+      </div>
+
+      <div class="lane-divider"></div>
+
+      <!-- SYSTEM ROW -->
+      <div class="swim-lane">
+        <div class="lane-label system">System</div>
+        <div class="lane-steps">
+          <div class="jstep"><div class="jbox s">Saves Order<br>to Firestore</div><div class="jlabel">Auto ID generated</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox s">Notifies Admin<br>by Email</div><div class="jlabel">Web3Forms</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox s">Files Stored<br>in Cloud</div><div class="jlabel">Firebase Storage</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox s">Status Updates<br>in Real Time</div><div class="jlabel">Firestore sync</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox s ghost">Invoice PDF<br>Generated</div><div class="jlabel">Phase 2 · jsPDF</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox s ghost">Wallet<br>Deducted</div><div class="jlabel">Phase 2</div></div>
+        </div>
+      </div>
+
+      <div class="lane-divider"></div>
+
+      <!-- ADMIN ROW -->
+      <div class="swim-lane">
+        <div class="lane-label admin">Admin</div>
+        <div class="lane-steps">
+          <div class="jstep"><div class="jbox a">Reviews Order<br>in Dashboard</div><div class="jlabel">admin.html</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox a">Confirms<br>+ Notes</div><div class="jlabel">Status: Confirmed</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox a ghost">Assigns to<br>Employee</div><div class="jlabel">Phase 2</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox a ghost">Assigns to<br>Vendor</div><div class="jlabel">Phase 2</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox a">Updates to<br>Dispatched</div><div class="jlabel">6-stage pipeline</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox a ghost">Top-up<br>Customer Wallet</div><div class="jlabel">Phase 2</div></div>
+        </div>
+      </div>
+
+      <div class="lane-divider"></div>
+
+      <!-- VENDOR ROW -->
+      <div class="swim-lane">
+        <div class="lane-label vendor">Vendor<br><span style="font-size:8px;font-weight:400">(Phase 2)</span></div>
+        <div class="lane-steps">
+          <div class="jstep"><div class="jbox ghost">Receives<br>Assigned Order</div><div class="jlabel">Vendor portal login</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox ghost">Views Design<br>Files</div><div class="jlabel">Storage URLs</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox ghost">Updates<br>Production Status</div><div class="jlabel">In Production</div></div>
+          <div class="jarrow">→</div>
+          <div class="jstep"><div class="jbox ghost">Marks<br>Ready to Ship</div><div class="jlabel">Admin notified</div></div>
+        </div>
+      </div>
+
+    </div><!-- /journey-wrap -->
+
+    <!-- Summary bar -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:18px">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:18px;margin-bottom:4px">🛒</div>
+        <div style="font-size:11px;font-weight:700;color:#1e40af">Self-Service Orders</div>
+        <div style="font-size:10px;color:#64748b;margin-top:2px">Customer places &amp; pays without calling anyone</div>
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:18px;margin-bottom:4px">🛠</div>
+        <div style="font-size:11px;font-weight:700;color:#15803d">Admin in Control</div>
+        <div style="font-size:10px;color:#64748b;margin-top:2px">Full pipeline visibility — confirm, assign, dispatch</div>
+      </div>
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:18px;margin-bottom:4px">⚡</div>
+        <div style="font-size:11px;font-weight:700;color:#92400e">Real-Time Sync</div>
+        <div style="font-size:10px;color:#64748b;margin-top:2px">Every status change visible to customer instantly</div>
+      </div>
+      <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:18px;margin-bottom:4px">📈</div>
+        <div style="font-size:11px;font-weight:700;color:#7c3aed">Scales with You</div>
+        <div style="font-size:10px;color:#64748b;margin-top:2px">Vendor &amp; team layer added in Phase 2</div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 2</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3 — THE PROBLEM & SOLUTION -->
 <div class="page">
   <div class="inner">
     <div class="section-tag">Why OrderFlow Exists</div>
@@ -224,12 +392,12 @@
 
     <div class="page-footer">
       <span>OrderFlow — Product Pitch — Confidential</span>
-      <span>Page 2</span>
+      <span>Page 3</span>
     </div>
   </div>
 </div>
 
-<!-- PAGE 3 — LIVE CLIENT + WHAT'S DELIVERED -->
+<!-- PAGE 4 — LIVE CLIENT + WHAT'S DELIVERED -->
 <div class="page">
   <div class="inner">
     <div class="section-tag">Platform in Action</div>
@@ -320,7 +488,7 @@
 
     <div class="page-footer">
       <span>OrderFlow — Product Pitch — Confidential</span>
-      <span>Page 3</span>
+      <span>Page 4</span>
     </div>
   </div>
 </div>
@@ -388,7 +556,7 @@
 
     <div class="page-footer">
       <span>OrderFlow — Product Pitch — Confidential</span>
-      <span>Page 4</span>
+      <span>Page 5</span>
     </div>
   </div>
 </div>
@@ -405,7 +573,13 @@
       <div class="price-card highlight">
         <div class="badge">✓ Production Ready</div>
         <div class="plan">Phase 1 — Full Platform</div>
-        <div class="amount">₹75,000 <span>one-time</span></div>
+        <div style="margin-bottom:2px">
+          <span style="font-size:15px;color:rgba(255,255,255,0.4);text-decoration:line-through;font-weight:500">₹75,000</span>
+        </div>
+        <div class="amount" style="display:flex;align-items:baseline;gap:8px">
+          ₹45,000 <span>one-time</span>
+          <span style="font-size:10px;background:#fbbf24;color:#1a1a1a;border-radius:4px;padding:2px 7px;font-weight:700">Special Offer</span>
+        </div>
         <div class="desc">Everything to start taking and managing orders on day one.</div>
         <ul>
           <li>Customer portal + order management</li>
@@ -421,7 +595,13 @@
       <div class="price-card outline">
         <div class="badge">Phase 2</div>
         <div class="plan">Advanced Operations</div>
-        <div class="amount">₹25,000 <span>one-time</span></div>
+        <div style="margin-bottom:2px">
+          <span style="font-size:15px;color:#94a3b8;text-decoration:line-through;font-weight:500">₹25,000</span>
+        </div>
+        <div class="amount" style="display:flex;align-items:baseline;gap:8px">
+          ₹10,000 <span>one-time</span>
+          <span style="font-size:10px;background:#fbbf24;color:#1a1a1a;border-radius:4px;padding:2px 7px;font-weight:700">Special Offer</span>
+        </div>
         <div class="desc">Scale your operations with team tools, vendor management, and customer self-service.</div>
         <ul>
           <li>Mockup Builder (staging → live)</li>
@@ -437,14 +617,17 @@
       <div class="price-card dark">
         <div class="badge">Best Value</div>
         <div class="plan">Bundle — Phase 1 + 2</div>
-        <div class="amount">₹90,000 <span>one-time</span></div>
-        <div class="desc">Full platform from day one. Save ₹10,000 with bundled pricing.</div>
+        <div style="margin-bottom:2px">
+          <span style="font-size:15px;color:rgba(255,255,255,0.4);text-decoration:line-through;font-weight:500">₹1,00,000</span>
+        </div>
+        <div class="amount">₹50,000 <span>one-time</span></div>
+        <div class="desc">Full platform from day one. Save ₹50,000 with bundled offer pricing.</div>
         <ul>
           <li>Everything in Phase 1</li>
           <li>Everything in Phase 2</li>
           <li>Priority delivery</li>
           <li>50% upfront, 50% on Phase 2 delivery</li>
-          <li style="margin-top:8px;list-style:none;color:#4ade80;font-weight:700">Save ₹10,000</li>
+          <li style="margin-top:8px;list-style:none;color:#4ade80;font-weight:700">Save ₹50,000</li>
         </ul>
       </div>
     </div>
@@ -455,13 +638,13 @@
     </div>
 
     <div class="callout callout-amber">
-      <strong>What you own vs. what you pay for</strong>
-      One-time fee covers all development and Year 1 support. From Year 2, only ₹5,000/year AMC. All third-party infrastructure costs (Firebase, Razorpay, email) are pass-through at actual cost — billed directly to your account, zero markup from us.
+      <strong>★ Special offer pricing for T-ADDA — limited time</strong>
+      Standard market rate is ₹75,000 (Phase 1) + ₹25,000 (Phase 2). This offer is extended as a partnership pricing for T-ADDA. One-time fee covers all development and Year 1 support. From Year 2, only ₹5,000/year AMC. All infrastructure costs pass-through at actual cost — zero markup.
     </div>
 
     <div class="page-footer">
       <span>OrderFlow — Product Pitch — Confidential</span>
-      <span>Page 5</span>
+      <span>Page 6</span>
     </div>
   </div>
 </div>
@@ -555,12 +738,93 @@
 
     <div class="page-footer">
       <span>OrderFlow — Product Pitch — Confidential</span>
-      <span>Page 6</span>
+      <span>Page 7</span>
     </div>
   </div>
 </div>
 
-<!-- PAGE 7 — RESPONSIBILITY MATRIX -->
+<!-- PAGE 7 — DATA OWNERSHIP & PRIVACY -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Data Privacy &amp; Ownership</div>
+    <h2 class="page-title">Your Data. Your Business. Your Control.</h2>
+    <p class="page-subtitle">A common and valid concern in B2B SaaS — addressed transparently.</p>
+    <div class="rule"></div>
+
+    <!-- The concern -->
+    <div style="background:#fff8f0;border:1px solid #fed7aa;border-left:4px solid #f97316;border-radius:10px;padding:16px 20px;margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:#c2410c;margin-bottom:6px">🤔 The Common Concern in B2B SaaS</div>
+      <p style="font-size:12px;color:#7c2d12;line-height:1.7">"The platform provider can see all my orders, customer details, pricing, and business data. What stops them from using it — especially if they're in the same industry?"</p>
+      <p style="font-size:11px;color:#9a3412;margin-top:8px;font-style:italic">This is a legitimate concern. Every serious B2B SaaS buyer should ask this. Here's how OrderFlow answers it.</p>
+    </div>
+
+    <!-- Two options -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:20px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin-bottom:8px">Option A — Shared Infrastructure</div>
+        <div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:10px">Rule-Based Isolation</div>
+        <ul style="font-size:11.5px;color:#475569;padding-left:16px;line-height:1.8;margin-bottom:14px">
+          <li>Data stored in a common Firebase project</li>
+          <li>Firestore security rules prevent platform admin from reading your orders, customers, or registrations</li>
+          <li>Super admin role is restricted to platform settings only — service level, billing, technical config</li>
+          <li>Zero access to <code style="font-size:10px;background:#f1f5f9;padding:1px 5px;border-radius:4px">/orders</code>, <code style="font-size:10px;background:#f1f5f9;padding:1px 5px;border-radius:4px">/customers</code>, <code style="font-size:10px;background:#f1f5f9;padding:1px 5px;border-radius:4px">/registrations</code> enforced at database level</li>
+        </ul>
+        <div style="background:#dbeafe;border-radius:8px;padding:10px 12px;font-size:11px;color:#1e40af">
+          <strong>Trust basis:</strong> Firestore rules are verifiable — client can review and audit them anytime. Rules are part of the code handover.
+        </div>
+      </div>
+
+      <div style="background:#0f172a;border-radius:12px;padding:20px;color:#fff;position:relative;overflow:hidden">
+        <div style="position:absolute;top:12px;right:12px;background:#4ade80;color:#14532d;font-size:10px;font-weight:700;border-radius:4px;padding:2px 8px">Recommended</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.5);margin-bottom:8px">Option B — Dedicated Project</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:10px">Your Own Firebase Account</div>
+        <ul style="font-size:11.5px;color:rgba(255,255,255,0.8);padding-left:16px;line-height:1.8;margin-bottom:14px">
+          <li>Platform deployed into <strong>your</strong> Google/Firebase account</li>
+          <li>You hold all credentials — API keys, project access, storage</li>
+          <li>We have <strong>zero ongoing access</strong> unless you explicitly invite us for support</li>
+          <li>Full source code handed over — any developer can maintain it</li>
+          <li>You can revoke our access at any time</li>
+        </ul>
+        <div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:10px 12px;font-size:11px;color:#4ade80">
+          <strong>Trust basis:</strong> We literally cannot access your data — we don't have your account credentials.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- What we guarantee -->
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:10px">✅ What OrderFlow Guarantees — Regardless of Option</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div style="font-size:11.5px;color:#166534">
+          <div style="font-weight:700;margin-bottom:3px">🔒 No Data Monetisation</div>
+          Your business data is never used, analysed, sold, or shared with any third party — including the platform owner.
+        </div>
+        <div style="font-size:11.5px;color:#166534">
+          <div style="font-weight:700;margin-bottom:3px">📦 Full Data Portability</div>
+          Export all your orders, customers, and registrations as JSON/CSV at any time. You're never locked in.
+        </div>
+        <div style="font-size:11.5px;color:#166534">
+          <div style="font-weight:700;margin-bottom:3px">🔑 Code Ownership</div>
+          Source code is handed over at the end of Phase 1. You own it. Any developer can read, audit, or modify it.
+        </div>
+      </div>
+    </div>
+
+    <!-- NDA offer -->
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #3b82f6;border-radius:8px;padding:12px 16px;font-size:12px;color:#1e40af">
+      <strong>NDA Available on Request</strong> — If required, we are happy to sign a Non-Disclosure Agreement before any engagement begins. This is standard practice and we welcome it.
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 8</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 9 — RESPONSIBILITY MATRIX -->
 <div class="page">
   <div class="inner">
     <div class="section-tag">Governance &amp; Accountability</div>
@@ -619,7 +883,7 @@
 
     <div class="page-footer">
       <span>OrderFlow — Product Pitch — Confidential</span>
-      <span>Page 7</span>
+      <span>Page 9</span>
     </div>
   </div>
 </div>
@@ -679,7 +943,7 @@
 
     <div class="page-footer">
       <span>OrderFlow — Product Pitch — Confidential</span>
-      <span>Page 8</span>
+      <span>Page 10</span>
     </div>
   </div>
 </div>

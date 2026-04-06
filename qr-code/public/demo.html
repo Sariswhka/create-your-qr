@@ -276,6 +276,39 @@
   .pin-boxes { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
   .pin-box { width: 32px; height: 36px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #3b82f6; font-weight: 700; }
 
+  /* ── Live iframe frame ── */
+  .live-frame-outer {
+    flex-shrink: 0; width: 460px;
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    background: #1e293b; position: relative;
+  }
+  .live-frame-chrome {
+    background: #0f172a; padding: 10px 14px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .live-frame-viewport {
+    width: 460px; height: 340px; overflow: hidden; position: relative;
+  }
+  .live-frame-viewport iframe {
+    width: 1200px; height: 900px;
+    transform: scale(0.3833); transform-origin: top left;
+    border: none; pointer-events: none; display: block;
+  }
+  .live-frame-cta {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(0deg, rgba(15,23,42,0.95) 60%, transparent);
+    padding: 18px 14px 10px; display: flex; justify-content: flex-end;
+  }
+  .live-frame-cta a {
+    background: #3b82f6; color: #fff; border-radius: 8px;
+    padding: 6px 14px; font-size: 11px; font-weight: 700;
+    text-decoration: none; transition: background 0.2s;
+  }
+  .live-frame-cta a:hover { background: #2563eb; }
+
   /* ── Scan counter ── */
   .scan-badge {
     display: flex; align-items: center; justify-content: space-between;
@@ -350,7 +383,7 @@
     <!-- SLIDE 3: URL QR -->
     <div class="slide slide-split" id="s3">
       <div class="slide-text">
-        <div class="slide-tag">Feature 1</div>
+        <div class="slide-tag">Feature 1 — Live Site</div>
         <div class="slide-title">URL QR <span>Generator</span></div>
         <div class="slide-body">Paste any link — website, Instagram, YouTube, Google Form, payment link — and generate a clean, downloadable QR code in seconds.</div>
         <ul class="slide-bullets">
@@ -361,29 +394,16 @@
           <li><span class="bullet-icon">⬇️</span> Download as PNG — no watermark, no sign-up</li>
         </ul>
       </div>
-      <div class="mock">
-        <div class="mock-browser">
-          <div class="mock-topbar">
-            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
-            <div class="mock-url">create-your-qr.web.app</div>
-          </div>
-          <div class="mock-body">
-            <div class="m-label">Enter URL</div>
-            <div class="m-input highlight typing">https://instagram.com/yourbrand</div>
-            <div class="m-row">
-              <div style="flex:1"><div class="m-label">QR Colour</div><div class="m-input" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#1e40af;display:inline-block"></span> Navy Blue</div></div>
-              <div style="flex:1"><div class="m-label">Background</div><div class="m-input" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#fff;border:1px solid #334155;display:inline-block"></span> White</div></div>
-            </div>
-            <div class="qr-preview">
-              <div class="qr-grid">
-                <div class="qr-corner tl"></div>
-                <div class="qr-corner tr"></div>
-                <div class="qr-corner bl"></div>
-                <div class="qr-dots"></div>
-              </div>
-              <div class="qr-label">Your QR is ready ✓</div>
-            </div>
-            <div class="m-btn">⬇ Download PNG</div>
+      <div class="live-frame-outer">
+        <div class="live-frame-chrome">
+          <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+          <div class="mock-url">create-your-qr.web.app</div>
+          <span style="font-size:10px;color:#4ade80;font-weight:700;margin-left:4px">● LIVE</span>
+        </div>
+        <div class="live-frame-viewport">
+          <iframe src="https://create-your-qr.web.app" title="Create Your QR — Live" loading="lazy"></iframe>
+          <div class="live-frame-cta">
+            <a href="https://create-your-qr.web.app" target="_blank">Open Full Site ↗</a>
           </div>
         </div>
       </div>
