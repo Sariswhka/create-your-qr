@@ -42,8 +42,9 @@ There are **two web properties** for Tadda:
 │  │  Firestore   │  │    Storage    │  │   Authentication   │   │
 │  │  /orders     │  │  orders/{id}/ │  │  Google Sign-In    │   │
 │  │  /users      │  │  design files │  │  Email/Password    │   │
-│  │  /registr..  │  │  mockups etc  │  └────────────────────┘   │
-│  └──────────────┘  └───────────────┘                           │
+│  │  /registr..  │  │  mockups/{uid}│  └────────────────────┘   │
+│  │  /mockups    │  └───────────────┘                           │
+│  └──────────────┘                                              │
 │                                                                  │
 │  ┌──────────────────────────────────────────────┐               │
 │  │  Web3Forms (email notifications, no backend) │               │
@@ -85,12 +86,15 @@ tadda/                             ← Order portal
 ├── firebase.json                  # Hosting: site = taddaportal
 ├── .firebaserc                    # project = tadda-81f3e
 ├── cors.json                      # Storage CORS (applied once via gsutil)
+├── pitch.html                     # T-ADDA specific pitch (7 pages, PDF-ready)
+├── pitch-product.html             # General "OrderFlow" product pitch (8 pages, PDF-ready)
 ├── CLAUDE.md                      # This file
 └── public/
     ├── index.html                 # Login (Google + Email/Password)
-    ├── order.html                 # New order form
-    ├── dashboard.html             # Customer dashboard
+    ├── order.html                 # New order form (multi-file + saved design picker)
+    ├── dashboard.html             # Customer dashboard (with My Saved Designs section)
     ├── admin.html                 # Admin dashboard
+    ├── mockup.html                # Mockup Builder (staging → production pending)
     ├── css/style.css              # Full design system (shared across portal)
     └── js/
         └── config.js             # Firebase config + WEB3FORMS_KEY (NOT in git)
@@ -131,17 +135,23 @@ Sections:
    - Dynamic colour swatches rendered per product
    - Dynamic size table (adult S/M/L/XL or kids age sizes) rendered per product
    - Auto total qty + estimated dispatch ETA
-3. **Design & Artwork** — design PNG (required), mockup (optional), placement (required), design size (optional)
-4. **Neck Label** — yes/no toggle + upload
-5. **Shipping**
+3. **Design & Artwork** — tab switcher:
+   - *Upload New*: file input, `multiple`, up to 6 images from device
+   - *Choose from Saved*: thumbnail grid from `/mockups` collection, multi-select up to 6 (checkmark badge on selected)
+4. **Mockup** — same tab switcher pattern as Design (Upload New / Choose from Saved)
+5. **Placement** — required text field; **Design Size** — optional
+6. **Neck Label** — yes/no toggle + upload
+7. **Shipping**
    - Self-managed: customer arranges courier
    - Tadda arranges: shows delivery address fields (address, city, PIN) + shipping label upload
-6. **Additional Notes** — free text
+8. **Additional Notes** — free text
 
 On submit:
 - Validates colour selected + at least one size qty > 0
-- Uploads files to Firebase Storage: `orders/{orderId}/{timestamp}_{filename}`
-- Saves order doc to Firestore `/orders/{orderId}`
+- Validates design provided (either file upload or saved design selected)
+- Uploads new files to Firebase Storage: `orders/{orderId}/{timestamp}_{filename}`
+- Uses saved design URLs directly (no re-upload)
+- Saves order doc to Firestore `/orders/{orderId}` — stores both `designUrl` (first), `designUrls` (array), `mockupUrl`, `mockupUrls` (array)
 - Sends admin email via Web3Forms (non-blocking)
 - Shows success modal with order summary (ID, brand, product+colour, qty, ETA)
 
@@ -151,12 +161,36 @@ On submit:
 - Filter by status
 - Click order row → modal with full order details + file download links
 - Requires Firestore composite index: `userId ASC + createdAt DESC`
+- **My Saved Designs** — section above orders table; loads from `/mockups` (limit 20, no orderBy)
+  - Composite thumbnail: `blankUrl` as background image + `imageUrl` as overlay (CSS position)
+  - Click thumbnail → opens `imageUrl` in new tab
+  - "+ Create New" button links to `/mockup.html`
+  - Section hidden if user has no saved designs
 - **Become a Brand Owner** — sidebar link that opens registration modal
   - Pre-fills name + email from logged-in user
   - Checks `reg_index` on login — if already registered, sidebar shows "Brand Owner Registered ✓" in green
   - Clicking when already registered shows info message instead of opening form
   - Saves to `/registrations` with `registeredFrom: 'portal'` + writes `reg_index` entries atomically
   - Duplicate phone/email blocked with clear error message
+
+### mockup.html — Mockup Builder (Staging)
+- Login-required page — redirects to index if not authenticated
+- **Product/colour selector** — dropdown picks product + colour; loads blank photos from Firestore `/products/{key}` Storage URLs
+- **View tabs** — Front / Back / Left / Right; each loads corresponding blank photo
+- **Canvas rendering:**
+  - Blank product photo displayed as CSS `background-image` on `.canvas-wrapper` div (NOT drawn into canvas — avoids CORS taint)
+  - Fabric.js canvas sits on top with `backgroundColor: 'transparent'` — holds only the design layer
+  - `canvas.toDataURL()` works cleanly since no cross-origin pixels are in the canvas
+- **Design upload** — user uploads PNG; `fabric.Image.fromURL` adds it to canvas, scalable/moveable
+- **Tools panel** — delete selected object, download mockup (merges blank + canvas via off-screen canvas), save mockup
+- **Save Mockup** — saves to Firestore `/mockups`:
+  - `imageUrl`: canvas layer PNG (transparent background, just the design) uploaded to Storage `mockups/{uid}/{id}.png`
+  - `blankUrl`: product blank photo Storage URL (saved separately, not composited in canvas)
+  - Thumbnail on dashboard composites them with CSS overlay
+- **My Saved Designs panel** — grid of saved mockups with delete; clicking opens design in new tab
+- **Save Design Only** — upload PNG directly to `/mockups` without using canvas (for storing finished artwork)
+  - Supports up to 6 files at once
+  - `blankUrl` stored as empty string; `productKey` and `colour` stored as empty string
 
 ### admin.html — Admin Dashboard
 - Restricted to `parashar.sachin@gmail.com` only — others redirected to dashboard
@@ -226,8 +260,10 @@ Product dropdown values → display names:
 | colour | string | e.g. "Black" |
 | sizes | map | `{S: 10, M: 20, ...}` or kids age keys |
 | totalQty | number | |
-| designUrl | string | Storage URL |
-| mockupUrl | string | Storage URL (optional) |
+| designUrl | string | Storage URL — first/primary design file |
+| designUrls | array | Storage URLs — all design files (up to 6) |
+| mockupUrl | string | Storage URL — first/primary mockup (optional) |
+| mockupUrls | array | Storage URLs — all mockup files (up to 6, optional) |
 | placementDetails | string | Required |
 | designSize | string | Optional |
 | neckLabel | string | `yes` / `no` |
@@ -275,6 +311,21 @@ Duplicate prevention index — publicly readable/writable, stores no PII.
 ### `/users/{uid}`
 - Managed by Firebase Auth — used for customer list in admin
 
+### `/mockups/{mockupId}`
+Saved designs and mockups per user.
+| Field | Type | Notes |
+|-------|------|-------|
+| userId | string | Firebase Auth UID |
+| userEmail | string | |
+| productKey | string | One of the 7 product keys (empty for direct design saves) |
+| colour | string | Product colour (empty for direct design saves) |
+| view | string | `front/back/left/right` or original filename for direct saves |
+| imageUrl | string | Storage URL — transparent design layer PNG |
+| blankUrl | string | Storage URL — product blank photo (empty for direct design saves) |
+| createdAt | timestamp | Server timestamp |
+
+Storage path: `mockups/{uid}/{timestamp}_{filename}`
+
 ---
 
 ## Firestore Security Rules
@@ -300,6 +351,10 @@ service cloud.firestore {
     match /reg_index/{checkId} {
       allow read, write: if true;  // duplicate check index — no PII stored
     }
+    match /mockups/{mockupId} {
+      allow create: if request.auth != null;
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
   }
 }
 ```
@@ -321,7 +376,9 @@ Applied via gsutil (one-time setup):
 ```bash
 gsutil cors set cors.json gs://tadda-81f3e.firebasestorage.app
 ```
-`cors.json` allows origins: `https://taddaportal.web.app` and `http://localhost:5000`
+`cors.json` allows origins: `https://taddaportal.web.app`, `https://taddaportal--staging-tm3zjr94.web.app`, and `http://localhost:5000`
+
+**Note:** CORS headers are not strictly required for the Mockup Builder because product blank photos are rendered via CSS `background-image` on a wrapper div (not drawn into the Fabric.js canvas). This keeps the canvas untainted and `toDataURL()` works without CORS. Proper CORS headers would enable future canvas-merge export features.
 
 ---
 
@@ -405,10 +462,12 @@ window.WEB3FORMS_KEY = '1c16ff01-bc48-4d2a-8671-23bf96569cf2';
 - [x] Auto-fill customer details (name, brand, phone) from last order for returning customers
 - [x] Order confirmation modal before submit — shows full summary + pricing breakdown
 - [x] Delivery address fields (shown when Tadda arranges shipping)
-- [x] Design size field optional
+- [x] Design & mockup file upload — multiple files (up to 6), tab switcher (Upload New / Choose from Saved)
 - [x] File uploads to Firebase Storage (parallel — all files uploaded simultaneously)
 - [x] Order saved first with `unpaid` status, then Razorpay payment attempted
+- [x] Order doc stores `designUrl` + `designUrls[]`, `mockupUrl` + `mockupUrls[]`
 - [x] Customer dashboard — own orders only, status filter, order details modal
+- [x] My Saved Designs section on dashboard (loaded from `/mockups` collection)
 - [x] Payment column in orders table (Paid / Unpaid)
 - [x] "Pay Now" button on dashboard for unpaid orders (works once Razorpay key is configured)
 - [x] "Become a Brand Owner" in customer dashboard (pre-fill + duplicate check + already-registered state)
@@ -417,9 +476,18 @@ window.WEB3FORMS_KEY = '1c16ff01-bc48-4d2a-8671-23bf96569cf2';
 - [x] Product Photos tab in admin — upload/delete photos per product (stored in Firestore + Storage)
 - [x] Product photos shown to customers in order form when product is selected (horizontal scroll)
 - [x] Duplicate registration prevention via `reg_index` collection (phone + email)
-- [x] Firestore security rules (orders user-scoped, products readable by auth, admin-write only)
+- [x] Firestore security rules (orders, mockups user-scoped; products readable by auth; admin-write only)
 - [x] Firebase Storage + CORS
 - [x] Admin email notifications on new order + new registration
+
+**Mockup Builder (mockup.html) — Staging ✅, Production pending**
+- [x] DIY canvas — upload design PNG, position on real product blank photos
+- [x] Product/colour/view selector (Front, Back, Left, Right)
+- [x] Fabric.js canvas with transparent background (CSS background approach — no CORS taint)
+- [x] Save Mockup to `/mockups` collection (imageUrl = design layer, blankUrl = product photo)
+- [x] My Saved Designs panel on mockup builder
+- [x] Save Design Only — upload PNG directly to library (up to 6 files)
+- [x] Saved designs selectable from order form (tab switcher)
 
 **Marketing Website (tadda-web.web.app)**
 - [x] Full single-page marketing site (Hero, About, Why Us, How It Works, Products, Pricing, T&C, Contact)
@@ -428,52 +496,30 @@ window.WEB3FORMS_KEY = '1c16ff01-bc48-4d2a-8671-23bf96569cf2';
 - [x] Brand Owner registration modal with duplicate check (phone + email)
 - [x] Contact form via Web3Forms
 
-### Phase 2 — Planned (see `plan.md` for full details)
+**Pitch Documents**
+- [x] `pitch.html` — T-ADDA specific pitch (7 pages, PDF-ready via Chrome print)
+- [x] `pitch-product.html` — General "OrderFlow" product pitch (8 pages) — T-ADDA as live client reference
 
-**Role System:**
-- Super Admin (`parashar.sachin@gmail.com`) — platform control, manage admins, service level. No access to business data
-- Admin (Tadda official email + 1 more, max 2) — full business access: orders, registrations, customers
-- Customer — own orders only
-
-**Service Suspension (4 levels):**
-- Level 0: Active (all works)
-- Level 1: Warning (new orders hidden from admin, notifications blocked, customers unaffected)
-- Level 2: Restricted (admin dashboard blocked entirely)
-- Level 3: Limited (order form disabled)
-- Level 4: Suspended (entire portal down)
-
+### Phase 2 — Planned (₹25,000 one-time)
 **Features:**
-- Super admin panel (`superadmin.html`) — service level control, admin management, password reset
-- Admin role check from `/admins/{email}` collection (replaces hardcoded email)
-- Export to JSON — admin can download all orders + registrations as backup
+- [ ] Mockup Builder → deploy to production (staging already done)
+- [ ] Role system: Super Admin (platform), Admin (business, max 2 seats), Customer
+  - Admin roles from `/admins/{email}` Firestore collection (no hardcoded emails)
+  - Super admin panel (`superadmin.html`) — service level, admin management
+- [ ] Service Level Control (4 levels: Active → Warning → Restricted → Limited → Suspended)
+- [ ] Employee Management — add team members (name, phone, email); assign Primary + Secondary owner per order
+- [ ] Vendor Portal — multiple vendors, assigned orders only, production status updates
+- [ ] Ticketing System — customers raise queries from dashboard; admin responds with thread; Open → In Progress → Resolved
+- [ ] New Product Category Management — admin adds products, colours, sizes, pricing from panel (zero code changes)
+- [ ] Wallet System — admin tops up customer wallet, 5% bonus; used at checkout alongside Razorpay
+- [ ] Invoice PDF auto-generation on order confirmation (jsPDF); Credit Note PDF for cancellations
+- [ ] Data Export — admin downloads all orders + registrations as CSV/JSON backup
+- [ ] Smart Notifications — email/WhatsApp alerts to assigned employees on new order; customer notified on status change
+
+### Phase 3 — Planned (Pricing TBD)
+- Razorpay advance payment (50% at order, balance before dispatch) — integration built, activates with credentials
 - Brand logo & product file upload — user profile with one-time upload, auto-attached to orders
 - Data policy page (`policy.html`) — ownership, encryption, backup, deletion policies
-- Notification updates — send to all admin emails, blocked at Level 1+
-
-**Estimated effort:** ~4.25 hours (see `plan.md` for step-by-step breakdown)
-
-### Phase 3 — Planned (Payments, Wallet & Product Images)
-- Razorpay advance payment (50% at order, balance before dispatch)
-- Wallet system — admin tops up customer wallet, 5% bonus on every top-up
-- Wallet used at checkout (partial or full, alongside Razorpay)
-- Firestore: `/wallets/{uid}` for balance, `/wallet_transactions/{autoId}` for history
-- Invoice PDF auto-generation on order confirmation (jsPDF)
-- Credit note PDF for cancellations/returns
-- Product image management — admin uploads multiple images per product from admin panel
-- Images stored in Firestore `/products/{productKey}` + Firebase Storage `products/{key}/`
-- Marketing site product viewer: horizontal scroll with dot indicators
-- Order form: product preview card with horizontal scroll when product selected
-
-### Phase 4 — Planned (Vendor Portal + Digital Marketing)
-- Franchise/vendor portal — vendor login, assigned orders only
-- Admin assigns orders to vendors
-- Vendor updates production status
-- Vendor dashboard with own stats
-- Digital marketing support packages (Starter/Growth/Premium) — monthly subscription
-- Customer opts in from dashboard, fills brand brief, pays via Razorpay/wallet
-- Tadda team manages social media, ads, content — progress visible in customer dashboard
-- Firestore: `/marketing_subscriptions/{uid}`, `/marketing_deliverables/{autoId}`
-- Recurring revenue model for Tadda — upsell from printing to full brand partner
 
 ---
 
@@ -484,9 +530,20 @@ window.WEB3FORMS_KEY = '1c16ff01-bc48-4d2a-8671-23bf96569cf2';
 - `let` / `const` variables cause TDZ errors if referenced in inline `onclick=` handlers — use `var` for module-level state or move handlers to `addEventListener`
 - When adding multiple click handlers to the same element, use a flag variable (e.g. `alreadyRegistered`) to control behaviour rather than `onclick` which conflicts with `addEventListener`
 - Web3Forms free tier: 250 emails/month — monitor as order volume grows; upgrade or switch service if exceeded
+- Mockup Builder: `fabric.Image.fromURL` with `crossOrigin: 'anonymous'` causes browser to cache CORS failures silently — solved by rendering product blanks via CSS `background-image` (not drawn into canvas)
+- Firestore `orderBy` on `/mockups` requires a composite index — removed `orderBy` to avoid the error; results returned in natural order
+- Mockup Builder blank photos only uploaded for Regular 180 GSM Black (4 views) — other products/colours need photos added via Admin → Product Photos tab for Mockup Builder to work fully
+
+## Pending Actions (Production)
+- [ ] **Razorpay credentials** — T-ADDA to provide Key ID + Secret to activate payment gateway
+- [ ] **Deploy Mockup Builder** — run `firebase deploy --only hosting:taddaportal` to push staging changes live
+- [ ] **Upload remaining product blank photos** — use Admin → Product Photos tab for all products/colours/views
+- [ ] **Custom domain** — register tadda.in (~₹1,000/year), point to Firebase Hosting (optional)
+- [ ] **Fix GitHub Actions auto-deploy** — run `firebase login:ci`, update `FIREBASE_TOKEN` secret in GitHub repo settings
 
 ## Scalability Notes
 - Firebase Storage: each user uploads to isolated path `orders/{orderId}/` — no contention between users
+- Mockup designs stored at `mockups/{uid}/` — isolated per user
 - Firestore: each order is a separate document — no locking or queuing issues at scale
 - File uploads use `Promise.all()` so all files upload in parallel (not sequential) — roughly halves wait time
 - Web3Forms 250/month limit is the first constraint to hit at scale

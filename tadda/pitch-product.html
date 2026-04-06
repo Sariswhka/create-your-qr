@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OrderFlow — Product Pitch</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; color: #1e293b; background: #fff; font-size: 13px; line-height: 1.6; }
+
+  @media print {
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: avoid; }
+    @page { margin: 0; size: A4; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 0; overflow: hidden; position: relative; }
+
+  /* Cover */
+  .cover { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%); color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 60px 56px; min-height: 297mm; }
+  .cover-tag { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 5px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 28px; display: inline-block; }
+  .cover h1 { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 8px; }
+  .cover h1 span { color: #60a5fa; }
+  .cover-tagline { font-size: 19px; color: rgba(255,255,255,0.8); margin-bottom: 12px; font-weight: 500; }
+  .cover-sub { font-size: 13.5px; color: rgba(255,255,255,0.6); margin-bottom: 48px; max-width: 460px; line-height: 1.7; }
+  .cover-divider { width: 60px; height: 4px; background: #3b82f6; border-radius: 2px; margin-bottom: 40px; }
+  .cover-stats { display: flex; gap: 36px; margin-bottom: 48px; }
+  .cover-stat .num { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -1px; }
+  .cover-stat .lbl { font-size: 11px; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+  .cover-badge { position: absolute; bottom: 48px; right: 56px; text-align: right; }
+  .cover-badge .live-dot { display: inline-flex; align-items: center; gap: 6px; background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.4); border-radius: 20px; padding: 5px 14px; font-size: 11px; font-weight: 700; color: #4ade80; margin-bottom: 8px; }
+  .cover-badge .date { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+  /* Inner */
+  .inner { padding: 48px 56px; min-height: 297mm; }
+  .section-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #3b82f6; margin-bottom: 6px; }
+  h2.page-title { font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .page-subtitle { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+  .rule { height: 2px; background: linear-gradient(90deg, #3b82f6, #e0e7ff); border-radius: 1px; margin-bottom: 28px; }
+
+  /* Cards */
+  .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .feat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+  .feat-card h4 { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .feat-card ul { padding-left: 14px; color: #475569; font-size: 11.5px; }
+  .feat-card ul li { margin-bottom: 3px; }
+
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pill-live    { background: #dcfce7; color: #15803d; }
+  .pill-ready   { background: #dbeafe; color: #1e40af; }
+  .pill-planned { background: #f1f5f9; color: #475569; }
+  .pill-staging { background: #fef3c7; color: #92400e; }
+
+  .callout { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 14px 16px; font-size: 12px; color: #1e40af; margin-bottom: 16px; }
+  .callout strong { font-weight: 700; display: block; margin-bottom: 3px; }
+  .callout-green { background: #f0fdf4; border-color: #86efac; border-left-color: #10b981; color: #15803d; }
+  .callout-amber { background: #fffbeb; border-color: #fcd34d; border-left-color: #f59e0b; color: #92400e; }
+  .callout-purple { background: #faf5ff; border-color: #d8b4fe; border-left-color: #7c3aed; color: #6d28d9; }
+
+  /* Pricing */
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .price-card { border-radius: 12px; padding: 20px; }
+  .price-card.highlight { background: linear-gradient(135deg, #1e3a8a, #1d4ed8); color: #fff; }
+  .price-card.outline { background: #f8fafc; border: 1.5px solid #e2e8f0; }
+  .price-card.dark { background: #0f172a; color: #fff; }
+  .price-card .plan { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px; }
+  .price-card.highlight .plan, .price-card.dark .plan { color: rgba(255,255,255,0.6); }
+  .price-card.outline .plan { color: #64748b; }
+  .price-card .amount { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; line-height: 1; }
+  .price-card.highlight .amount, .price-card.dark .amount { color: #fff; }
+  .price-card.outline .amount { color: #0f172a; }
+  .price-card .amount span { font-size: 13px; font-weight: 500; }
+  .price-card .desc { font-size: 11px; margin-bottom: 12px; line-height: 1.5; }
+  .price-card.highlight .desc, .price-card.dark .desc { color: rgba(255,255,255,0.65); }
+  .price-card.outline .desc { color: #64748b; }
+  .price-card ul { font-size: 11px; padding-left: 14px; }
+  .price-card.highlight ul, .price-card.dark ul { color: rgba(255,255,255,0.85); }
+  .price-card.outline ul li { color: #475569; margin-bottom: 3px; }
+  .price-card .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; }
+  .price-card.highlight .badge { background: #4ade80; color: #14532d; }
+  .price-card.dark .badge { background: #818cf8; color: #fff; }
+  .price-card.outline .badge { background: #e2e8f0; color: #475569; }
+
+  /* Cost table */
+  .cost-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 18px; }
+  .cost-table th { background: #f1f5f9; padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+  .cost-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: top; }
+  .cost-table tr:last-child td { border-bottom: none; }
+
+  /* RACI */
+  .raci { width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:18px; }
+  .raci thead tr { background:#0f172a; color:#fff; }
+  .raci th { padding:9px 12px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
+  .raci td { padding:9px 12px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+  .raci tr:nth-child(even) td { background:#f8fafc; }
+  .raci tr:last-child td { border-bottom:none; }
+  .raci td:first-child { font-weight:600; color:#1e293b; width:42%; }
+  .own { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700; }
+  .own-tp  { background:#dbeafe;color:#1e40af; }
+  .own-td  { background:#dcfce7;color:#15803d; }
+  .own-sh  { background:#f3e8ff;color:#7c3aed; }
+  .cat-header td { background:#1e3a8a !important; color:#fff !important; font-weight:700; font-size:11px; padding:7px 12px; }
+
+  /* Phase grid */
+  .phase2-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-bottom: 18px; }
+  .p2-card { background: #fafafa; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+  .p2-card h4 { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 5px; }
+  .p2-card p { font-size: 11px; color: #64748b; line-height: 1.5; }
+  .p2-card .status { margin-bottom: 5px; }
+
+  /* Client card */
+  .client-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 12px; padding: 22px 24px; color: #fff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .client-card .client-info h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .client-card .client-info p { font-size: 12px; color: rgba(255,255,255,0.65); }
+  .client-card .client-stats { display: flex; gap: 24px; }
+  .client-card .cs-item .num { font-size: 22px; font-weight: 800; text-align: right; }
+  .client-card .cs-item .lbl { font-size: 10px; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 22px; }
+  .timeline::before { content: ''; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 2px; background: #e2e8f0; }
+  .tl-item { position: relative; margin-bottom: 16px; }
+  .tl-item::before { content: ''; position: absolute; left: -18px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; border: 2px solid #fff; box-shadow: 0 0 0 2px #3b82f6; }
+  .tl-item.done::before { background: #10b981; box-shadow: 0 0 0 2px #10b981; }
+  .tl-item h4 { font-size: 12.5px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+  .tl-item p { font-size: 11px; color: #64748b; }
+
+  .page-footer { position: absolute; bottom: 24px; left: 56px; right: 56px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 — COVER -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-tag">Product Pitch — April 2026</div>
+    <h1>Order<span>Flow</span></h1>
+    <p class="cover-tagline">End-to-End Order Management for Print &amp; Manufacturing Businesses</p>
+    <p class="cover-sub">A complete digital operations platform — customer portal, admin dashboard, mockup builder, vendor management, and team collaboration. Built for businesses that take custom orders and need one system to run everything.</p>
+    <div class="cover-divider"></div>
+    <div class="cover-stats">
+      <div class="cover-stat">
+        <div class="num">2</div>
+        <div class="lbl">Live Properties</div>
+      </div>
+      <div class="cover-stat">
+        <div class="num">100%</div>
+        <div class="lbl">Cloud-Based</div>
+      </div>
+      <div class="cover-stat">
+        <div class="num">₹0</div>
+        <div class="lbl">Monthly Fee to Start</div>
+      </div>
+      <div class="cover-stat">
+        <div class="num">1</div>
+        <div class="lbl">Live Client</div>
+      </div>
+    </div>
+    <div class="cover-badge">
+      <div><span class="live-dot">● Production Live</span></div>
+      <div class="date">Delivering since April 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2 — THE PROBLEM & SOLUTION -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Why OrderFlow Exists</div>
+    <h2 class="page-title">The Problem We Solve</h2>
+    <p class="page-subtitle">Custom order businesses — apparel, merchandise, printing — are running on WhatsApp, Excel, and gut feeling.</p>
+    <div class="rule"></div>
+
+    <div class="feat-grid" style="margin-bottom:24px">
+      <div class="feat-card" style="border-left:3px solid #ef4444">
+        <h4>😓 Without OrderFlow</h4>
+        <ul>
+          <li>Orders tracked on WhatsApp — things get missed</li>
+          <li>Design files shared over chat — no version control</li>
+          <li>Customer has no visibility — calls admin constantly</li>
+          <li>No payment tracking — chasing advances manually</li>
+          <li>Admin can't tell which vendor has which order</li>
+          <li>Registrations managed on paper or Excel</li>
+          <li>No data — can't tell which customer ordered most</li>
+        </ul>
+      </div>
+      <div class="feat-card" style="border-left:3px solid #10b981">
+        <h4>✅ With OrderFlow</h4>
+        <ul>
+          <li>Every order has a unique ID, status, and timeline</li>
+          <li>Design files stored in cloud — always accessible</li>
+          <li>Customer dashboard — self-service order tracking</li>
+          <li>Razorpay advance payment collected at order</li>
+          <li>Orders assigned to vendors or employees with visibility</li>
+          <li>Brand owner registrations managed with pipeline</li>
+          <li>Full analytics — customers, orders, conversions</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout-purple callout">
+      <strong>Who is this for?</strong>
+      Any business that takes custom product orders — apparel printing, merchandise, corporate gifting, packaging, embroidery, promotional products. If you take an order, manage production, and deliver — OrderFlow runs your operations.
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:4px">
+      <div class="feat-card" style="text-align:center;padding:20px 14px">
+        <div style="font-size:24px;margin-bottom:8px">🏭</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">Print-on-Demand</div>
+        <div style="font-size:11px;color:#64748b">T-shirts, hoodies, caps, custom apparel with branding</div>
+      </div>
+      <div class="feat-card" style="text-align:center;padding:20px 14px">
+        <div style="font-size:24px;margin-bottom:8px">🎁</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">Corporate Gifting</div>
+        <div style="font-size:11px;color:#64748b">Branded merchandise, bulk customised gifts, event kits</div>
+      </div>
+      <div class="feat-card" style="text-align:center;padding:20px 14px">
+        <div style="font-size:24px;margin-bottom:8px">📦</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">Custom Manufacturing</div>
+        <div style="font-size:11px;color:#64748b">Any made-to-order business with multiple vendors and customers</div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 2</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3 — LIVE CLIENT + WHAT'S DELIVERED -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Platform in Action</div>
+    <h2 class="page-title">Live &amp; Delivering Today</h2>
+    <p class="page-subtitle">OrderFlow is not a concept — it is running in production for a live client.</p>
+    <div class="rule"></div>
+
+    <div class="client-card">
+      <div class="client-info">
+        <h3>T-ADDA — Print-on-Demand Clothing</h3>
+        <p>Custom apparel brand — bulk orders, brand printing, POD fulfilment</p>
+        <div style="margin-top:10px;display:flex;gap:10px">
+          <span style="font-size:11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:3px 12px;color:rgba(255,255,255,0.8)">taddaportal.web.app ●</span>
+          <span style="font-size:11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:3px 12px;color:rgba(255,255,255,0.8)">tadda-web.web.app ●</span>
+        </div>
+      </div>
+      <div class="client-stats">
+        <div class="cs-item">
+          <div class="num">2</div>
+          <div class="lbl">Live Sites</div>
+        </div>
+        <div class="cs-item">
+          <div class="num">7</div>
+          <div class="lbl">Products</div>
+        </div>
+        <div class="cs-item">
+          <div class="num">Live</div>
+          <div class="lbl">Apr 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feat-grid">
+      <div class="feat-card">
+        <h4>🔐 Authentication &amp; Onboarding <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>Google Sign-In + Email/Password</li>
+          <li>Auto-fill for returning customers</li>
+          <li>Customer analytics in real time</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4>📋 Smart Order Form <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>Dynamic products, colour swatches, size tables</li>
+          <li>Multiple design &amp; mockup file uploads</li>
+          <li>Order confirmation with pricing breakdown</li>
+          <li>50% advance payment at submission</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4>📦 Customer Dashboard <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>Full order history and real-time status</li>
+          <li>Pay Now for unpaid orders</li>
+          <li>My Saved Designs library</li>
+          <li>Brand owner registration &amp; status tracking</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4>🛠 Admin Dashboard <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>All orders — filter, search, update status</li>
+          <li>6-stage order pipeline with notes</li>
+          <li>Brand lead management with pipeline + Brand ID</li>
+          <li>Customer analytics — login counts, history</li>
+          <li>Product photo management per colour &amp; view</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4>🌐 Marketing Website <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>Product catalogue with photo viewer</li>
+          <li>Brand owner registration with duplicate check</li>
+          <li>Pricing, T&amp;C, and contact form</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4>💳 Payment &amp; Notifications <span class="pill pill-ready">Ready to Activate</span></h4>
+        <ul>
+          <li>Razorpay integration built and tested</li>
+          <li>50% advance at order, balance before dispatch</li>
+          <li>Admin email on every order &amp; registration</li>
+          <li>Activates with Razorpay credentials only</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 3</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4 — ROADMAP (Phase 2) -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Product Roadmap</div>
+    <h2 class="page-title">What's Coming in Phase 2</h2>
+    <p class="page-subtitle">Deeper tools for operations, team management, and customer experience — designed generically for any business.</p>
+    <div class="rule"></div>
+
+    <div class="phase2-grid">
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-staging">Staging Ready</span></div>
+        <h4>🎨 Mockup Builder</h4>
+        <p>DIY canvas — customers position their design on real product blanks. Save to library, reuse across orders. No design software needed.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-staging">Staging Ready</span></div>
+        <h4>🖼 Design Library</h4>
+        <p>Personal design vault per customer. Upload once, reuse on any order. Supports multiple views per product (front, back, left, right).</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>👥 Role &amp; Access Control</h4>
+        <p>Super Admin, Business Admin, Employee, Vendor, Customer — each with scoped access. No hardcoded permissions.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>👨‍💼 Employee Management</h4>
+        <p>Add team members (name, phone, email). Assign Primary and Secondary owner per order. Know who is handling what without WhatsApp.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>🏭 Vendor Portal</h4>
+        <p>Multiple vendors per business. Each vendor sees only assigned orders. Updates production status directly. Admin tracks all vendors in one view.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>🎫 Ticketing System</h4>
+        <p>Customers raise queries from dashboard. Admin responds with full conversation thread. Status: Open → In Progress → Resolved.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>➕ Product Category Management</h4>
+        <p>Admin adds new products, colours, sizes, and pricing from panel — zero code changes. Live on order form instantly.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>💰 Wallet + Invoicing</h4>
+        <p>Customer wallet with top-up bonus. Auto PDF invoice on order confirmation. Credit note for cancellations. Export orders as CSV/JSON.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>🚦 Service Level Control</h4>
+        <p>Platform health switch — Active, Warning, Restricted, Limited, Suspended. Super Admin controls without touching code.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>🔔 Smart Notifications</h4>
+        <p>WhatsApp or email alerts to assigned employees on new order. Customer notified on status change. Configurable per business.</p>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 4</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5 — PRICING -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Commercial Model</div>
+    <h2 class="page-title">Simple, Transparent Pricing</h2>
+    <p class="page-subtitle">One-time investment. No monthly lock-in. Your platform, your data, your control.</p>
+    <div class="rule"></div>
+
+    <div class="pricing-grid">
+      <div class="price-card highlight">
+        <div class="badge">✓ Production Ready</div>
+        <div class="plan">Phase 1 — Full Platform</div>
+        <div class="amount">₹75,000 <span>one-time</span></div>
+        <div class="desc">Everything to start taking and managing orders on day one.</div>
+        <ul>
+          <li>Customer portal + order management</li>
+          <li>Admin dashboard (full)</li>
+          <li>Marketing website</li>
+          <li>Razorpay payment integration</li>
+          <li>Email notifications</li>
+          <li>Firebase cloud setup</li>
+          <li>Source code + full handover</li>
+          <li>Year 1 support included</li>
+        </ul>
+      </div>
+      <div class="price-card outline">
+        <div class="badge">Phase 2</div>
+        <div class="plan">Advanced Operations</div>
+        <div class="amount">₹25,000 <span>one-time</span></div>
+        <div class="desc">Scale your operations with team tools, vendor management, and customer self-service.</div>
+        <ul>
+          <li>Mockup Builder (staging → live)</li>
+          <li>Employee management + assignment</li>
+          <li>Vendor portal (multi-vendor)</li>
+          <li>Ticketing system</li>
+          <li>Product category management</li>
+          <li>Wallet + invoice PDFs</li>
+          <li>Role &amp; access control</li>
+          <li>Data export (CSV/JSON)</li>
+        </ul>
+      </div>
+      <div class="price-card dark">
+        <div class="badge">Best Value</div>
+        <div class="plan">Bundle — Phase 1 + 2</div>
+        <div class="amount">₹90,000 <span>one-time</span></div>
+        <div class="desc">Full platform from day one. Save ₹10,000 with bundled pricing.</div>
+        <ul>
+          <li>Everything in Phase 1</li>
+          <li>Everything in Phase 2</li>
+          <li>Priority delivery</li>
+          <li>50% upfront, 50% on Phase 2 delivery</li>
+          <li style="margin-top:8px;list-style:none;color:#4ade80;font-weight:700">Save ₹10,000</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="feat-card" style="background:#f0fdf4;border-color:#86efac;margin-bottom:16px">
+      <h4 style="color:#15803d">🔧 Annual Maintenance Contract (AMC) — from Year 2 only</h4>
+      <p style="color:#166534;font-size:12px;margin-top:4px"><strong>₹5,000 / year</strong> — Bug fixes, minor UI updates, security rule changes, and technical support. Year 1 support included in the one-time cost. No hidden charges.</p>
+    </div>
+
+    <div class="callout callout-amber">
+      <strong>What you own vs. what you pay for</strong>
+      One-time fee covers all development and Year 1 support. From Year 2, only ₹5,000/year AMC. All third-party infrastructure costs (Firebase, Razorpay, email) are pass-through at actual cost — billed directly to your account, zero markup from us.
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 5</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 6 — INFRASTRUCTURE COSTS -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Infrastructure &amp; Operating Costs</div>
+    <h2 class="page-title">Pass-Through Costs — At Actual, Zero Markup</h2>
+    <p class="page-subtitle">These are third-party platform costs owned and paid directly by you. We advise — you control.</p>
+    <div class="rule"></div>
+
+    <table class="cost-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Current Plan</th>
+          <th>Current Cost</th>
+          <th>Upgrade Trigger</th>
+          <th>Upgrade Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Firebase Hosting</strong><br><span style="color:#64748b;font-size:11px">Portal + Marketing website</span></td>
+          <td>Free (Spark)</td>
+          <td>₹0/month</td>
+          <td>&gt;10 GB transfer/month</td>
+          <td>~₹1.5/GB (Blaze)</td>
+        </tr>
+        <tr>
+          <td><strong>Firebase Firestore</strong><br><span style="color:#64748b;font-size:11px">Orders, customers, products</span></td>
+          <td>Free (Spark)</td>
+          <td>₹0/month</td>
+          <td>&gt;50K reads / 20K writes per day</td>
+          <td>~₹6/100K reads (Blaze)</td>
+        </tr>
+        <tr>
+          <td><strong>Firebase Storage</strong><br><span style="color:#64748b;font-size:11px">Design files, mockups, labels</span></td>
+          <td>Free (Spark)</td>
+          <td>₹0/month</td>
+          <td>&gt;5 GB stored</td>
+          <td>~₹21/GB/month (Blaze)</td>
+        </tr>
+        <tr>
+          <td><strong>Email Notifications</strong><br><span style="color:#64748b;font-size:11px">Order &amp; registration alerts</span></td>
+          <td>Free (250/month)</td>
+          <td>₹0/month</td>
+          <td>&gt;250 emails/month</td>
+          <td>~₹850/month (Basic)</td>
+        </tr>
+        <tr>
+          <td><strong>Razorpay</strong><br><span style="color:#64748b;font-size:11px">Advance payment collection</span></td>
+          <td>Pay per transaction</td>
+          <td>2% per txn</td>
+          <td>Always</td>
+          <td>Industry standard</td>
+        </tr>
+        <tr>
+          <td><strong>Custom Domain</strong><br><span style="color:#64748b;font-size:11px">yourbrand.in (optional)</span></td>
+          <td>web.app subdomain (free)</td>
+          <td>₹0</td>
+          <td>Brand presence</td>
+          <td>~₹800–1,200/year</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-green">
+      <strong>Current total infrastructure cost: ₹0/month</strong>
+      Entire platform runs on Firebase free tier. Estimated free tier capacity: ~500 orders/month, ~5 GB files, ~250 email alerts. Costs scale proportionally with revenue — not a fixed overhead.
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <div class="feat-card" style="text-align:center">
+        <div style="font-size:20px;margin-bottom:6px">🔒</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">You Own Everything</div>
+        <div style="font-size:11px;color:#64748b">Source code, Firebase project, Storage — all under your Google account. No vendor lock-in.</div>
+      </div>
+      <div class="feat-card" style="text-align:center">
+        <div style="font-size:20px;margin-bottom:6px">📈</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">Scales with Revenue</div>
+        <div style="font-size:11px;color:#64748b">Free until real volume. Infrastructure costs grow only when your business grows.</div>
+      </div>
+      <div class="feat-card" style="text-align:center">
+        <div style="font-size:20px;margin-bottom:6px">🔄</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">Standard Technology</div>
+        <div style="font-size:11px;color:#64748b">Built on HTML, JavaScript, Firebase. Any developer can maintain or extend it independently.</div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 6</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 7 — RESPONSIBILITY MATRIX -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Governance &amp; Accountability</div>
+    <h2 class="page-title">Responsibility Matrix</h2>
+    <p class="page-subtitle">Clear ownership so both sides know exactly what they are responsible for.</p>
+    <div class="rule"></div>
+
+    <table class="raci">
+      <thead>
+        <tr>
+          <th style="width:44%">Area / Activity</th>
+          <th style="width:28%">OrderFlow (Tool Provider)</th>
+          <th style="width:28%">Your Business (Client)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="cat-header"><td colspan="3">🖥 Platform &amp; Technology</td></tr>
+        <tr><td>Live platform availability 24/7</td><td><span class="own own-tp">✓ Responsible</span></td><td>—</td></tr>
+        <tr><td>Delivery of all agreed features per scope</td><td><span class="own own-tp">✓ Responsible</span></td><td>—</td></tr>
+        <tr><td>Bug identification &amp; resolution</td><td><span class="own own-tp">✓ Responsible</span></td><td>Report via ticket</td></tr>
+        <tr><td>Regular minor UI updates &amp; enhancements (AMC)</td><td><span class="own own-tp">✓ Responsible</span></td><td>—</td></tr>
+        <tr><td>Sanity &amp; functionality testing before releases</td><td><span class="own own-tp">✓ Responsible</span></td><td>—</td></tr>
+        <tr><td>Firebase, security rules &amp; storage configuration</td><td><span class="own own-tp">✓ Responsible</span></td><td>—</td></tr>
+        <tr><td>Source code ownership</td><td>Delivers &amp; hands over</td><td><span class="own own-td">✓ Owner</span></td></tr>
+        <tr><td>Google / Firebase account credentials</td><td>—</td><td><span class="own own-td">✓ Owner</span></td></tr>
+        <tr class="cat-header"><td colspan="3">✅ Acceptance &amp; Sign-off</td></tr>
+        <tr><td>UAT (User Acceptance Testing) confirmation</td><td>Supports &amp; fixes</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Request for new features / scope changes</td><td>Estimates &amp; delivers</td><td><span class="own own-td">✓ Initiates</span></td></tr>
+        <tr><td>Approval before production deployment</td><td>Seeks approval</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Payment milestone approvals</td><td>—</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr class="cat-header"><td colspan="3">🏢 Business Operations</td></tr>
+        <tr><td>Customer onboarding, communication &amp; support</td><td>—</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Order fulfilment, vendor coordination &amp; delivery</td><td>—</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Pricing, discounts &amp; promotional decisions</td><td>—</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Marketing, campaigns &amp; brand promotions</td><td>—</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Product catalogue — photos, colours, pricing updates</td><td>Platform supports it</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Employee data &amp; order assignment management</td><td>Platform supports it</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Admin panel day-to-day usage</td><td>Training provided</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr class="cat-header"><td colspan="3">💰 Infrastructure &amp; Costs</td></tr>
+        <tr><td>Third-party costs (Firebase, Razorpay, email)</td><td>Advises on upgrades</td><td><span class="own own-td">✓ Pays directly</span></td></tr>
+        <tr><td>Razorpay account setup &amp; KYC</td><td>Integration ready</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr><td>Domain registration &amp; renewal</td><td>DNS configuration</td><td><span class="own own-td">✓ Pays &amp; owns</span></td></tr>
+        <tr><td>AMC payment from Year 2</td><td>Invoices annually</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+        <tr class="cat-header"><td colspan="3">🔒 Data &amp; Compliance</td></tr>
+        <tr><td>Customer data privacy &amp; compliance</td><td><span class="own own-sh">Shared</span></td><td><span class="own own-sh">Shared</span></td></tr>
+        <tr><td>Data backup &amp; periodic export</td><td>Platform level backup</td><td>Export backups periodically</td></tr>
+        <tr><td>Access credential security</td><td>—</td><td><span class="own own-td">✓ Responsible</span></td></tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;gap:12px;font-size:11px;margin-top:4px">
+      <span style="display:flex;align-items:center;gap:5px"><span class="own own-tp">OrderFlow</span> Tool Provider</span>
+      <span style="display:flex;align-items:center;gap:5px"><span class="own own-td">Client</span> Business Owner</span>
+      <span style="display:flex;align-items:center;gap:5px"><span class="own own-sh">Shared</span> Joint</span>
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 7</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 8 — NEXT STEPS -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Getting Started</div>
+    <h2 class="page-title">From Sign-off to Live in Days</h2>
+    <p class="page-subtitle">The platform is built. Deployment is fast. Here's how we go live for your business.</p>
+    <div class="rule"></div>
+
+    <div class="timeline">
+      <div class="tl-item done">
+        <h4>Platform Built &amp; Battle-Tested</h4>
+        <p>OrderFlow is live in production with a real client. All core flows — orders, payments, admin, customer portal — are tested and stable.</p>
+      </div>
+      <div class="tl-item">
+        <h4>Day 1 — Discovery &amp; Configuration</h4>
+        <p>We understand your products, team structure, and workflow. Configure product catalogue, colours, pricing, and branding.</p>
+      </div>
+      <div class="tl-item">
+        <h4>Day 2–3 — Setup &amp; Deployment</h4>
+        <p>Firebase project under your account. Custom domain (if needed). Upload product photos. Configure admin email notifications.</p>
+      </div>
+      <div class="tl-item">
+        <h4>Day 3–4 — Payment Activation</h4>
+        <p>Share your Razorpay credentials. We configure and test. Advance payment collection goes live. First order can be placed.</p>
+      </div>
+      <div class="tl-item">
+        <h4>Day 4–5 — UAT &amp; Handover</h4>
+        <p>Your team tests all flows. We fix anything. Admin training walkthrough. Full documentation and source code handover.</p>
+      </div>
+      <div class="tl-item">
+        <h4>Day 5 — Go Live</h4>
+        <p>Share portal link with your customers. Start taking orders. Admin manages everything from the dashboard.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-green" style="margin-top:20px">
+      <strong>Why act now?</strong>
+      Every order managed on WhatsApp is a missed opportunity — no record, no payment tracking, no customer visibility. OrderFlow pays for itself the moment it prevents one missed order or one payment dispute.
+    </div>
+
+    <div style="margin-top:16px;background:#0f172a;border-radius:12px;padding:22px 28px;color:#fff;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin-bottom:6px">Ready to get started?</div>
+        <div style="font-size:17px;font-weight:800;letter-spacing:-0.5px">Phase 1 live in under a week.</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">One-time ₹75,000 · No monthly fees · You own everything</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Live reference</div>
+        <div style="font-size:12px;color:#60a5fa">taddaportal.web.app</div>
+        <div style="font-size:12px;color:#60a5fa">tadda-web.web.app</div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>OrderFlow — Product Pitch — Confidential</span>
+      <span>Page 8</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

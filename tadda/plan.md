@@ -97,6 +97,29 @@
 
 ---
 
+## Phase 2 — API & Licensing Cost Summary
+
+| Feature | External API / Service | Cost |
+|---------|----------------------|------|
+| Role system + service levels | Firestore only | ₹0 |
+| Employee management | Firestore only | ₹0 |
+| Vendor portal | Firestore only | ₹0 |
+| Ticketing system | Firestore + Web3Forms (existing) | ₹0 |
+| Ticketing at scale (>250 emails/month) | SendGrid free tier | ₹0 |
+| Wallet system | Firestore only | ₹0 |
+| Wallet top-up payments | Razorpay (already integrated) | 2% per txn |
+| Invoice / Credit Note PDF | jsPDF (MIT, CDN) | ₹0 |
+| Data export (CSV/JSON) | Pure JS (no API) | ₹0 |
+| Product category management | Firestore only | ₹0 |
+| Smart notifications (email) | SendGrid free (3,000/month) | ₹0 |
+| Smart notifications (WhatsApp) | Not recommended at current scale | ₹999–1,399/month if needed |
+| Mockup Builder → production deploy | Already built on staging | ₹0 |
+| **Total new monthly cost** | | **₹0** |
+
+> WhatsApp notification via API (Interakt/AiSensy/WATI) is optional — only worth adding once order volume justifies it. Email notifications cover all Phase 2 needs at ₹0.
+
+---
+
 ## Estimated Total Effort
 
 | Block | Time |
@@ -108,8 +131,13 @@
 | Notification updates | 20 min |
 | Data policy page | 15 min |
 | Brand logo & product file upload | 45 min |
-| Testing + deploy | 15 min |
-| **Total** | **~4.25 hours** |
+| Wallet system (Firestore + admin top-up + dashboard + order checkout) | 2 hrs |
+| Ticketing system (Firestore + dashboard Support tab + admin Tickets tab) | 2.5 hrs |
+| Employee management + order assignment | 1 hr |
+| New product category management (admin panel) | 1.5 hrs |
+| Vendor portal (login, assigned orders, status update) | 2 hrs |
+| Testing + deploy | 30 min |
+| **Total** | **~12 hours** |
 
 ---
 
@@ -158,6 +186,12 @@
 
 **Concept:** Tadda admin tops up a customer's wallet. Customer uses wallet balance to pay for orders. Incentive: 5% bonus on every wallet top-up.
 
+**API / Licensing cost: ₹0**
+- Pure Firestore implementation — no external API or SDK needed
+- Razorpay already integrated (2% per transaction — already budgeted)
+- jsPDF for invoice PDF — MIT license, free CDN
+- No new monthly costs
+
 **How it works:**
 
 ```
@@ -198,7 +232,100 @@
 - `order.html` — wallet payment option at checkout
 - `admin.html` — top-up button per customer, wallet column in customer list
 
-**Dependencies:** Should be built after Razorpay integration (Phase 3) so both payment methods work together.
+**Build steps:**
+1. Create `/wallets/{uid}` doc on first admin top-up (or on user creation)
+2. Admin panel: add "Wallet" column to customer list + "Top Up" button → modal (amount input → write topup + bonus transactions + update balance atomically via `db.batch()`)
+3. `order.html`: show wallet balance if available → checkbox "Use wallet balance" → deduct at submission (inside existing submit handler, before/after Razorpay)
+4. `dashboard.html`: wallet balance card in stats row + Wallet History tab (`where userId == uid, orderBy createdAt DESC`)
+5. Security rules: `/wallets/{uid}` — read by owner + admin; write only by admin or server-side logic (use `request.auth.token.email` check)
+
+**Time estimate: ~2 hours**
+
+**Dependencies:** Should be built after Razorpay integration is activated so both payment methods work together.
+
+---
+
+### Ticketing System
+
+**Concept:** Customers raise support queries or concerns from their dashboard. Admin views, responds, and closes tickets. Full conversation thread per ticket with status tracking.
+
+**API / Licensing cost: ₹0 (with note on email volume)**
+- Pure Firestore implementation — no external ticketing API or SDK needed
+- Ticket thread uses Firestore `onSnapshot()` for real-time updates — no WebSocket service needed
+- Email notifications: Web3Forms handles new-ticket alerts (shared 250/month quota)
+  - **If email volume grows:** switch ticket notifications to **SendGrid free tier (3,000/month, ₹0)** — simple config swap, no code change beyond the fetch URL and API key
+  - Do NOT use WhatsApp API for tickets at current scale — cost not justified (₹999–1,399/month via Interakt/AiSensy)
+
+**How it works:**
+
+```
+1. Customer raises a ticket
+   Dashboard → Support tab → "New Ticket" button
+   → Subject + description + optional file attachment
+   → Ticket saved to Firestore with status: "open"
+   → Admin receives email notification (Web3Forms)
+
+2. Admin responds
+   Admin panel → Tickets tab → click ticket
+   → Types reply → saved as message doc in thread
+   → Status can be updated: Open → In Progress → Resolved
+   → Customer sees reply in real-time (onSnapshot)
+
+3. Customer sees reply
+   Dashboard → Support tab → click ticket
+   → Full conversation thread shown (newest last)
+   → Customer can reply, add more info
+   → Once resolved, customer can reopen if issue persists
+
+4. Ticket closed
+   Admin marks as "Resolved"
+   → Customer notified by email (optional)
+   → Ticket archived but still visible in history
+```
+
+**Firestore structure:**
+
+| Collection | Purpose |
+|------------|---------|
+| `/tickets/{ticketId}` | `{ userId, userEmail, subject, status: 'open/in_progress/resolved', createdAt, updatedAt, adminNotes }` |
+| `/ticket_messages/{autoId}` | `{ ticketId, userId, senderRole: 'customer/admin', message, attachmentUrl, createdAt }` |
+
+**Status flow:** `open → in_progress → resolved` (customer can reopen → back to `open`)
+
+**Key rules:**
+- Customer can create tickets and read/write only their own (`userId == request.auth.uid`)
+- Admin can read/write all tickets
+- Attachments stored in Firebase Storage: `tickets/{ticketId}/{timestamp}_{filename}`
+
+**Pages affected:**
+- `dashboard.html` — new "Support" tab: ticket list + new ticket form + thread view
+- `admin.html` — new "Tickets" tab: all tickets filterable by status + thread view + status update
+
+**Build steps:**
+1. Firestore: add security rules for `/tickets` and `/ticket_messages`
+2. `dashboard.html` Support tab: ticket list (filter: open/in_progress/resolved), "New Ticket" button → inline form (subject + description + optional file), click ticket → thread modal with `onSnapshot` listener
+3. `admin.html` Tickets tab: all tickets table (filter by status, search by email/subject), click → thread modal, reply input, status dropdown (Open / In Progress / Resolved), admin notes field
+4. Email notification on new ticket: Web3Forms POST (same pattern as order notifications)
+5. Storage: upload attachment in ticket message (optional, can skip in v1)
+
+**Time estimate: ~2.5 hours**
+
+**Note on SendGrid migration (if needed):**
+```js
+// Current (Web3Forms)
+fetch('https://api.web3forms.com/submit', {
+  method: 'POST',
+  body: JSON.stringify({ access_key: WEB3FORMS_KEY, subject, message })
+});
+
+// Switch to SendGrid (free, 3000/month)
+fetch('https://api.sendgrid.com/v3/mail/send', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${SENDGRID_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ personalizations: [...], from: {...}, subject, content: [...] })
+});
+```
+SendGrid key stored in `config.js` (not in git) alongside existing Firebase config.
 
 ---
 

@@ -116,14 +116,25 @@
             <div class="order-section-title">3. Design & Artwork</div>
 
             <div class="form-group">
-                <label>Upload Design File <span class="field-required">*</span></label>
-                <div class="upload-box" onclick="document.getElementById('designFile').click()">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom:8px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <div class="upload-box-label">Click to upload design (PNG only)</div>
-                    <input type="file" id="designFile" accept=".png" onchange="showFileName(this, 'designFileName')">
+                <label>Design File <span class="field-required">*</span></label>
+                <div style="display:flex;gap:6px;margin-bottom:10px">
+                    <button type="button" id="designTabUpload" onclick="switchDesignTab('upload')" style="padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer">Upload New</button>
+                    <button type="button" id="designTabSaved" onclick="switchDesignTab('saved')" style="padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer">Choose from Saved</button>
                 </div>
-                <div class="upload-preview hidden" id="designFileName"></div>
-                <div class="input-hint">Only PNG format accepted. Max 10MB.</div>
+                <div id="designUploadPanel">
+                    <div class="upload-box" onclick="document.getElementById('designFile').click()">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom:8px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <div class="upload-box-label">Click to upload (up to 6 images)</div>
+                        <input type="file" id="designFile" accept="image/*,.png" multiple onchange="showMultipleFiles(this, 'designFileName')">
+                    </div>
+                    <div id="designFileName" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
+                    <div class="input-hint">PNG/JPG accepted. Up to 6 files, max 10MB each.</div>
+                </div>
+                <div id="designSavedPanel" style="display:none">
+                    <div class="input-hint" style="margin-bottom:8px">Click to select (up to 6). Click again to deselect.</div>
+                    <div id="designSavedGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px"></div>
+                    <div id="designSelectedInfo" style="display:none;margin-top:8px;padding:8px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:0.82rem;color:#15803d;font-weight:600"></div>
+                </div>
             </div>
 
             <div class="form-row">
@@ -132,12 +143,23 @@
                     <textarea id="placementDetails" placeholder="e.g. Front chest center, Back full print, Left sleeve..." required></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Mockup Upload (optional)</label>
-                    <div class="upload-box" onclick="document.getElementById('mockupFile').click()" style="height:102px;justify-content:center;display:flex;flex-direction:column;align-items:center">
-                        <div class="upload-box-label">Upload mockup (PNG/JPG)</div>
-                        <input type="file" id="mockupFile" accept=".png,.jpg,.jpeg" onchange="showFileName(this, 'mockupFileName')">
+                    <label>Mockup (optional)</label>
+                    <div style="display:flex;gap:6px;margin-bottom:10px">
+                        <button type="button" id="mockupTabUpload" onclick="switchMockupTab('upload')" style="padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer">Upload New</button>
+                        <button type="button" id="mockupTabSaved" onclick="switchMockupTab('saved')" style="padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer">Choose from Saved</button>
                     </div>
-                    <div class="upload-preview hidden" id="mockupFileName"></div>
+                    <div id="mockupUploadPanel">
+                        <div class="upload-box" onclick="document.getElementById('mockupFile').click()" style="height:80px;justify-content:center;display:flex;flex-direction:column;align-items:center">
+                            <div class="upload-box-label">Upload mockups (up to 6, PNG/JPG)</div>
+                            <input type="file" id="mockupFile" accept="image/*,.png,.jpg,.jpeg" multiple onchange="showMultipleFiles(this, 'mockupFileName')">
+                        </div>
+                        <div id="mockupFileName" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
+                    </div>
+                    <div id="mockupSavedPanel" style="display:none">
+                        <div class="input-hint" style="margin-bottom:8px">Click to select (up to 6). Click again to deselect.</div>
+                        <div id="mockupSavedGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px"></div>
+                        <div id="mockupSelectedInfo" style="display:none;margin-top:8px;padding:8px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:0.82rem;color:#15803d;font-weight:600"></div>
+                    </div>
                 </div>
             </div>
 
@@ -296,6 +318,9 @@ const db      = firebase.firestore();
 const storage = firebase.storage();
 
 let currentUser = null;
+let selectedDesignUrls = [];
+let selectedMockupUrls = [];
+let savedDesignsData   = [];
 
 auth.onAuthStateChanged(async user => {
     if (!user) { window.location.href = '/'; return; }
@@ -317,8 +342,95 @@ auth.onAuthStateChanged(async user => {
             if (last.brandName) document.getElementById('brandName').value = last.brandName;
             if (last.custPhone) document.getElementById('custPhone').value = last.custPhone;
         }
-    } catch (e) { /* ignore — user may not have orders yet */ }
+    } catch (e) { /* ignore */ }
+
+    // Load saved designs for picker
+    try {
+        const mSnap = await db.collection('mockups').where('userId','==',user.uid).limit(20).get();
+        savedDesignsData = mSnap.docs.map(d => d.data());
+        renderSavedGrid('design');
+        renderSavedGrid('mockup');
+    } catch(e) { /* ignore */ }
 });
+
+function renderSavedGrid(field) {
+    const gridId = field === 'design' ? 'designSavedGrid' : 'mockupSavedGrid';
+    const grid = document.getElementById(gridId);
+    if (!savedDesignsData.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1;font-size:0.8rem;color:var(--muted)">No saved designs yet. <a href="/mockup.html" style="color:var(--primary)">Create one in Mockup Builder →</a></div>`;
+        return;
+    }
+    grid.innerHTML = savedDesignsData.map((m, i) => `
+        <div id="${field}Thumb${i}" onclick="toggleSaved('${field}', '${m.imageUrl}', ${i})"
+            style="border-radius:8px;overflow:hidden;border:2px solid var(--border);cursor:pointer;background:#f8fafc;transition:border-color 0.15s;position:relative" title="${m.colour || ''} ${m.view || ''}">
+            <div style="position:relative;aspect-ratio:4/5">
+                ${m.blankUrl ? `<img src="${m.blankUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">` : ''}
+                <img src="${m.imageUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;inset:0">
+            </div>
+            <div id="${field}Check${i}" style="display:none;position:absolute;top:4px;right:4px;background:var(--primary);color:#fff;border-radius:50%;width:20px;height:20px;font-size:0.7rem;align-items:center;justify-content:center">✓</div>
+            <div style="padding:4px 6px;font-size:0.68rem;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.colour || ''} ${m.view || ''}</div>
+        </div>`).join('');
+}
+
+function toggleSaved(field, url, idx) {
+    const urls = field === 'design' ? selectedDesignUrls : selectedMockupUrls;
+    const infoId = field === 'design' ? 'designSelectedInfo' : 'mockupSelectedInfo';
+    const thumb  = document.getElementById(`${field}Thumb${idx}`);
+    const check  = document.getElementById(`${field}Check${idx}`);
+    const pos = urls.indexOf(url);
+    if (pos === -1) {
+        if (urls.length >= 6) { alert('Maximum 6 designs can be selected.'); return; }
+        urls.push(url);
+        thumb.style.borderColor = 'var(--primary)';
+        check.style.display = 'flex';
+    } else {
+        urls.splice(pos, 1);
+        thumb.style.borderColor = 'var(--border)';
+        check.style.display = 'none';
+    }
+    const info = document.getElementById(infoId);
+    if (urls.length) {
+        info.style.display = 'block';
+        info.textContent = `✅ ${urls.length} design(s) selected`;
+    } else {
+        info.style.display = 'none';
+    }
+}
+
+function switchDesignTab(tab) {
+    const isUpload = tab === 'upload';
+    document.getElementById('designUploadPanel').style.display = isUpload ? 'block' : 'none';
+    document.getElementById('designSavedPanel').style.display  = isUpload ? 'none'  : 'block';
+    document.getElementById('designTabUpload').style.cssText = isUpload
+        ? 'padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer'
+        : 'padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer';
+    document.getElementById('designTabSaved').style.cssText = isUpload
+        ? 'padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer'
+        : 'padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer';
+    if (isUpload) selectedDesignUrls = [];
+}
+
+function switchMockupTab(tab) {
+    const isUpload = tab === 'upload';
+    document.getElementById('mockupUploadPanel').style.display = isUpload ? 'block' : 'none';
+    document.getElementById('mockupSavedPanel').style.display  = isUpload ? 'none'  : 'block';
+    document.getElementById('mockupTabUpload').style.cssText = isUpload
+        ? 'padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer'
+        : 'padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer';
+    document.getElementById('mockupTabSaved').style.cssText = isUpload
+        ? 'padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer'
+        : 'padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer';
+    if (isUpload) selectedMockupUrls = [];
+}
+
+function showMultipleFiles(input, previewId) {
+    const container = document.getElementById(previewId);
+    const files = Array.from(input.files).slice(0, 6);
+    if (files.length > 6) { alert('Maximum 6 files allowed. Only first 6 will be used.'); }
+    container.innerHTML = files.map(f =>
+        `<span style="display:inline-flex;align-items:center;gap:4px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:3px 8px;font-size:0.78rem;color:#15803d">✅ ${f.name}</span>`
+    ).join('');
+}
 
 document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));
 
@@ -527,6 +639,7 @@ document.getElementById('orderForm').addEventListener('submit', (e) => {
     const inputs = document.querySelectorAll('#sizeTable input[type=number]');
     const totalQty = Array.from(inputs).reduce((sum, el) => sum + (parseInt(el.value) || 0), 0);
     if (totalQty === 0) { alert('Please enter at least one quantity.'); return; }
+    if (!selectedDesignUrls.length && !document.getElementById('designFile').files[0]) { alert('Please upload a design file or choose one from saved designs.'); return; }
 
     // Calculate pricing
     const productKey = document.getElementById('product').value;
@@ -604,12 +717,18 @@ async function proceedWithOrder() {
         const balanceAmount = orderTotal - advanceAmount;
 
         btn.innerHTML = '⏳ Uploading files...';
-        const [designUrl, mockupUrl, neckLabelUrl, shippingLblUrl] = await Promise.all([
-            uploadFile(document.getElementById('designFile').files[0], orderId),
-            uploadFile(document.getElementById('mockupFile').files[0], orderId),
+        const designFiles = Array.from(document.getElementById('designFile').files).slice(0, 6);
+        const mockupFiles = Array.from(document.getElementById('mockupFile').files).slice(0, 6);
+        const [designUrlsUploaded, mockupUrlsUploaded, neckLabelUrl, shippingLblUrl] = await Promise.all([
+            selectedDesignUrls.length ? Promise.resolve(selectedDesignUrls) : Promise.all(designFiles.map(f => uploadFile(f, orderId))),
+            selectedMockupUrls.length ? Promise.resolve(selectedMockupUrls) : Promise.all(mockupFiles.map(f => uploadFile(f, orderId))),
             uploadFile(document.getElementById('neckLabelFile').files[0], orderId),
             uploadFile(document.getElementById('shippingLabelFile').files[0], orderId),
         ]);
+        const designUrl  = designUrlsUploaded[0] || '';
+        const designUrls = designUrlsUploaded;
+        const mockupUrl  = mockupUrlsUploaded[0] || '';
+        const mockupUrls = mockupUrlsUploaded;
 
         // Save order FIRST with unpaid status
         btn.innerHTML = '⏳ Saving order...';
@@ -631,7 +750,9 @@ async function proceedWithOrder() {
             paymentStatus:    'unpaid',
             razorpayPaymentId: '',
             designUrl,
+            designUrls,
             mockupUrl,
+            mockupUrls,
             placementDetails: document.getElementById('placementDetails').value.trim(),
             designSize:       document.getElementById('designSize').value.trim(),
             neckLabel:        document.querySelector('input[name="neckLabel"]:checked').value,

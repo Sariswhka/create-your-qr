@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>T-ADDA Digital Platform — Project Pitch</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; color: #1e293b; background: #fff; font-size: 13px; line-height: 1.6; }
+
+  /* ── Print ── */
+  @media print {
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: avoid; }
+    @page { margin: 0; size: A4; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  .page {
+    width: 210mm; min-height: 297mm;
+    margin: 0 auto;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
+    color: #fff;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 60px 56px;
+    min-height: 297mm;
+  }
+  .cover-tag { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 5px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 28px; display: inline-block; }
+  .cover h1 { font-size: 52px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin-bottom: 16px; }
+  .cover h1 span { color: #60a5fa; }
+  .cover-sub { font-size: 18px; color: rgba(255,255,255,0.75); margin-bottom: 48px; font-weight: 400; max-width: 420px; }
+  .cover-divider { width: 60px; height: 4px; background: #3b82f6; border-radius: 2px; margin-bottom: 48px; }
+  .cover-meta { display: flex; gap: 40px; }
+  .cover-meta-item .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .cover-meta-item .value { font-size: 15px; font-weight: 700; color: #fff; }
+  .cover-badge { position: absolute; bottom: 48px; right: 56px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 14px 20px; text-align: right; }
+  .cover-badge .live { color: #4ade80; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+  .cover-badge .url { font-size: 12px; color: rgba(255,255,255,0.8); }
+
+  /* ── Inner pages ── */
+  .inner { padding: 48px 56px; min-height: 297mm; }
+  .section-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #3b82f6; margin-bottom: 6px; }
+  h2.page-title { font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .page-subtitle { font-size: 13px; color: #64748b; margin-bottom: 32px; }
+  .rule { height: 2px; background: linear-gradient(90deg, #3b82f6, #e0e7ff); border-radius: 1px; margin-bottom: 32px; }
+
+  /* ── Feature grid ── */
+  .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+  .feat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+  .feat-card h4 { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .feat-card ul { padding-left: 14px; color: #475569; font-size: 11.5px; }
+  .feat-card ul li { margin-bottom: 3px; }
+  .feat-card .icon { font-size: 15px; }
+
+  /* ── Status pill ── */
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pill-live    { background: #dcfce7; color: #15803d; }
+  .pill-ready   { background: #dbeafe; color: #1e40af; }
+  .pill-planned { background: #f1f5f9; color: #475569; }
+  .pill-staging { background: #fef3c7; color: #92400e; }
+
+  /* ── Timeline ── */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before { content: ''; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 2px; background: #e2e8f0; }
+  .tl-item { position: relative; margin-bottom: 20px; }
+  .tl-item::before { content: ''; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; border: 2px solid #fff; box-shadow: 0 0 0 2px #3b82f6; }
+  .tl-item.done::before { background: #10b981; box-shadow: 0 0 0 2px #10b981; }
+  .tl-item h4 { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+  .tl-item p { font-size: 11.5px; color: #64748b; }
+
+  /* ── Pricing ── */
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .price-card { border-radius: 12px; padding: 22px; }
+  .price-card.highlight { background: linear-gradient(135deg, #1e3a8a, #1d4ed8); color: #fff; }
+  .price-card.outline { background: #f8fafc; border: 1.5px solid #e2e8f0; }
+  .price-card .plan { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px; }
+  .price-card.highlight .plan { color: rgba(255,255,255,0.7); }
+  .price-card.outline .plan { color: #64748b; }
+  .price-card .amount { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+  .price-card.highlight .amount { color: #fff; }
+  .price-card.outline .amount { color: #0f172a; }
+  .price-card .amount span { font-size: 14px; font-weight: 500; }
+  .price-card .desc { font-size: 11px; margin-bottom: 16px; }
+  .price-card.highlight .desc { color: rgba(255,255,255,0.7); }
+  .price-card.outline .desc { color: #64748b; }
+  .price-card ul { font-size: 11.5px; padding-left: 14px; }
+  .price-card.highlight ul { color: rgba(255,255,255,0.9); }
+  .price-card.outline ul li { color: #475569; margin-bottom: 3px; }
+  .price-card .badge { display: inline-block; background: #10b981; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 10px; }
+
+  /* ── Pass-through costs ── */
+  .cost-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
+  .cost-table th { background: #f1f5f9; padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+  .cost-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+  .cost-table tr:last-child td { border-bottom: none; }
+
+  /* ── Call out box ── */
+  .callout { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 14px 16px; font-size: 12px; color: #1e40af; margin-bottom: 20px; }
+  .callout strong { font-weight: 700; display: block; margin-bottom: 3px; }
+  .callout-green { background: #f0fdf4; border-color: #86efac; border-left-color: #10b981; color: #15803d; }
+  .callout-amber { background: #fffbeb; border-color: #fcd34d; border-left-color: #f59e0b; color: #92400e; }
+
+  /* ── Footer ── */
+  .page-footer { position: absolute; bottom: 28px; left: 56px; right: 56px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px; }
+
+  /* ── Phase 2 feature list ── */
+  .phase2-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .p2-card { background: #fafafa; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+  .p2-card h4 { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+  .p2-card p  { font-size: 11px; color: #64748b; }
+  .p2-card .status { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     PAGE 1 — COVER
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-tag">Project Proposal — April 2026</div>
+    <h1>T-<span>ADDA</span><br>Digital Platform</h1>
+    <p class="cover-sub">End-to-end order management, brand portal, and DIY mockup builder for print-on-demand clothing.</p>
+    <div class="cover-divider"></div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="label">Phase 1 Status</div>
+        <div class="value">✅ Live on Production</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Phase 2 Status</div>
+        <div class="value">🛠 Staging Ready</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Prepared By</div>
+        <div class="value">Technology Partner</div>
+      </div>
+    </div>
+    <div class="cover-badge">
+      <div class="live">● Live</div>
+      <div class="url">taddaportal.web.app</div>
+      <div class="url">tadda-web.web.app</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 2 — WHAT WE BUILT (Phase 1)
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Phase 1 — Delivered & Live</div>
+    <h2 class="page-title">What's on Production Today</h2>
+    <p class="page-subtitle">Both properties are live, tested, and ready for customers to use.</p>
+    <div class="rule"></div>
+
+    <div class="feat-grid">
+      <div class="feat-card">
+        <h4><span class="icon">🔐</span> Authentication <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>Google Sign-In + Email/Password</li>
+          <li>Auto-fill for returning customers (name, brand, phone)</li>
+          <li>Session-aware login count tracking</li>
+          <li>Customer analytics stored in Firestore</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4><span class="icon">📋</span> Order Form <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>7 products — swatches, dynamic size tables</li>
+          <li>Design & mockup file upload (up to 6 files)</li>
+          <li>Neck label & shipping label upload</li>
+          <li>Order confirmation modal with pricing breakdown</li>
+          <li>Advance 50% shown at submission</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4><span class="icon">📦</span> Customer Dashboard <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>Full order history with status tracking</li>
+          <li>Payment column — Paid / Unpaid</li>
+          <li>Pay Now button for unpaid orders</li>
+          <li>My Saved Designs section</li>
+          <li>Brand Owner registration from dashboard</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4><span class="icon">🛠</span> Admin Dashboard <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>All orders — filter, search, update status</li>
+          <li>6-stage order pipeline with admin notes</li>
+          <li>Registrations tab — brand lead management</li>
+          <li>Brand ID auto-generation on conversion</li>
+          <li>Customers tab — login analytics</li>
+          <li>Product Photos tab — structured blank upload</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4><span class="icon">🌐</span> Marketing Website <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>Hero, About, How It Works, Products, Pricing</li>
+          <li>7-product viewer modal with photos</li>
+          <li>Brand Owner registration with duplicate check</li>
+          <li>Contact form (Web3Forms)</li>
+          <li>T&amp;C / Support section</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <h4><span class="icon">📬</span> Notifications &amp; Ops <span class="pill pill-live">Live</span></h4>
+        <ul>
+          <li>Admin email on every new order &amp; registration</li>
+          <li>Order saved before payment — no lost orders</li>
+          <li>Duplicate registration prevention (phone + email)</li>
+          <li>Firebase Storage for all uploaded files</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-amber">
+      <strong>💳 Payment Gateway — Ready to Activate</strong>
+      Razorpay integration is fully built and tested. The moment T-ADDA shares their <strong>Razorpay Key ID &amp; Secret</strong>, advance payment collection (50% at order) goes live instantly — no additional development needed.
+    </div>
+
+    <div class="page-footer">
+      <span>T-ADDA Digital Platform — Confidential</span>
+      <span>Page 2</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 3 — PHASE 2 PLAN
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Phase 2 — Planned Features</div>
+    <h2 class="page-title">What's Coming Next</h2>
+    <p class="page-subtitle">Phase 2 expands the platform with DIY tools, stronger access control, and operational efficiency.</p>
+    <div class="rule"></div>
+
+    <div class="phase2-grid">
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-staging">Staging Ready</span></div>
+        <h4>🎨 Mockup Builder</h4>
+        <p>DIY canvas where customers upload their design PNG and position it on real product blank photos (front, back, left, right). Save mockups to library and attach to orders directly. No design software needed.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-staging">Staging Ready</span></div>
+        <h4>🖼 Design Library</h4>
+        <p>Customers save designs (with or without product canvas) to a personal library. Pick saved designs when placing future orders — no re-uploading same file every time.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>👥 Role System</h4>
+        <p>Super Admin (platform control), Admin (business access — up to 2 seats), Customer. Roles stored in Firestore — no hardcoded emails.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>🚦 Service Levels</h4>
+        <p>4-level service switch: Active → Warning → Restricted → Limited → Suspended. Super Admin controls service health without touching code.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>📤 Data Export</h4>
+        <p>Admin can export all orders and registrations as JSON/CSV backup. Essential for compliance and offline reporting.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>📄 Invoice & Credit Notes</h4>
+        <p>Auto-generated PDF invoice on order confirmation (jsPDF). Credit note PDF for cancellations and returns.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>💰 Wallet System</h4>
+        <p>Admin tops up customer wallet. 5% bonus on every top-up. Customers use wallet balance (partial or full) at checkout alongside Razorpay.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>🏭 Vendor Portal</h4>
+        <p>Vendor login with assigned orders only. Vendor updates production status. Admin assigns orders to vendors. Parallel to customer portal.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>👨‍💼 Employee Management</h4>
+        <p>Admin adds team members (name, phone, email). Each order can have a Primary and Secondary assignee from the team. Clear internal ownership — know who is handling what at any point, without chasing on WhatsApp.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>➕ New Product Category Management</h4>
+        <p>Admin can add new product categories, colours, sizes, and pricing directly from the admin panel — no code changes needed. Products appear instantly on the order form and marketing site.</p>
+      </div>
+      <div class="p2-card">
+        <div class="status"><span class="pill pill-planned">Planned</span></div>
+        <h4>🎫 Ticketing System</h4>
+        <p>Customers raise queries or concerns from their dashboard. Admin views, responds to, and closes tickets. Status tracking: Open → In Progress → Resolved. Full conversation thread per ticket.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Mockup Builder is already built and tested on staging.</strong>
+      Deployment to production can happen as soon as Phase 2 is signed off — no additional build time needed for this feature.
+    </div>
+
+    <div class="page-footer">
+      <span>T-ADDA Digital Platform — Confidential</span>
+      <span>Page 3</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 4 — PRICING
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Commercial Proposal</div>
+    <h2 class="page-title">Pricing Model</h2>
+    <p class="page-subtitle">One-time investment. No monthly lock-in. AMC from Year 2 only.</p>
+    <div class="rule"></div>
+
+    <div class="pricing-grid">
+      <div class="price-card highlight">
+        <div class="badge">✓ Delivered</div>
+        <div class="plan">Phase 1 — Complete Platform</div>
+        <div class="amount">₹75,000 <span>one-time</span></div>
+        <div class="desc">Full portal live on production. Everything T-ADDA needs to start taking orders today.</div>
+        <ul>
+          <li>Order portal (taddaportal.web.app)</li>
+          <li>Marketing website (tadda-web.web.app)</li>
+          <li>Admin dashboard — full management</li>
+          <li>Customer dashboard + brand owner flow</li>
+          <li>Firebase setup (Auth, Firestore, Storage)</li>
+          <li>Razorpay integration (activate with credentials)</li>
+          <li>Email notifications via Web3Forms</li>
+          <li>Source code + full handover</li>
+        </ul>
+      </div>
+      <div class="price-card outline">
+        <div class="plan">Phase 2 — Advanced Features</div>
+        <div class="amount">₹25,000 <span>one-time</span></div>
+        <div class="desc">Mockup builder + operational upgrades. Activate when T-ADDA is ready to scale.</div>
+        <ul>
+          <li>Mockup Builder (staging → production)</li>
+          <li>Design Library for customers</li>
+          <li>Role system (Super Admin / Admin)</li>
+          <li>Service level control panel</li>
+          <li>Invoice + Credit Note PDF generation</li>
+          <li>Wallet system with top-up bonus</li>
+          <li>Data export (JSON/CSV)</li>
+          <li>Vendor portal (basic)</li>
+          <li>New product category management</li>
+          <li>Ticketing system for queries</li>
+          <li>Employee management + order assignment</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="feat-card" style="margin-bottom:20px;background:#f0fdf4;border-color:#86efac">
+      <h4 style="color:#15803d">🔧 Annual Maintenance Contract (AMC) — from Year 2</h4>
+      <p style="color:#166534;font-size:12px;margin-top:4px">
+        <strong>₹5,000 / year</strong> — Covers bug fixes, minor UI updates, Firebase rule changes, and technical support.
+        Year 1 support is included in the one-time cost. AMC kicks in from Year 2 onwards.
+      </p>
+    </div>
+
+    <div class="callout callout-amber">
+      <strong>⚡ Bundle Offer — Phase 1 + Phase 2 Together</strong>
+      Take both phases together at <strong>₹90,000</strong> (save ₹10,000) with payment split: 50% upfront, 50% on Phase 2 delivery.
+    </div>
+
+    <div class="page-footer">
+      <span>T-ADDA Digital Platform — Confidential</span>
+      <span>Page 4</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 5 — PASS-THROUGH COSTS
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Infrastructure &amp; Operating Costs</div>
+    <h2 class="page-title">Pass-Through Costs</h2>
+    <p class="page-subtitle">These are third-party platform costs charged at actual cost with zero markup. T-ADDA owns and pays these directly as the business grows.</p>
+    <div class="rule"></div>
+
+    <table class="cost-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Current Plan</th>
+          <th>Current Cost</th>
+          <th>When Upgrade Needed</th>
+          <th>Upgrade Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Firebase Hosting</strong><br><span style="color:#64748b;font-size:11px">Portal + Marketing site</span></td>
+          <td>Free (Spark)</td>
+          <td>₹0 / month</td>
+          <td>&gt;10 GB transfer/month</td>
+          <td>~₹1.5 / GB overage (Blaze)</td>
+        </tr>
+        <tr>
+          <td><strong>Firebase Firestore</strong><br><span style="color:#64748b;font-size:11px">Orders, users, products data</span></td>
+          <td>Free (Spark)</td>
+          <td>₹0 / month</td>
+          <td>&gt;50K reads or 20K writes/day</td>
+          <td>~₹6 / 100K reads (Blaze)</td>
+        </tr>
+        <tr>
+          <td><strong>Firebase Storage</strong><br><span style="color:#64748b;font-size:11px">Design files, mockups, labels</span></td>
+          <td>Free (Spark)</td>
+          <td>₹0 / month</td>
+          <td>&gt;5 GB stored</td>
+          <td>~₹21 / GB / month (Blaze)</td>
+        </tr>
+        <tr>
+          <td><strong>Email Notifications</strong><br><span style="color:#64748b;font-size:11px">Order &amp; registration alerts (Web3Forms)</span></td>
+          <td>Free (250 emails/month)</td>
+          <td>₹0 / month</td>
+          <td>&gt;250 emails/month</td>
+          <td>~₹850 / month (Basic plan)</td>
+        </tr>
+        <tr>
+          <td><strong>Razorpay</strong><br><span style="color:#64748b;font-size:11px">Advance payment collection</span></td>
+          <td>Pay per transaction</td>
+          <td>2% per transaction</td>
+          <td>Always</td>
+          <td>Industry standard — no alternative</td>
+        </tr>
+        <tr>
+          <td><strong>Custom Domain</strong><br><span style="color:#64748b;font-size:11px">e.g. tadda.in (optional)</span></td>
+          <td>Not yet (web.app subdomain)</td>
+          <td>₹0</td>
+          <td>Brand presence</td>
+          <td>~₹800–1,200 / year (GoDaddy / Google)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-green">
+      <strong>Current total infrastructure cost: ₹0 / month</strong>
+      The entire platform runs on Firebase free tier today. Upgrade costs only apply as transaction and user volume grows — fully in T-ADDA's control. Estimated free tier capacity: <strong>~500 orders/month, ~5 GB files, ~250 email alerts</strong>.
+    </div>
+
+    <div class="callout">
+      <strong>Future Enterprise / License Considerations</strong>
+      As volume scales, Firebase Blaze (pay-as-you-go) is the natural upgrade — no code changes, just a billing plan switch. Razorpay fees are passed to T-ADDA at cost (2%). If email volume exceeds 250/month, upgrading Web3Forms or switching to SendGrid (~₹0 for 100/day free) is a simple config change. All these costs are T-ADDA's operating expenses — not development costs.
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:4px">
+      <div class="feat-card" style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">🔒</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">You Own Everything</div>
+        <div style="font-size:11px;color:#64748b">Source code, Firebase project, Storage bucket — all under T-ADDA's Google account.</div>
+      </div>
+      <div class="feat-card" style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">📈</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">Scales with Business</div>
+        <div style="font-size:11px;color:#64748b">Free until you have real volume. Infrastructure costs grow proportional to revenue.</div>
+      </div>
+      <div class="feat-card" style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">🔄</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px">No Vendor Lock-in</div>
+        <div style="font-size:11px;color:#64748b">Standard web tech (HTML/JS/Firebase). Any developer can maintain or extend it.</div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>T-ADDA Digital Platform — Confidential</span>
+      <span>Page 5</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 6 — NEXT STEPS
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Action Plan</div>
+    <h2 class="page-title">Next Steps to Go Live Fully</h2>
+    <p class="page-subtitle">Phase 1 is already live. These are the remaining actions to unlock full capability.</p>
+    <div class="rule"></div>
+
+    <div class="timeline">
+      <div class="tl-item done">
+        <h4>✅ Portal &amp; Marketing Site — Live</h4>
+        <p>Both taddaportal.web.app and tadda-web.web.app are live, tested, and accessible to customers.</p>
+      </div>
+      <div class="tl-item done">
+        <h4>✅ Order Management — Live</h4>
+        <p>Customers can place orders, upload designs, and track status. Admin can manage full order pipeline.</p>
+      </div>
+      <div class="tl-item done">
+        <h4>✅ Brand Owner Registration — Live</h4>
+        <p>Customers register from portal or marketing site. Admin manages leads with status tracking and Brand ID.</p>
+      </div>
+      <div class="tl-item">
+        <h4>🔑 Share Razorpay Credentials → Payment Goes Live</h4>
+        <p>T-ADDA shares Razorpay Key ID &amp; Secret. We configure in 10 minutes. Advance payment (50%) starts collecting immediately.</p>
+      </div>
+      <div class="tl-item">
+        <h4>📸 Upload Product Blank Photos (Ongoing)</h4>
+        <p>Admin uploads Front/Back/Left/Right photos for each product colour. Already started for Regular 180 GSM — Black. Complete for all products to unlock Mockup Builder fully.</p>
+      </div>
+      <div class="tl-item">
+        <h4>🎨 Phase 2 Sign-off → Mockup Builder to Production</h4>
+        <p>Mockup Builder is built and staged. One deploy command moves it to production. Can happen this week.</p>
+      </div>
+      <div class="tl-item">
+        <h4>🌐 Custom Domain (Optional)</h4>
+        <p>Register tadda.in or similar. Point to Firebase Hosting. Adds brand credibility (~₹1,000/year).</p>
+      </div>
+    </div>
+
+    <div class="callout callout-green" style="margin-top:24px">
+      <strong>Summary: Investment &amp; Returns</strong>
+      Phase 1 (₹75,000 one-time) → Platform live, orders flowing, admin in control.<br>
+      Phase 2 (₹25,000 one-time) → Mockup builder, wallet, vendor portal, ticketing, invoicing.<br>
+      AMC (₹5,000/year from Year 2) → Ongoing support, minor updates, technical health.<br>
+      Infrastructure → ₹0 until scale kicks in, then pass-through at actual cost.
+    </div>
+
+    <div style="margin-top:20px;background:#0f172a;border-radius:12px;padding:24px 28px;color:#fff;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin-bottom:6px">Ready to Move Forward?</div>
+        <div style="font-size:18px;font-weight:800;letter-spacing:-0.5px">Let's activate payments and ship Phase 2.</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Live portals</div>
+        <div style="font-size:12px;color:#60a5fa">taddaportal.web.app</div>
+        <div style="font-size:12px;color:#60a5fa">tadda-web.web.app</div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>T-ADDA Digital Platform — Confidential</span>
+      <span>Page 6</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 7 — RESPONSIBILITY MATRIX
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="inner">
+    <div class="section-tag">Governance &amp; Accountability</div>
+    <h2 class="page-title">Responsibility Matrix</h2>
+    <p class="page-subtitle">Clear ownership across platform operations, business management, and ongoing improvement.</p>
+    <div class="rule"></div>
+
+    <style>
+      .raci { width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:20px; }
+      .raci thead tr { background:#0f172a; color:#fff; }
+      .raci th { padding:10px 14px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
+      .raci td { padding:10px 14px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+      .raci tr:nth-child(even) td { background:#f8fafc; }
+      .raci tr:last-child td { border-bottom:none; }
+      .raci td:first-child { font-weight:600; color:#1e293b; width:42%; }
+      .raci td:nth-child(2) { width:29%; }
+      .raci td:nth-child(3) { width:29%; }
+      .own { display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700; }
+      .own-tp  { background:#dbeafe;color:#1e40af; }
+      .own-td  { background:#dcfce7;color:#15803d; }
+      .own-sh  { background:#f3e8ff;color:#7c3aed; }
+      .cat-header td { background:#1e3a8a !important; color:#fff !important; font-weight:700; font-size:11px; letter-spacing:0.04em; padding:8px 14px; }
+    </style>
+
+    <table class="raci">
+      <thead>
+        <tr>
+          <th>Area / Activity</th>
+          <th>Tool Provider</th>
+          <th>T-ADDA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="cat-header"><td colspan="3">🖥 Platform &amp; Technology</td></tr>
+        <tr>
+          <td>Live platform availability 24/7</td>
+          <td><span class="own own-tp">✓ Responsible</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Delivery of all agreed features per scope of work</td>
+          <td><span class="own own-tp">✓ Responsible</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Bug identification, reporting &amp; resolution</td>
+          <td><span class="own own-tp">✓ Responsible</span></td>
+          <td>Report bugs via ticket</td>
+        </tr>
+        <tr>
+          <td>Regular minor UI updates &amp; feature enhancements (AMC)</td>
+          <td><span class="own own-tp">✓ Responsible</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Basic sanity &amp; functionality testing before releases</td>
+          <td><span class="own own-tp">✓ Responsible</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Firebase setup, security rules &amp; storage configuration</td>
+          <td><span class="own own-tp">✓ Responsible</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Source code ownership &amp; handover</td>
+          <td>Delivers code</td>
+          <td><span class="own own-td">✓ Owner</span></td>
+        </tr>
+        <tr>
+          <td>Firebase &amp; Google account credentials</td>
+          <td>—</td>
+          <td><span class="own own-td">✓ Owner</span></td>
+        </tr>
+
+        <tr class="cat-header"><td colspan="3">✅ Acceptance &amp; Sign-off</td></tr>
+        <tr>
+          <td>UAT (User Acceptance Testing) confirmation</td>
+          <td>Supports &amp; fixes</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Request for new features or scope changes</td>
+          <td>Estimates &amp; delivers</td>
+          <td><span class="own own-td">✓ Initiates</span></td>
+        </tr>
+        <tr>
+          <td>Sign-off before production deployment</td>
+          <td>Seeks approval</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Payment milestone approvals</td>
+          <td>—</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+
+        <tr class="cat-header"><td colspan="3">🏢 Business Operations</td></tr>
+        <tr>
+          <td>Customer onboarding, communication &amp; support</td>
+          <td>—</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Order fulfilment, vendor coordination &amp; delivery</td>
+          <td>—</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Pricing decisions, discount policies &amp; offers</td>
+          <td>—</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Marketing, promotions &amp; brand campaigns</td>
+          <td>—</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Product catalogue updates (photos, colours, pricing)</td>
+          <td>Platform supports it</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Admin panel usage &amp; day-to-day order management</td>
+          <td>Training provided</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Employee data management &amp; order assignment</td>
+          <td>Platform supports it</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+
+        <tr class="cat-header"><td colspan="3">💰 Infrastructure &amp; Costs</td></tr>
+        <tr>
+          <td>Third-party platform costs (Firebase, Razorpay, email)</td>
+          <td>Advises on plan</td>
+          <td><span class="own own-td">✓ Pays directly</span></td>
+        </tr>
+        <tr>
+          <td>Razorpay account setup &amp; KYC</td>
+          <td>Integration ready</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+        <tr>
+          <td>Domain registration &amp; renewal (if custom domain)</td>
+          <td>DNS configuration</td>
+          <td><span class="own own-td">✓ Pays &amp; owns</span></td>
+        </tr>
+        <tr>
+          <td>AMC payment (from Year 2)</td>
+          <td>Invoices annually</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+
+        <tr class="cat-header"><td colspan="3">🔒 Data &amp; Compliance</td></tr>
+        <tr>
+          <td>Customer data privacy &amp; GDPR/IT Act compliance</td>
+          <td><span class="own own-sh">Shared</span></td>
+          <td><span class="own own-sh">Shared</span></td>
+        </tr>
+        <tr>
+          <td>Data backup &amp; disaster recovery</td>
+          <td><span class="own own-tp">✓ Platform level</span></td>
+          <td>Export backups periodically</td>
+        </tr>
+        <tr>
+          <td>Access credential security (admin passwords, API keys)</td>
+          <td>—</td>
+          <td><span class="own own-td">✓ Responsible</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;gap:12px;font-size:11px">
+      <span style="display:flex;align-items:center;gap:5px"><span class="own own-tp">Tool Provider</span> Technology Partner</span>
+      <span style="display:flex;align-items:center;gap:5px"><span class="own own-td">T-ADDA</span> Business Owner</span>
+      <span style="display:flex;align-items:center;gap:5px"><span class="own own-sh">Shared</span> Joint Responsibility</span>
+    </div>
+
+    <div class="page-footer">
+      <span>T-ADDA Digital Platform — Confidential</span>
+      <span>Page 7</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

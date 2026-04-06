@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Your QR — Product Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #0f172a; color: #fff; overflow: hidden; height: 100vh; }
+
+  /* ── Shell ── */
+  #shell {
+    display: flex; flex-direction: column; height: 100vh;
+  }
+
+  /* ── Top bar ── */
+  #topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px; background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
+  }
+  #topbar .brand { font-size: 14px; font-weight: 700; color: #60a5fa; letter-spacing: -0.3px; }
+  #topbar .slide-counter { font-size: 12px; color: #64748b; }
+  #topbar .controls { display: flex; gap: 8px; align-items: center; }
+  .ctrl-btn {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    color: #cbd5e1; border-radius: 8px; padding: 6px 14px; font-size: 12px;
+    font-family: inherit; cursor: pointer; transition: all 0.2s;
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.13); color: #fff; }
+  .ctrl-btn.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+
+  /* ── Progress bar ── */
+  #progress-track {
+    height: 3px; background: rgba(255,255,255,0.08); flex-shrink: 0;
+  }
+  #progress-fill {
+    height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    transition: width 0.4s ease; width: 0%;
+  }
+
+  /* ── Stage ── */
+  #stage {
+    flex: 1; display: flex; overflow: hidden; position: relative;
+  }
+
+  /* ── Slides ── */
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 32px 48px; gap: 56px;
+    opacity: 0; transform: translateX(40px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1; transform: translateX(0); pointer-events: all;
+  }
+  .slide.exit {
+    opacity: 0; transform: translateX(-40px);
+  }
+
+  /* ── Slide layout variants ── */
+  .slide-cover { flex-direction: column; text-align: center; gap: 20px; }
+  .slide-split { flex-direction: row; align-items: center; }
+  .slide-center { flex-direction: column; align-items: center; text-align: center; }
+
+  /* ── Text side ── */
+  .slide-text { flex: 1; max-width: 420px; }
+  .slide-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #3b82f6; margin-bottom: 10px; }
+  .slide-title { font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1.15; margin-bottom: 14px; }
+  .slide-title span { color: #60a5fa; }
+  .slide-body { font-size: 14px; color: #94a3b8; line-height: 1.75; margin-bottom: 20px; }
+  .slide-bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .slide-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5; }
+  .bullet-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .slide-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3); border-radius: 20px; padding: 5px 14px; font-size: 11px; font-weight: 700; color: #4ade80; margin-top: 16px; }
+
+  /* ── Mock UI ── */
+  .mock { flex-shrink: 0; }
+  .mock-browser {
+    background: #1e293b; border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    width: 420px;
+  }
+  .mock-browser.narrow { width: 320px; }
+  .mock-topbar {
+    background: #0f172a; padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .mock-dots { display: flex; gap: 5px; }
+  .mock-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .mock-dot.r { background: #f87171; }
+  .mock-dot.y { background: #fbbf24; }
+  .mock-dot.g { background: #4ade80; }
+  .mock-url {
+    flex: 1; background: rgba(255,255,255,0.06); border-radius: 6px;
+    padding: 4px 10px; font-size: 11px; color: #64748b; margin-left: 6px;
+  }
+  .mock-body { padding: 20px; }
+
+  /* ── Form elements in mock ── */
+  .m-label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .m-input {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 9px 12px; font-size: 12px; color: #cbd5e1;
+    width: 100%; margin-bottom: 12px; font-family: inherit;
+  }
+  .m-input.highlight { border-color: #3b82f6; background: rgba(59,130,246,0.08); }
+  .m-btn {
+    background: #3b82f6; color: #fff; border-radius: 8px; padding: 9px 16px;
+    font-size: 12px; font-weight: 700; width: 100%; text-align: center; margin-bottom: 10px;
+    font-family: inherit; cursor: default;
+  }
+  .m-btn.green { background: #10b981; }
+  .m-btn.purple { background: #7c3aed; }
+  .m-btn.outline { background: transparent; border: 1.5px solid #3b82f6; color: #60a5fa; }
+  .m-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .m-row .m-input { margin-bottom: 0; }
+
+  /* ── QR preview ── */
+  .qr-preview {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .qr-grid {
+    width: 80px; height: 80px;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(96,165,250,0.15) 0px, rgba(96,165,250,0.15) 2px, transparent 2px, transparent 8px),
+      repeating-linear-gradient(90deg, rgba(96,165,250,0.15) 0px, rgba(96,165,250,0.15) 2px, transparent 2px, transparent 8px);
+    border-radius: 6px; position: relative; overflow: hidden;
+  }
+  .qr-corner {
+    position: absolute; width: 18px; height: 18px;
+    border: 3px solid #60a5fa; border-radius: 3px;
+  }
+  .qr-corner.tl { top: 4px; left: 4px; }
+  .qr-corner.tr { top: 4px; right: 4px; }
+  .qr-corner.bl { bottom: 4px; left: 4px; }
+  .qr-dots {
+    position: absolute; inset: 10px;
+    background-image: radial-gradient(circle, #60a5fa 1.5px, transparent 1.5px);
+    background-size: 7px 7px;
+    opacity: 0.7;
+  }
+  .qr-label { font-size: 11px; color: #64748b; }
+
+  /* ── Pill tags ── */
+  .tag-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tag-blue { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .tag-green { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+  .tag-purple { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .tag-amber { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+
+  /* ── Cover specific ── */
+  .cover-logo { font-size: 48px; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; }
+  .cover-logo span { color: #60a5fa; }
+  .cover-tagline { font-size: 18px; color: #94a3b8; font-weight: 400; max-width: 480px; line-height: 1.6; }
+  .cover-stats { display: flex; gap: 40px; justify-content: center; margin-top: 8px; }
+  .cover-stat .num { font-size: 28px; font-weight: 800; color: #fff; }
+  .cover-stat .lbl { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ── Problem slide ── */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 760px; }
+  .prob-card {
+    background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 12px; padding: 16px;
+  }
+  .prob-card h4 { font-size: 13px; font-weight: 700; color: #f87171; margin-bottom: 6px; }
+  .prob-card p { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  .sol-card {
+    background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 12px; padding: 16px; grid-column: span 2;
+  }
+  .sol-card h4 { font-size: 13px; font-weight: 700; color: #60a5fa; margin-bottom: 6px; }
+  .sol-card p { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+
+  /* ── AI slide ── */
+  .ai-before, .ai-after {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.6; margin-bottom: 8px;
+  }
+  .ai-before { color: #64748b; border-style: dashed; }
+  .ai-after { color: #cbd5e1; border-color: rgba(124,58,237,0.4); background: rgba(124,58,237,0.06); }
+  .ai-arrow { text-align: center; font-size: 18px; margin: 4px 0; color: #7c3aed; }
+  .ai-btn-mock {
+    display: flex; align-items: center; gap: 6px; justify-content: center;
+    background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.4);
+    border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; color: #a78bfa; margin-bottom: 12px;
+  }
+
+  /* ── Dynamic slide ── */
+  .change-demo {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .change-row {
+    display: flex; align-items: center; gap: 10px; font-size: 12px;
+  }
+  .change-step {
+    background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 8px; padding: 8px 12px; flex: 1; color: #cbd5e1;
+  }
+  .change-arrow { color: #3b82f6; font-size: 16px; }
+
+  /* ── Upload slide ── */
+  .upload-zone {
+    border: 2px dashed rgba(59,130,246,0.4); border-radius: 10px;
+    padding: 20px; text-align: center; margin-bottom: 12px;
+    background: rgba(59,130,246,0.04);
+  }
+  .upload-icon { font-size: 28px; margin-bottom: 6px; }
+  .upload-hint { font-size: 11px; color: #64748b; }
+  .upload-preview {
+    background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden;
+    display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 12px;
+  }
+  .upload-thumb {
+    width: 40px; height: 40px; border-radius: 6px;
+    background: linear-gradient(135deg, #3b82f6, #7c3aed); flex-shrink: 0;
+  }
+  .upload-name { font-size: 12px; color: #cbd5e1; }
+  .upload-size { font-size: 11px; color: #64748b; }
+
+  /* ── Summary slide ── */
+  .feature-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; }
+  .chip {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 10px 16px; font-size: 13px; color: #cbd5e1; font-weight: 500;
+  }
+  .chip .icon { font-size: 18px; }
+
+  /* ── Bottom nav ── */
+  #bottomnav {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 14px; background: rgba(255,255,255,0.02);
+    border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0;
+  }
+  .nav-btn {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    color: #cbd5e1; border-radius: 10px; padding: 8px 20px; font-size: 13px;
+    font-family: inherit; cursor: pointer; transition: all 0.2s; font-weight: 600;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn.primary { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+  .nav-btn.primary:hover { background: #2563eb; }
+  .slide-dots { display: flex; gap: 6px; align-items: center; }
+  .sdot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.2s; }
+  .sdot.active { background: #3b82f6; width: 20px; border-radius: 4px; }
+
+  /* ── Animations ── */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  .slide.active .slide-tag { animation: fadeUp 0.4s ease 0.1s both; }
+  .slide.active .slide-title { animation: fadeUp 0.4s ease 0.2s both; }
+  .slide.active .slide-body { animation: fadeUp 0.4s ease 0.3s both; }
+  .slide.active .slide-bullets { animation: fadeUp 0.4s ease 0.35s both; }
+  .slide.active .mock { animation: fadeUp 0.5s ease 0.15s both; }
+  .slide.active .problem-grid { animation: fadeUp 0.5s ease 0.2s both; }
+  .slide.active .feature-chips { animation: fadeUp 0.5s ease 0.3s both; }
+  .typing::after { content: '|'; animation: blink 1s infinite; color: #3b82f6; }
+
+  /* ── PIN screen ── */
+  .pin-screen {
+    background: #0f172a; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .pin-icon { font-size: 28px; margin-bottom: 8px; }
+  .pin-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .pin-sub { font-size: 11px; color: #64748b; margin-bottom: 12px; }
+  .pin-boxes { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+  .pin-box { width: 32px; height: 36px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #3b82f6; font-weight: 700; }
+
+  /* ── Scan counter ── */
+  .scan-badge {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
+  }
+  .scan-badge .label { font-size: 11px; color: #64748b; }
+  .scan-badge .count { font-size: 20px; font-weight: 800; color: #34d399; }
+</style>
+</head>
+<body>
+
+<div id="shell">
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <div class="brand">Create Your QR — Product Demo</div>
+    <div class="slide-counter" id="slideCounter">1 / 9</div>
+    <div class="controls">
+      <button class="ctrl-btn" id="autoplayBtn" onclick="toggleAutoplay()">▶ Auto-play</button>
+      <a href="https://create-your-qr.web.app" target="_blank" class="ctrl-btn">Try it Live ↗</a>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div id="progress-track"><div id="progress-fill"></div></div>
+
+  <!-- Stage -->
+  <div id="stage">
+
+    <!-- SLIDE 1: Cover -->
+    <div class="slide slide-cover active" id="s1">
+      <div class="cover-logo">Create Your <span>QR</span></div>
+      <div class="cover-tagline">The smartest free QR code generator — URL links, WhatsApp chats, AI-powered messages, and dynamic codes you can edit anytime.</div>
+      <div class="cover-stats">
+        <div class="cover-stat"><div class="num">2</div><div class="lbl">QR Types</div></div>
+        <div class="cover-stat"><div class="num">AI</div><div class="lbl">Powered</div></div>
+        <div class="cover-stat"><div class="num">Free</div><div class="lbl">Forever</div></div>
+        <div class="cover-stat"><div class="num">∞</div><div class="lbl">Dynamic Edits</div></div>
+      </div>
+      <div class="slide-badge">🟢 Live at create-your-qr.web.app</div>
+    </div>
+
+    <!-- SLIDE 2: Problem -->
+    <div class="slide slide-center" id="s2">
+      <div class="slide-tag">The Problem</div>
+      <div class="slide-title">Every other QR tool has a <span>catch</span></div>
+      <div class="problem-grid">
+        <div class="prob-card">
+          <h4>🔒 Paywalled Features</h4>
+          <p>Free plans lock basic features like custom colours, dynamic codes, or download in PNG behind a paid subscription.</p>
+        </div>
+        <div class="prob-card">
+          <h4>💧 Watermarks</h4>
+          <p>Your QR code has a "Made with XYZ" logo stamped on it unless you pay. Looks unprofessional on print materials.</p>
+        </div>
+        <div class="prob-card">
+          <h4>⏳ Expiring Links</h4>
+          <p>Free dynamic QR codes expire after 30 days. Your printed flyers become useless.</p>
+        </div>
+        <div class="prob-card">
+          <h4>📋 No WhatsApp QR</h4>
+          <p>None of them let you create a QR that opens a WhatsApp chat with a pre-filled message. You have to use wa.me links manually.</p>
+        </div>
+        <div class="sol-card">
+          <h4>✅ Create Your QR solves all of this — free, no watermark, no expiry, dynamic edits, and WhatsApp QR built in.</h4>
+          <p>One tool. Everything you need. Nothing you don't.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: URL QR -->
+    <div class="slide slide-split" id="s3">
+      <div class="slide-text">
+        <div class="slide-tag">Feature 1</div>
+        <div class="slide-title">URL QR <span>Generator</span></div>
+        <div class="slide-body">Paste any link — website, Instagram, YouTube, Google Form, payment link — and generate a clean, downloadable QR code in seconds.</div>
+        <ul class="slide-bullets">
+          <li><span class="bullet-icon">🎨</span> Custom foreground + background colours</li>
+          <li><span class="bullet-icon">🖼</span> Add a logo in the centre (Pro)</li>
+          <li><span class="bullet-icon">🔳</span> 4 frame styles with custom text</li>
+          <li><span class="bullet-icon">↔️</span> Invert colours toggle</li>
+          <li><span class="bullet-icon">⬇️</span> Download as PNG — no watermark, no sign-up</li>
+        </ul>
+      </div>
+      <div class="mock">
+        <div class="mock-browser">
+          <div class="mock-topbar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">create-your-qr.web.app</div>
+          </div>
+          <div class="mock-body">
+            <div class="m-label">Enter URL</div>
+            <div class="m-input highlight typing">https://instagram.com/yourbrand</div>
+            <div class="m-row">
+              <div style="flex:1"><div class="m-label">QR Colour</div><div class="m-input" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#1e40af;display:inline-block"></span> Navy Blue</div></div>
+              <div style="flex:1"><div class="m-label">Background</div><div class="m-input" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#fff;border:1px solid #334155;display:inline-block"></span> White</div></div>
+            </div>
+            <div class="qr-preview">
+              <div class="qr-grid">
+                <div class="qr-corner tl"></div>
+                <div class="qr-corner tr"></div>
+                <div class="qr-corner bl"></div>
+                <div class="qr-dots"></div>
+              </div>
+              <div class="qr-label">Your QR is ready ✓</div>
+            </div>
+            <div class="m-btn">⬇ Download PNG</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: WhatsApp QR -->
+    <div class="slide slide-split" id="s4">
+      <div class="slide-text">
+        <div class="slide-tag">Feature 2</div>
+        <div class="slide-title">WhatsApp <span>QR Codes</span></div>
+        <div class="slide-body">Create a QR that opens a WhatsApp chat with your number and a pre-typed message. Perfect for businesses, freelancers, and event promotions.</div>
+        <ul class="slide-bullets">
+          <li><span class="bullet-icon">📲</span> Scan → WhatsApp opens → message pre-filled</li>
+          <li><span class="bullet-icon">🏷</span> Add your name and branding on the landing page</li>
+          <li><span class="bullet-icon">✏️</span> Toggle: let visitors edit the message or lock it</li>
+          <li><span class="bullet-icon">🤖</span> AI-generated tagline for your landing page</li>
+          <li><span class="bullet-icon">📊</span> Real-time scan counter per QR</li>
+        </ul>
+      </div>
+      <div class="mock">
+        <div class="mock-browser">
+          <div class="mock-topbar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">create-your-qr.web.app</div>
+          </div>
+          <div class="mock-body">
+            <div class="m-label">Your Name</div>
+            <div class="m-input">Rahul's Clothing Store</div>
+            <div class="m-label">WhatsApp Number</div>
+            <div class="m-input">+91 98765 43210</div>
+            <div class="m-label">Pre-filled Message</div>
+            <div class="m-input" style="height:52px;padding-top:8px">Hi! I'd like to place a bulk order for custom tees...</div>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <span class="tag-pill tag-green">✓ Editable by visitor</span>
+              <span class="tag-pill tag-blue">+ Add Image</span>
+            </div>
+            <div class="m-btn green">Generate WhatsApp QR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Dynamic / Edit -->
+    <div class="slide slide-split" id="s5">
+      <div class="slide-text">
+        <div class="slide-tag">Feature 3</div>
+        <div class="slide-title">Dynamic QR — <span>Edit Anytime</span></div>
+        <div class="slide-body">Already printed the QR on a banner or business card? No problem. The QR code stays the same — just update the message behind it.</div>
+        <ul class="slide-bullets">
+          <li><span class="bullet-icon">🖨</span> Print once — update content forever</li>
+          <li><span class="bullet-icon">📝</span> Change your offer, event date, or message anytime</li>
+          <li><span class="bullet-icon">🔗</span> Same QR link always works — no reprinting</li>
+          <li><span class="bullet-icon">📊</span> Scan count resets or carries over — your choice</li>
+        </ul>
+        <div class="slide-badge">💡 No other free tool offers this</div>
+      </div>
+      <div class="mock">
+        <div class="mock-browser">
+          <div class="mock-topbar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">create-your-qr.web.app</div>
+          </div>
+          <div class="mock-body">
+            <div style="font-size:11px;font-weight:700;color:#3b82f6;margin-bottom:10px">✏️ Edit WhatsApp QR</div>
+            <div class="change-demo">
+              <div style="font-size:11px;color:#64748b;margin-bottom:4px">Update your message anytime:</div>
+              <div class="change-row">
+                <div class="change-step" style="background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.2);color:#94a3b8">
+                  <div style="font-size:10px;color:#f87171;margin-bottom:3px">OLD MESSAGE</div>
+                  Hi! I'm interested in custom tees...
+                </div>
+              </div>
+              <div style="text-align:center;font-size:18px;color:#3b82f6">↓</div>
+              <div class="change-row">
+                <div class="change-step" style="background:rgba(16,185,129,0.07);border-color:rgba(16,185,129,0.2);">
+                  <div style="font-size:10px;color:#34d399;margin-bottom:3px">UPDATED MESSAGE</div>
+                  Hi! Saw your Diwali sale — I want to order 50 hoodies with logo print!
+                </div>
+              </div>
+              <div class="m-btn" style="margin-top:6px">Save Changes</div>
+            </div>
+            <div style="font-size:11px;color:#64748b;text-align:center;margin-top:8px">🔗 QR link unchanged — same code still works</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: AI Improve -->
+    <div class="slide slide-split" id="s6">
+      <div class="slide-text">
+        <div class="slide-tag">Feature 4</div>
+        <div class="slide-title">Improve with <span>AI</span></div>
+        <div class="slide-body">Not sure how to phrase your message? Hit "Improve with AI" — Gemini rewrites it to sound professional and persuasive in seconds.</div>
+        <ul class="slide-bullets">
+          <li><span class="bullet-icon">🤖</span> Powered by Google Gemini AI</li>
+          <li><span class="bullet-icon">✍️</span> Rewrites your rough draft into a polished message</li>
+          <li><span class="bullet-icon">🆓</span> 2 free uses — unlimited with Pro</li>
+          <li><span class="bullet-icon">⚡</span> One click — result in under 3 seconds</li>
+        </ul>
+        <div class="slide-badge">🚀 Perfect for non-native English writers</div>
+      </div>
+      <div class="mock">
+        <div class="mock-browser narrow">
+          <div class="mock-topbar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">create-your-qr.web.app</div>
+          </div>
+          <div class="mock-body">
+            <div class="m-label">Your Message</div>
+            <div class="ai-before">hi i want buy tshirt in bulk for my company event can u help</div>
+            <div class="ai-btn-mock">✨ Improve with AI</div>
+            <div class="ai-arrow">↓</div>
+            <div style="font-size:10px;color:#a78bfa;margin-bottom:5px;font-weight:600">AI IMPROVED ✓</div>
+            <div class="ai-after">Hi! I'm interested in placing a bulk order for custom T-shirts for a corporate event. Could you please share your pricing, available customisation options, and turnaround time? Thank you!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Image Upload -->
+    <div class="slide slide-split" id="s7">
+      <div class="slide-text">
+        <div class="slide-tag">Feature 5</div>
+        <div class="slide-title">Add Your <span>Brand Image</span></div>
+        <div class="slide-body">Upload a photo — product image, logo, or promo banner — and it appears on the WhatsApp QR landing page. Anyone who scans sees your brand before messaging you.</div>
+        <ul class="slide-bullets">
+          <li><span class="bullet-icon">📸</span> Upload up to 2 MB image (JPG, PNG, WebP)</li>
+          <li><span class="bullet-icon">🎯</span> Shown on landing page before visitor messages you</li>
+          <li><span class="bullet-icon">🏪</span> Great for product previews, menus, offers</li>
+          <li><span class="bullet-icon">🔄</span> Update or remove image anytime via Edit</li>
+        </ul>
+      </div>
+      <div class="mock">
+        <div class="mock-browser narrow">
+          <div class="mock-topbar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">create-your-qr.web.app / q / abc123</div>
+          </div>
+          <div class="mock-body">
+            <div style="background:linear-gradient(135deg,#1e3a8a,#7c3aed);border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:11px;color:rgba(255,255,255,0.6)">
+              📷 Your brand image here
+            </div>
+            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:3px">Rahul's Clothing Store</div>
+            <div style="font-size:11px;color:#64748b;margin-bottom:12px">Bulk custom apparel for brands &amp; events</div>
+            <div class="m-input" style="height:52px;font-size:11px;color:#94a3b8">Hi! I'd like to order custom tees for my brand event…</div>
+            <div class="m-btn green" style="font-size:12px">💬 Message on WhatsApp</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: PIN Protection -->
+    <div class="slide slide-split" id="s8">
+      <div class="slide-text">
+        <div class="slide-tag">Feature 6</div>
+        <div class="slide-title">PIN Protection <span>+ Scan Tracking</span></div>
+        <div class="slide-body">Lock your WhatsApp QR with a PIN — only people you share the PIN with can access it. Track exactly how many times your QR has been scanned in real time.</div>
+        <ul class="slide-bullets">
+          <li><span class="bullet-icon">🔐</span> Optional PIN lock — wrong PIN shows error</li>
+          <li><span class="bullet-icon">📨</span> "Request Access" button for unknown visitors</li>
+          <li><span class="bullet-icon">📊</span> Live scan counter — know your reach</li>
+          <li><span class="bullet-icon">🎯</span> Great for exclusive offers or VIP groups</li>
+        </ul>
+      </div>
+      <div class="mock">
+        <div class="mock-browser narrow">
+          <div class="mock-topbar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">create-your-qr.web.app / q / abc123</div>
+          </div>
+          <div class="mock-body">
+            <div class="scan-badge">
+              <div><div class="label">Total Scans</div></div>
+              <div class="count">47</div>
+            </div>
+            <div class="pin-screen">
+              <div class="pin-icon">🔐</div>
+              <div class="pin-title">This QR is PIN protected</div>
+              <div class="pin-sub">Enter the 4-digit PIN to continue</div>
+              <div class="pin-boxes">
+                <div class="pin-box">•</div>
+                <div class="pin-box">•</div>
+                <div class="pin-box">•</div>
+                <div class="pin-box"></div>
+              </div>
+              <div class="m-btn" style="margin-bottom:8px">Unlock</div>
+              <div class="m-btn outline">Request Access</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Summary -->
+    <div class="slide slide-center" id="s9">
+      <div class="slide-tag">Everything in one place</div>
+      <div class="slide-title">One tool. Every QR need. <span>Free.</span></div>
+      <div class="feature-chips">
+        <div class="chip"><span class="icon">🔗</span> URL QR Generator</div>
+        <div class="chip"><span class="icon">💬</span> WhatsApp QR</div>
+        <div class="chip"><span class="icon">✏️</span> Dynamic Edit</div>
+        <div class="chip"><span class="icon">🤖</span> AI Message Improve</div>
+        <div class="chip"><span class="icon">📸</span> 2MB Image Upload</div>
+        <div class="chip"><span class="icon">🔐</span> PIN Protection</div>
+        <div class="chip"><span class="icon">📊</span> Scan Counter</div>
+        <div class="chip"><span class="icon">🎨</span> Custom Colours</div>
+        <div class="chip"><span class="icon">🖼</span> Logo Overlay</div>
+        <div class="chip"><span class="icon">🔳</span> Frame Styles</div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:center">
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:#fff">Free</div>
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">No Watermark</div>
+        </div>
+        <div style="width:1px;height:40px;background:rgba(255,255,255,0.1)"></div>
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:#fff">No Expiry</div>
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Links Last Forever</div>
+        </div>
+        <div style="width:1px;height:40px;background:rgba(255,255,255,0.1)"></div>
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:#60a5fa">create-your-qr.web.app</div>
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Try it now</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /stage -->
+
+  <!-- Bottom Nav -->
+  <div id="bottomnav">
+    <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Prev</button>
+    <div class="slide-dots" id="dots"></div>
+    <button class="nav-btn primary" id="nextBtn" onclick="navigate(1)">Next →</button>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+  const TOTAL = 9;
+  let current = 0;
+  let autoplay = false;
+  let autoTimer = null;
+  const AUTOPLAY_INTERVAL = 8000;
+
+  const slides = document.querySelectorAll('.slide');
+  const dotsContainer = document.getElementById('dots');
+
+  // Build dots
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'sdot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsContainer.appendChild(d);
+  }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= TOTAL) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('exit');
+    setTimeout(() => slides[idx < current ? idx + 1 : idx - 1]?.classList.remove('exit'), 500);
+    slides[current].addEventListener('transitionend', function h() {
+      slides[current].classList.remove('exit');
+      current = idx;
+      slides[current].classList.add('active');
+      updateUI();
+      this.removeEventListener('transitionend', h);
+    }, { once: true });
+    current = idx;
+    slides[current].classList.add('active');
+    updateUI();
+  }
+
+  function navigate(dir) {
+    const next = current + dir;
+    if (next < 0 || next >= TOTAL) return;
+
+    const oldSlide = slides[current];
+    const newSlide = slides[next];
+
+    oldSlide.classList.remove('active');
+    oldSlide.style.transform = dir > 0 ? 'translateX(-40px)' : 'translateX(40px)';
+    oldSlide.style.opacity = '0';
+
+    newSlide.style.transform = dir > 0 ? 'translateX(40px)' : 'translateX(-40px)';
+    newSlide.style.opacity = '0';
+    newSlide.style.transition = 'none';
+    newSlide.classList.add('active');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        newSlide.style.transition = '';
+        newSlide.style.transform = 'translateX(0)';
+        newSlide.style.opacity = '1';
+        setTimeout(() => {
+          oldSlide.style.transform = '';
+          oldSlide.style.opacity = '';
+        }, 500);
+      });
+    });
+
+    current = next;
+    updateUI();
+  }
+
+  function updateUI() {
+    // Counter
+    document.getElementById('slideCounter').textContent = (current + 1) + ' / ' + TOTAL;
+    // Progress
+    document.getElementById('progress-fill').style.width = ((current + 1) / TOTAL * 100) + '%';
+    // Buttons
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === TOTAL - 1;
+    document.getElementById('nextBtn').textContent = current === TOTAL - 2 ? 'Finish →' : 'Next →';
+    // Dots
+    document.querySelectorAll('.sdot').forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  function toggleAutoplay() {
+    autoplay = !autoplay;
+    const btn = document.getElementById('autoplayBtn');
+    if (autoplay) {
+      btn.textContent = '⏸ Pause';
+      btn.classList.add('active');
+      autoTimer = setInterval(() => {
+        if (current < TOTAL - 1) navigate(1);
+        else { autoplay = false; btn.textContent = '▶ Auto-play'; btn.classList.remove('active'); clearInterval(autoTimer); }
+      }, AUTOPLAY_INTERVAL);
+    } else {
+      btn.textContent = '▶ Auto-play';
+      btn.classList.remove('active');
+      clearInterval(autoTimer);
+    }
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate(-1);
+    if (e.key === ' ') { e.preventDefault(); toggleAutoplay(); }
+  });
+
+  updateUI();
+</script>
+</body>
+</html>

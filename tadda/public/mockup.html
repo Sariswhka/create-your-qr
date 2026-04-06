@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup Builder — T-ADDA</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .mockup-layout { display: grid; grid-template-columns: 320px 1fr; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 24px; }
+        @media (max-width: 768px) { .mockup-layout { grid-template-columns: 1fr; } }
+
+        .panel { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .panel-title { font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 14px; }
+
+        .view-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+        .view-tab { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); font-size: 0.8rem; font-weight: 600; cursor: pointer; background: #fff; color: var(--muted); transition: all 0.15s; }
+        .view-tab:hover { border-color: var(--primary); color: var(--primary); }
+        .view-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .view-tab:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .canvas-wrapper { position: relative; display: inline-block; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #f8fafc; }
+        .canvas-placeholder { width: 460px; height: 540px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; color: var(--muted); }
+
+        .tool-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--text); transition: all 0.15s; width: 100%; justify-content: center; }
+        .tool-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .tool-btn.danger { color: #dc2626; border-color: #fca5a5; }
+        .tool-btn.danger:hover { background: #fee2e2; }
+
+        .saved-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        .saved-thumb { position: relative; width: 80px; height: 96px; border-radius: 8px; overflow: hidden; border: 2px solid var(--border); cursor: pointer; }
+        .saved-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .saved-thumb:hover { border-color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<header class="app-header">
+    <a href="/dashboard.html" class="brand">T-ADDA</a>
+    <nav class="header-nav">
+        <a href="/dashboard.html" class="nav-link">My Orders</a>
+        <a href="/mockup.html" class="nav-link active">Mockup Builder</a>
+        <div class="user-avatar" id="userAvatar">?</div>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+    </nav>
+</header>
+
+<div style="background:var(--bg);border-bottom:1px solid var(--border);padding:12px 24px;font-size:0.82rem;color:var(--muted)">
+    <strong style="color:var(--text)">Mockup Builder</strong> — Select a product, choose a view, upload your design and position it on the blank.
+</div>
+
+<div class="mockup-layout">
+
+    <!-- Left panel: controls -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Step 1: Product -->
+        <div class="panel">
+            <div class="panel-title">1. Select Product</div>
+            <div class="form-group" style="margin-bottom:12px">
+                <select id="productSelect" onchange="onProductSelect()" style="width:100%">
+                    <option value="">— Select Product —</option>
+                    <option value="regular_180">T-Shirt Regular Fit — 180 GSM</option>
+                    <option value="oversized_220">T-Shirt Oversized — 220 GSM</option>
+                    <option value="oversized_240">T-Shirt Oversized Terry — 240 GSM</option>
+                    <option value="polo_220">Polo (Collar Tee) — 220 GSM</option>
+                    <option value="sweatshirt_350">Sweatshirt — 350 GSM</option>
+                    <option value="hoodie_350">Hoodie — 350 GSM</option>
+                    <option value="kids_regular_180">Kids Regular Tee — 180 GSM</option>
+                </select>
+            </div>
+            <div id="colourSwatchesM" class="colour-swatches"></div>
+            <input type="hidden" id="selectedColour">
+        </div>
+
+        <!-- Step 2: View -->
+        <div class="panel" id="viewPanel" style="display:none">
+            <div class="panel-title">2. Select View</div>
+            <div class="view-tabs" id="viewTabs"></div>
+        </div>
+
+        <!-- Step 3: Design -->
+        <div class="panel" id="designPanel" style="display:none">
+            <div class="panel-title">3. Upload Your Design</div>
+            <label class="tool-btn" style="cursor:pointer;margin-bottom:8px">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Design PNG
+                <input type="file" id="designInput" accept="image/png,image/*" style="display:none" onchange="onDesignUpload(this)">
+            </label>
+            <div id="designFileName" style="font-size:0.78rem;color:var(--muted)"></div>
+        </div>
+
+        <!-- Step 4: Tools -->
+        <div class="panel" id="toolsPanel" style="display:none">
+            <div class="panel-title">4. Adjust & Save</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                <button class="tool-btn" onclick="centerDesign()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                    Center Design
+                </button>
+                <button class="tool-btn" onclick="flipDesign()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+                    Flip Horizontal
+                </button>
+                <button class="tool-btn danger" onclick="removeDesign()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                    Remove Design
+                </button>
+                <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+                <button class="btn btn-primary" onclick="saveMockup()" id="saveBtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save Mockup
+                </button>
+            </div>
+        </div>
+
+        <!-- Save Design Only -->
+        <div class="panel">
+            <div class="panel-title">Save Design Only</div>
+            <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px">Upload a design PNG directly to your saved library without placing it on a product.</p>
+            <label class="tool-btn" style="cursor:pointer;margin-bottom:8px">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload & Save Design
+                <input type="file" id="directDesignInput" accept="image/png,image/*" multiple style="display:none" onchange="saveDesignsDirectly(this)">
+            </label>
+            <div id="directSaveStatus" style="font-size:0.78rem;color:var(--muted)"></div>
+        </div>
+
+        <!-- Saved mockups -->
+        <div class="panel" id="savedPanel" style="display:none">
+            <div class="panel-title">My Saved Designs</div>
+            <div class="saved-strip" id="savedStrip"></div>
+        </div>
+
+    </div>
+
+    <!-- Right panel: canvas -->
+    <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:560px">
+        <div id="canvasPlaceholder" class="canvas-placeholder">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div style="font-size:0.9rem">Select a product and colour to start</div>
+        </div>
+        <div id="canvasContainer" style="display:none">
+            <div class="view-tabs" id="viewTabsTop" style="margin-bottom:12px;justify-content:center"></div>
+            <div class="canvas-wrapper">
+                <canvas id="mockupCanvas"></canvas>
+            </div>
+            <div style="margin-top:8px;font-size:0.75rem;color:var(--muted);text-align:center">Drag to reposition · Corners to resize · Double-click to rotate freely</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Success toast -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:#1a1a1a;color:#fff;padding:12px 20px;border-radius:10px;font-size:0.85rem;display:none;z-index:9999"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="js/config.js"></script>
+<!-- Fabric.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<script>
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
+
+let currentUser  = null;
+let fabricCanvas = null;
+let designObj    = null;
+let blanksData   = {};
+let activeView   = 'front';
+let activeProduct = '';
+let activeColour  = '';
+
+auth.onAuthStateChanged(user => {
+    if (!user) { window.location.href = '/'; return; }
+    currentUser = user;
+    document.getElementById('userAvatar').textContent = (user.displayName || user.email || '?')[0].toUpperCase();
+    loadSavedMockups();
+});
+document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = '/'));
+
+// ── Product data ──
+const PRODUCT_DATA = {
+    regular_180:     { colors:['Sea Green','Maroon','Navy Blue','Black','White'], dots:['#4CAF50','#8B0000','#1a237e','#1a1a1a','#f5f5f5'] },
+    oversized_220:   { colors:['Beige','White','Avocado Green','Brown','Black'],  dots:['#f5e6c8','#f5f5f5','#4a6741','#6B4226','#1a1a1a'] },
+    oversized_240:   { colors:['Black','Smokey Grey','Beige','White'],            dots:['#1a1a1a','#6b7280','#f5e6c8','#f5f5f5'] },
+    polo_220:        { colors:['Black','White'],                                   dots:['#1a1a1a','#f5f5f5'] },
+    sweatshirt_350:  { colors:['Black','Navy Blue','Off-White','Maroon','Lavender'], dots:['#1a1a1a','#1a237e','#f5f0e8','#8B0000','#c4b5e0'] },
+    hoodie_350:      { colors:['Black','Coffee Brown','Off-White','Olive Green','Beige'], dots:['#1a1a1a','#4a3728','#f5f0e8','#4a6741','#f5e6c8'] },
+    kids_regular_180:{ colors:['Black','Orange','White','Sea Green','Baby Pink'], dots:['#1a1a1a','#f97316','#f5f5f5','#4CAF50','#ec4899'] },
+};
+const VIEWS = ['front','back','left','right'];
+
+function onProductSelect() {
+    const val = document.getElementById('productSelect').value;
+    activeProduct = val;
+    activeColour  = '';
+    designObj     = null;
+    document.getElementById('selectedColour').value = '';
+    document.getElementById('viewPanel').style.display = 'none';
+    document.getElementById('designPanel').style.display = 'none';
+    document.getElementById('toolsPanel').style.display = 'none';
+    document.getElementById('canvasContainer').style.display = 'none';
+    document.getElementById('canvasPlaceholder').style.display = 'flex';
+
+    const swatches = document.getElementById('colourSwatchesM');
+    if (!val) { swatches.innerHTML = ''; return; }
+    const data = PRODUCT_DATA[val];
+    swatches.innerHTML = data.colors.map((c, i) => `
+        <div class="colour-swatch" onclick="selectColour('${c}', this)" title="${c}">
+            <span class="swatch-dot" style="background:${data.dots[i]};${data.dots[i]==='#f5f5f5'?'border:1px solid #ddd':''}"></span>
+            <span class="swatch-label">${c}</span>
+        </div>`).join('');
+}
+
+async function selectColour(colour, el) {
+    document.querySelectorAll('#colourSwatchesM .colour-swatch').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    activeColour = colour;
+    document.getElementById('selectedColour').value = colour;
+
+    // Load blanks from Firestore
+    const doc = await db.collection('products').doc(activeProduct).get();
+    console.log('Firestore doc exists:', doc.exists);
+    console.log('Firestore doc data:', doc.exists ? JSON.stringify(doc.data()) : 'none');
+
+    blanksData = (doc.exists && doc.data().blanks) ? doc.data().blanks : {};
+    console.log('blanksData:', JSON.stringify(blanksData));
+    console.log('Looking for colour:', colour);
+    console.log('Colour keys in blanksData:', Object.keys(blanksData));
+
+    const colourBlanks = blanksData[colour] || {};
+    console.log('colourBlanks:', JSON.stringify(colourBlanks));
+    const availableViews = VIEWS.filter(v => colourBlanks[v]);
+    console.log('availableViews:', availableViews);
+
+    if (!availableViews.length) {
+        showToast('No blank photos found for ' + colour + '. Check console for details.');
+        document.getElementById('canvasPlaceholder').innerHTML = `<div style="padding:20px;text-align:center;color:#dc2626">No blank photos found for <strong>${colour}</strong>.<br><small style="color:var(--muted)">Check browser console (F12) for details.</small></div>`;
+        return;
+    }
+
+    // Render view tabs in both side panel and above canvas
+    renderViewTabs(availableViews, 'viewTabs');
+    renderViewTabs(availableViews, 'viewTabsTop');
+    document.getElementById('viewPanel').style.display = 'block';
+
+    activeView = availableViews[0];
+    loadView(activeView);
+}
+
+function renderViewTabs(availableViews, containerId) {
+    document.getElementById(containerId).innerHTML = VIEWS.map(v => `
+        <button class="view-tab ${v===activeView?'active':''} ${availableViews.includes(v)?'':'disabled'}"
+            ${availableViews.includes(v) ? `onclick="switchView('${v}')"` : 'disabled'}
+            style="${!availableViews.includes(v)?'opacity:0.35;cursor:not-allowed':''}">
+            ${v.charAt(0).toUpperCase()+v.slice(1)}
+        </button>`).join('');
+}
+
+function switchView(view) {
+    activeView = view;
+    const availableViews = VIEWS.filter(v => (blanksData[activeColour]||{})[v]);
+    renderViewTabs(availableViews, 'viewTabs');
+    renderViewTabs(availableViews, 'viewTabsTop');
+    loadView(view);
+}
+
+function loadView(view) {
+    const url = (blanksData[activeColour] || {})[view];
+    if (!url) return;
+
+    document.getElementById('canvasPlaceholder').style.display = 'none';
+    document.getElementById('canvasContainer').style.display = 'block';
+    document.getElementById('designPanel').style.display = 'block';
+
+    const canvasEl = document.getElementById('mockupCanvas');
+    if (fabricCanvas) { fabricCanvas.dispose(); }
+
+    // Load image just to get dimensions
+    const imgEl = document.createElement('img');
+    imgEl.onload = () => {
+        const W = Math.min(imgEl.naturalWidth, 460);
+        const scale = W / imgEl.naturalWidth;
+        const H = Math.round(imgEl.naturalHeight * scale);
+
+        // Show blank as CSS background — canvas stays transparent (no taint, toDataURL works)
+        const wrapper = document.querySelector('.canvas-wrapper');
+        wrapper.style.backgroundImage = `url('${url}')`;
+        wrapper.style.backgroundSize = '100% 100%';
+        wrapper.style.width  = W + 'px';
+        wrapper.style.height = H + 'px';
+
+        canvasEl.width  = W;
+        canvasEl.height = H;
+        fabricCanvas = new fabric.Canvas('mockupCanvas', { selection: true, backgroundColor: 'transparent' });
+        fabricCanvas.setWidth(W);
+        fabricCanvas.setHeight(H);
+
+        if (designObj) addDesignToCanvas(designObj._element ? designObj._element.src : null);
+        document.getElementById('toolsPanel').style.display = 'block';
+    };
+    imgEl.onerror = () => showToast('Failed to load product image.');
+    imgEl.src = url;
+}
+
+function onDesignUpload(input) {
+    const file = input.files[0];
+    if (!file || !fabricCanvas) return;
+    document.getElementById('designFileName').textContent = '✅ ' + file.name;
+    const reader = new FileReader();
+    reader.onload = e => addDesignToCanvas(e.target.result);
+    reader.readAsDataURL(file);
+    input.value = '';
+}
+
+function addDesignToCanvas(src) {
+    if (!src || !fabricCanvas) return;
+    if (designObj) fabricCanvas.remove(designObj);
+    fabric.Image.fromURL(src, img => {
+        const canvasW = fabricCanvas.getWidth();
+        const canvasH = fabricCanvas.getHeight();
+        const maxW = canvasW * 0.4;
+        const scale = maxW / img.width;
+        img.set({
+            left:    canvasW / 2,
+            top:     canvasH * 0.35,
+            originX: 'center',
+            originY: 'center',
+            scaleX:  scale,
+            scaleY:  scale,
+            cornerColor: '#1e40af',
+            cornerSize:  10,
+            transparentCorners: false,
+        });
+        fabricCanvas.add(img);
+        fabricCanvas.setActiveObject(img);
+        fabricCanvas.renderAll();
+        designObj = img;
+    });
+}
+
+function centerDesign() {
+    if (!designObj || !fabricCanvas) return;
+    designObj.set({ left: fabricCanvas.getWidth()/2, top: fabricCanvas.getHeight()/2 });
+    fabricCanvas.renderAll();
+}
+
+function flipDesign() {
+    if (!designObj || !fabricCanvas) return;
+    designObj.set('flipX', !designObj.flipX);
+    fabricCanvas.renderAll();
+}
+
+function removeDesign() {
+    if (!designObj || !fabricCanvas) return;
+    fabricCanvas.remove(designObj);
+    designObj = null;
+    fabricCanvas.renderAll();
+    document.getElementById('designFileName').textContent = '';
+}
+
+async function saveMockup() {
+    if (!fabricCanvas || !currentUser) return;
+    if (!designObj) { showToast('Upload a design first.'); return; }
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+        fabricCanvas.discardActiveObject();
+        fabricCanvas.renderAll();
+
+        // Canvas only has design layer (transparent bg) — toDataURL works without CORS
+        const dataUrl = fabricCanvas.toDataURL({ format: 'png', multiplier: 1 });
+        const blob = await (await fetch(dataUrl)).blob();
+
+        const filename = `${Date.now()}.png`;
+        const ref = storage.ref(`mockups/${currentUser.uid}/${filename}`);
+        await ref.put(blob, { contentType: 'image/png' });
+        const imageUrl = await ref.getDownloadURL();
+
+        const blankUrl = (blanksData[activeColour] || {})[activeView] || '';
+
+        await db.collection('mockups').add({
+            userId:     currentUser.uid,
+            userEmail:  currentUser.email,
+            productKey: activeProduct,
+            colour:     activeColour,
+            view:       activeView,
+            imageUrl,   // design-only PNG (transparent background)
+            blankUrl,   // product blank photo URL
+            createdAt:  firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        showToast('Mockup saved!');
+        loadSavedMockups();
+    } catch (err) {
+        console.error(err);
+        showToast('Save failed: ' + err.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Mockup';
+}
+
+async function loadSavedMockups() {
+    if (!currentUser) return;
+    let snap;
+    try {
+        snap = await db.collection('mockups').where('userId','==',currentUser.uid).limit(20).get();
+    } catch(e) { console.error('loadSavedMockups error:', e); return; }
+    console.log('mockups snap size:', snap.size);
+    const mockups = snap.docs.map(d => d.data());
+    console.log('mockups data:', mockups);
+    if (!mockups.length) return;
+    document.getElementById('savedPanel').style.display = 'block';
+    document.getElementById('savedStrip').innerHTML = mockups.map(m =>
+        `<div class="saved-thumb" onclick="window.open('${m.imageUrl}','_blank')" title="${m.colour} ${m.view}" style="position:relative">
+            ${m.blankUrl ? `<img src="${m.blankUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0">` : ''}
+            <img src="${m.imageUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0">
+        </div>`
+    ).join('');
+}
+
+async function saveDesignsDirectly(input) {
+    if (!input.files.length || !currentUser) return;
+    const files = Array.from(input.files).slice(0, 6);
+    const status = document.getElementById('directSaveStatus');
+    status.textContent = `Saving ${files.length} design(s)…`;
+    let saved = 0;
+    for (const file of files) {
+        try {
+            const ref = storage.ref(`mockups/${currentUser.uid}/${Date.now()}_${file.name}`);
+            await ref.put(file, { contentType: file.type });
+            const imageUrl = await ref.getDownloadURL();
+            await db.collection('mockups').add({
+                userId:    currentUser.uid,
+                userEmail: currentUser.email,
+                imageUrl,
+                blankUrl:  '',
+                productKey: '',
+                colour:    '',
+                view:      file.name.replace(/\.[^.]+$/, ''),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+            saved++;
+        } catch (e) { console.error(e); }
+    }
+    status.textContent = `✅ ${saved} design(s) saved to library.`;
+    input.value = '';
+    loadSavedMockups();
+    setTimeout(() => { status.textContent = ''; }, 4000);
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>

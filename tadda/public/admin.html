@@ -109,15 +109,25 @@
 
         <!-- Products Section -->
         <div id="sectionProducts" class="hidden">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-                <div>
-                    <h2>Product Photos</h2>
-                    <p style="color:var(--muted);font-size:0.85rem;margin-top:4px">Upload photos for each product. Customers see these when placing orders.</p>
-                </div>
+            <div style="margin-bottom:20px">
+                <h2>Product Blank Photos</h2>
+                <p style="color:var(--muted);font-size:0.85rem;margin-top:4px">Upload Front / Back / Left / Right blank photos per product colour. Used in the mockup builder.</p>
             </div>
-            <div id="productCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
-                <div style="padding:40px;text-align:center;color:var(--muted)">Loading products…</div>
+            <!-- Product selector -->
+            <div class="card" style="padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <label style="font-weight:600;font-size:0.88rem">Product</label>
+                <select id="blanksProductSelect" onchange="onBlanksProductChange()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.88rem">
+                    <option value="">— Select Product —</option>
+                    <option value="regular_180">T-Shirt Regular Fit — 180 GSM</option>
+                    <option value="oversized_220">T-Shirt Oversized — 220 GSM</option>
+                    <option value="oversized_240">T-Shirt Oversized Terry — 240 GSM</option>
+                    <option value="polo_220">Polo (Collar Tee) — 220 GSM</option>
+                    <option value="sweatshirt_350">Sweatshirt — 350 GSM</option>
+                    <option value="hoodie_350">Hoodie — 350 GSM</option>
+                    <option value="kids_regular_180">Kids Regular Tee — 180 GSM</option>
+                </select>
             </div>
+            <div id="blanksColourGrid"></div>
         </div>
 
     </main>
@@ -458,89 +468,121 @@ async function updateOrderStatus() {
 function closeModal() { document.getElementById('orderModal').classList.add('hidden'); activeOrderId = null; }
 document.getElementById('orderModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
-// ── Product Photos Management ──
-const PRODUCTS_LIST = [
-    { key: 'regular_180',      label: 'T-Shirt Regular Fit — 180 GSM' },
-    { key: 'oversized_220',    label: 'T-Shirt Oversized — 220 GSM' },
-    { key: 'oversized_240',    label: 'T-Shirt Oversized Terry — 240 GSM' },
-    { key: 'polo_220',         label: 'Polo (Collar Tee) — 220 GSM' },
-    { key: 'sweatshirt_350',   label: 'Sweatshirt — 350 GSM' },
-    { key: 'hoodie_350',       label: 'Hoodie — 350 GSM' },
-    { key: 'kids_regular_180', label: 'Kids Regular Tee — 180 GSM' },
-];
+// ── Product Blank Photos Management ──
+const PRODUCT_COLOURS = {
+    regular_180:     ['Sea Green','Maroon','Navy Blue','Black','White'],
+    oversized_220:   ['Beige','White','Avocado Green','Brown','Black'],
+    oversized_240:   ['Black','Smokey Grey','Beige','White'],
+    polo_220:        ['Black','White'],
+    sweatshirt_350:  ['Black','Navy Blue','Off-White','Maroon','Lavender'],
+    hoodie_350:      ['Black','Coffee Brown','Off-White','Olive Green','Beige'],
+    kids_regular_180:['Black','Orange','White','Sea Green','Baby Pink'],
+};
+const VIEWS = ['front','back','left','right'];
 
-let productImages = {}; // { productKey: ['url1','url2',...] }
+let blanksData = {}; // { productKey: { colour: { front, back, left, right } } }
+let activeBlanksProduct = '';
 
-async function loadProducts() {
-    const grid = document.getElementById('productCardsGrid');
-    grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
-    const snap = await db.collection('products').get();
-    snap.forEach(doc => { productImages[doc.id] = doc.data().images || []; });
-    renderProductCards();
+function loadProducts() { /* no-op — products section uses onBlanksProductChange */ }
+
+async function onBlanksProductChange() {
+    const key = document.getElementById('blanksProductSelect').value;
+    activeBlanksProduct = key;
+    const grid = document.getElementById('blanksColourGrid');
+    if (!key) { grid.innerHTML = ''; return; }
+
+    grid.innerHTML = '<div style="padding:20px;color:var(--muted)">Loading…</div>';
+    const doc = await db.collection('products').doc(key).get();
+    blanksData[key] = (doc.exists && doc.data().blanks) ? doc.data().blanks : {};
+    renderBlanksGrid(key);
 }
 
-function renderProductCards() {
-    const grid = document.getElementById('productCardsGrid');
-    grid.innerHTML = PRODUCTS_LIST.map(p => {
-        const imgs = productImages[p.key] || [];
-        const thumbs = imgs.map((url, idx) => `
-            <div style="position:relative;flex-shrink:0">
-                <img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" onerror="this.style.display='none'">
-                <button onclick="deleteProductImage('${p.key}',${idx})" title="Delete" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;border:none;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
-            </div>`).join('');
+function renderBlanksGrid(productKey) {
+    const colours = PRODUCT_COLOURS[productKey] || [];
+    const data = blanksData[productKey] || {};
+    document.getElementById('blanksColourGrid').innerHTML = colours.map(colour => {
+        const colourData = data[colour] || {};
+        const colourKey = colour.replace(/\s+/g,'_');
+        const viewSlots = VIEWS.map(view => {
+            const url = colourData[view] || '';
+            return `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:var(--muted)">${view}</div>
+                <div style="position:relative;width:100px;height:120px;border:2px dashed ${url?'#86efac':'var(--border)'};border-radius:8px;overflow:hidden;background:${url?'#f0fdf4':'#f8fafc'};display:flex;align-items:center;justify-content:center">
+                    ${url
+                        ? `<img src="${url}" style="width:100%;height:100%;object-fit:cover">
+                           <button onclick="deleteBlank('${productKey}','${colour}','${view}')" style="position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;border:none;cursor:pointer;font-size:11px">✕</button>`
+                        : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`
+                    }
+                </div>
+                <label style="cursor:pointer;font-size:0.75rem;color:var(--primary);font-weight:600">
+                    ${url ? 'Replace' : 'Upload'}
+                    <input type="file" accept="image/*" style="display:none" onchange="uploadBlank('${productKey}','${colour}','${view}',this,'${colourKey}')">
+                </label>
+                <span id="blankStatus_${colourKey}_${view}" style="font-size:0.7rem;color:var(--muted);min-height:14px"></span>
+            </div>`;
+        }).join('');
         return `
-        <div class="card" style="padding:20px">
-            <div style="font-weight:700;font-size:0.9rem;margin-bottom:4px">${p.label}</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:14px">${imgs.length} photo${imgs.length !== 1 ? 's' : ''}</div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;min-height:${imgs.length ? '88px' : '0'}">
-                ${thumbs}
-                ${!imgs.length ? '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0">No photos yet</div>' : ''}
+        <div class="card" style="padding:20px;margin-bottom:16px">
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+                <span style="width:16px;height:16px;border-radius:50%;background:${getColourDot(productKey,colour)};border:1px solid rgba(0,0,0,0.15);display:inline-block"></span>
+                ${colour}
             </div>
-            <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:7px 14px;border-radius:8px;font-size:0.82rem;font-weight:600">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Upload Photo
-                <input type="file" accept="image/*" multiple style="display:none" onchange="uploadProductImages('${p.key}', this)">
-            </label>
-            <span id="uploadStatus_${p.key}" style="font-size:0.78rem;color:var(--muted);margin-left:8px"></span>
+            <div style="display:flex;gap:20px;flex-wrap:wrap">${viewSlots}</div>
         </div>`;
     }).join('');
 }
 
-async function uploadProductImages(productKey, input) {
-    const files = Array.from(input.files);
-    if (!files.length) return;
-    const statusEl = document.getElementById('uploadStatus_' + productKey);
-    statusEl.textContent = `Uploading ${files.length} file${files.length > 1 ? 's' : ''}…`;
+function getColourDot(productKey, colour) {
+    const DOTS = {
+        regular_180:     {['Sea Green']:'#4CAF50',Maroon:'#8B0000',['Navy Blue']:'#1a237e',Black:'#1a1a1a',White:'#f5f5f5'},
+        oversized_220:   {Beige:'#f5e6c8',White:'#f5f5f5',['Avocado Green']:'#4a6741',Brown:'#6B4226',Black:'#1a1a1a'},
+        oversized_240:   {Black:'#1a1a1a',['Smokey Grey']:'#6b7280',Beige:'#f5e6c8',White:'#f5f5f5'},
+        polo_220:        {Black:'#1a1a1a',White:'#f5f5f5'},
+        sweatshirt_350:  {Black:'#1a1a1a',['Navy Blue']:'#1a237e',['Off-White']:'#f5f0e8',Maroon:'#8B0000',Lavender:'#c4b5e0'},
+        hoodie_350:      {Black:'#1a1a1a',['Coffee Brown']:'#4a3728',['Off-White']:'#f5f0e8',['Olive Green']:'#4a6741',Beige:'#f5e6c8'},
+        kids_regular_180:{Black:'#1a1a1a',Orange:'#f97316',White:'#f5f5f5',['Sea Green']:'#4CAF50',['Baby Pink']:'#ec4899'},
+    };
+    return (DOTS[productKey] && DOTS[productKey][colour]) || '#ccc';
+}
 
+async function uploadBlank(productKey, colour, view, input, colourKey) {
+    const file = input.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById(`blankStatus_${colourKey}_${view}`);
+    statusEl.textContent = 'Uploading…';
     try {
-        const uploads = files.map(file => {
-            const ref = storage.ref(`products/${productKey}/${Date.now()}_${file.name}`);
-            return ref.put(file).then(() => ref.getDownloadURL());
-        });
-        const newUrls = await Promise.all(uploads);
+        const ref = storage.ref(`products/${productKey}/blanks/${colour}/${view}`);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
 
-        const existing = productImages[productKey] || [];
-        const merged = [...existing, ...newUrls];
-        await db.collection('products').doc(productKey).set({ images: merged, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-        productImages[productKey] = merged;
+        if (!blanksData[productKey]) blanksData[productKey] = {};
+        if (!blanksData[productKey][colour]) blanksData[productKey][colour] = {};
+        blanksData[productKey][colour][view] = url;
 
+        await db.collection('products').doc(productKey).set(
+            { blanks: blanksData[productKey], updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+            { merge: true }
+        );
         statusEl.textContent = '✓ Saved';
-        setTimeout(() => { statusEl.textContent = ''; }, 2000);
-        renderProductCards();
+        setTimeout(() => renderBlanksGrid(productKey), 800);
     } catch (err) {
         console.error(err);
-        statusEl.textContent = 'Upload failed';
+        statusEl.textContent = 'Failed';
     }
     input.value = '';
 }
 
-async function deleteProductImage(productKey, idx) {
-    if (!confirm('Delete this photo?')) return;
-    const imgs = [...(productImages[productKey] || [])];
-    imgs.splice(idx, 1);
-    await db.collection('products').doc(productKey).set({ images: imgs, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    productImages[productKey] = imgs;
-    renderProductCards();
+async function deleteBlank(productKey, colour, view) {
+    if (!confirm(`Delete ${view} photo for ${colour}?`)) return;
+    if (blanksData[productKey] && blanksData[productKey][colour]) {
+        delete blanksData[productKey][colour][view];
+    }
+    await db.collection('products').doc(productKey).set(
+        { blanks: blanksData[productKey], updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+    );
+    renderBlanksGrid(productKey);
 }
 
 function productLabel(val) {
