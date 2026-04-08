@@ -43,6 +43,8 @@ auth.onAuthStateChanged(async (user) => {
                 isPro:       checkProExpiry(data.isPro, data.isProExpiresAt),
                 isProBundle: isBundleActive
             };
+            window.singlePurchases = Array.isArray(data.singlePurchases) ? data.singlePurchases : [];
+            window.singlePurchaseCount = window.singlePurchases.length;
             const isQRPro = isProActive || isBundleActive;
             if (typeof applyQRProStatus === 'function') applyQRProStatus(isQRPro);
             showRenewalBanner(data, isQRPro);

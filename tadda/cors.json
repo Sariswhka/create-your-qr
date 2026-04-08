@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://taddaportal.web.app", "https://taddaportal--staging-tm3zjr94.web.app", "http://localhost:5000"],
+    "method": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization", "Content-Length", "User-Agent"]
+  }
+]

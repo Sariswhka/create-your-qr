@@ -10,6 +10,11 @@ let selectedFrame = 'none';
 let isQRPro = false;
 let logoDataUrl = null;
 
+// Single-purchase state
+window.hasPaidSession = false;
+let pendingDownloadFn = null;
+let pendingWQRId = null;
+
 const RAZORPAY_KEY = 'rzp_live_frEA3PTBCni695';
 
 // Listen for auth state changes
@@ -25,19 +30,18 @@ function applyQRProStatus(status) {
     if (badge) badge.classList.toggle('hidden', !isQRPro);
     if (upBtn) upBtn.classList.toggle('hidden', isQRPro);
 
-    // Color buttons
-    document.querySelectorAll('.color-btn.pro-color').forEach(btn => {
-        btn.disabled = !isQRPro;
-        btn.title = isQRPro ? (btn.title.replace(' — Pro', '') || '') : (btn.title.includes('Pro') ? btn.title : btn.title + ' — Pro');
-    });
-    const colorLock = document.getElementById('colorProLock');
-    if (colorLock) colorLock.classList.toggle('hidden', isQRPro);
+    // Remove blur if pro
+    if (isQRPro) {
+        document.getElementById('qrFrameWrapper')?.classList.remove('qr-blurred');
+        document.getElementById('qrLockOverlay')?.classList.add('hidden');
+    }
 
-    // Logo upload
-    const logoLock  = document.getElementById('logoProLock');
+    // All pro features are open to everyone — only download is paywalled
+    document.querySelectorAll('.color-btn.pro-color').forEach(btn => { btn.disabled = false; });
+    document.getElementById('colorProLock')?.classList.add('hidden');
+    document.getElementById('logoProLock')?.classList.add('hidden');
     const logoInput = document.getElementById('logoUploadInput');
-    if (logoLock)  logoLock.classList.toggle('hidden', isQRPro);
-    if (logoInput) logoInput.disabled = !isQRPro;
+    if (logoInput) logoInput.disabled = false;
 
     // WhatsApp QR features — delegate if whatsapp-qr.js is loaded
     if (typeof lockProWQFeatures === 'function') lockProWQFeatures();
@@ -79,6 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('qrUpgradeModal')?.addEventListener('click', (e) => {
         if (e.target === document.getElementById('qrUpgradeModal'))
             document.getElementById('qrUpgradeModal').classList.add('hidden');
+    });
+    document.getElementById('closeDownloadModal')?.addEventListener('click', () => {
+        document.getElementById('downloadModal').classList.add('hidden');
+    });
+    document.getElementById('downloadModal')?.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('downloadModal'))
+            document.getElementById('downloadModal').classList.add('hidden');
     });
 });
 
@@ -159,8 +170,6 @@ window.addEventListener('load', () => {
 // ── Color selection ────────────────────────────────────────
 document.querySelectorAll('.color-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        const isPro = btn.classList.contains('pro-color');
-        if (isPro && !isQRPro) { showQRUpgradeModal(); return; }
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         selectedColor = btn.dataset.color;
@@ -180,14 +189,12 @@ document.querySelectorAll('.color-btn').forEach(btn => {
 
 // Custom color picker
 document.getElementById('customColorFg')?.addEventListener('input', (e) => {
-    if (!isQRPro) { showQRUpgradeModal(); return; }
     document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
     selectedColor = e.target.value;
     selectedDarkBgActive = false;
 });
 
 document.getElementById('customColorBg')?.addEventListener('input', (e) => {
-    if (!isQRPro) { showQRUpgradeModal(); return; }
     selectedBgColor = e.target.value;
 });
 
@@ -211,7 +218,6 @@ function toggleInvert() {
 
 // Logo upload
 document.getElementById('logoUploadInput')?.addEventListener('change', (e) => {
-    if (!isQRPro) { showQRUpgradeModal(); return; }
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -264,7 +270,7 @@ function generateQR() {
 
     // Dark bg presets apply for all users; custom picker only for Pro
     let resolvedFg = selectedColor;
-    let resolvedBg = selectedDarkBgActive ? selectedBgColor : (isQRPro ? selectedBgColor : '#ffffff');
+    let resolvedBg = selectedDarkBgActive ? selectedBgColor : selectedBgColor;
     if (invertColors) { const tmp = resolvedFg; resolvedFg = resolvedBg; resolvedBg = tmp; }
     const bgColor = resolvedBg;
 
@@ -277,8 +283,8 @@ function generateQR() {
         correctLevel: QRCode.CorrectLevel.H
     });
 
-    // Apply logo overlay after QR renders
-    if (isQRPro && logoDataUrl) {
+    // Apply logo overlay after QR renders (open to all)
+    if (logoDataUrl) {
         setTimeout(() => applyLogoToQR(qrcodeDiv, logoDataUrl), 300);
     }
 
@@ -288,8 +294,8 @@ function generateQR() {
     qrFrameWrapper.style.borderRadius = '12px';
     qrFrameWrapper.style.padding = bgColor !== '#ffffff' ? '12px' : '';
 
-    // Custom frame message (Pro only)
-    const customMsg = isQRPro ? (document.getElementById('frameMsgText')?.value.trim() || '') : '';
+    // Custom frame message (open to all)
+    const customMsg = document.getElementById('frameMsgText')?.value.trim() || '';
     const msgPos    = document.getElementById('frameMsgPos')?.value || 'bottom';
 
     // Frame
@@ -315,6 +321,16 @@ function generateQR() {
     currentQRUrl = url;
     qrContainer.classList.add('active');
     urlDisplay.textContent = url;
+
+    // Blur QR preview for non-pro users
+    const lockOverlay = document.getElementById('qrLockOverlay');
+    if (!isQRPro) {
+        qrFrameWrapper.classList.add('qr-blurred');
+        if (lockOverlay) lockOverlay.classList.remove('hidden');
+    } else {
+        qrFrameWrapper.classList.remove('qr-blurred');
+        if (lockOverlay) lockOverlay.classList.add('hidden');
+    }
 
     gtag('event', 'generate_qr', { event_category: 'QR Code', event_label: url, color: selectedColor, frame: selectedFrame });
     if (currentUser) trackQRGenerated(currentUser, url, selectedColor, selectedFrame);
@@ -351,8 +367,19 @@ function applyLogoToQR(container, logoSrc, attempt = 0) {
 
 // ── Download ───────────────────────────────────────────────
 function downloadQR() {
+    if (!currentQRUrl) return;
+    if (isQRPro || window.hasPaidSession) {
+        doDownloadQR();
+        return;
+    }
+    pendingDownloadFn = () => doDownloadQR();
+    pendingWQRId = null;
+    showDownloadModal();
+}
+
+function doDownloadQR() {
     const qrFrameWrapper = document.getElementById('qrFrameWrapper');
-    const scale = isQRPro ? 4 : 2;  // Hi-res for Pro
+    const scale = isQRPro ? 4 : 2;
 
     if (typeof html2canvas !== 'undefined') {
         html2canvas(qrFrameWrapper, { backgroundColor: null, scale }).then(canvas => {
@@ -373,6 +400,86 @@ function downloadQR() {
             if (currentUser) trackQRDownloaded(currentUser, currentQRUrl);
         }
     }
+}
+
+// ── Download modal ─────────────────────────────────────────
+function showDownloadModal() {
+    const count = window.singlePurchaseCount || 0;
+    const progressEl = document.getElementById('singlePurchaseProgress');
+    if (progressEl) {
+        progressEl.textContent = count > 0
+            ? `${count}/5 purchases made — ${5 - count} more for auto Pro`
+            : '5 purchases automatically upgrades to Pro';
+    }
+    document.getElementById('downloadModal').classList.remove('hidden');
+}
+
+// ── Single QR payment (₹10) ────────────────────────────────
+function startSingleQRPayment() {
+    const user = window.currentUser;
+    if (!user) return;
+    const options = {
+        key: RAZORPAY_KEY,
+        amount: 1000,
+        currency: 'INR',
+        name: 'Single QR Download',
+        description: 'Download this QR code — ₹10',
+        redirect: false,
+        handler: async (response) => {
+            await saveSinglePurchase(response.razorpay_payment_id, pendingWQRId);
+            document.getElementById('downloadModal').classList.add('hidden');
+            if (pendingDownloadFn) { pendingDownloadFn(); pendingDownloadFn = null; }
+        },
+        prefill: { name: user.displayName || '', email: user.email || '' },
+        theme: { color: '#667eea' },
+        modal: { ondismiss: function() {} }
+    };
+    new Razorpay(options).open();
+}
+
+async function saveSinglePurchase(paymentId, qrId) {
+    const user = window.currentUser;
+    if (!user) return;
+    try {
+        const userRef = db.collection('users').doc(user.uid);
+        const userDoc = await userRef.get();
+        const data = userDoc.exists ? userDoc.data() : {};
+        const purchases = Array.isArray(data.singlePurchases) ? [...data.singlePurchases] : [];
+        purchases.push({ date: new Date(), paymentId, qrId: qrId || null });
+
+        const update = { singlePurchases: purchases };
+
+        // Auto-upgrade at 5th purchase (only if not already pro)
+        if (purchases.length >= 5 && !checkProExpiry(data.isProQR, data.isProQRExpiresAt) && !checkProExpiry(data.isProBundle, data.isProBundleExpiresAt)) {
+            const thirdDate = purchases[2].date instanceof Date ? purchases[2].date : new Date(purchases[2].date);
+            update.isProQR = true;
+            update.isProQRExpiresAt = new Date(thirdDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+            update.proPaymentId = paymentId;
+            update.proUpgradeDate = firebase.firestore.FieldValue.serverTimestamp();
+        }
+
+        await userRef.set(update, { merge: true });
+
+        // Mark WhatsApp QR as paid if applicable
+        if (qrId) {
+            await db.collection('qr_codes').doc(qrId).set({ paidDownload: true }, { merge: true });
+        }
+
+        window.hasPaidSession = true;
+        window.singlePurchaseCount = purchases.length;
+        window.singlePurchases = purchases;
+
+        // Apply pro if auto-upgraded
+        if (purchases.length >= 5) {
+            applyQRProStatus(true);
+            const toast = document.getElementById('qrProToast');
+            if (toast) {
+                toast.textContent = '🎉 You\'ve auto-upgraded to Pro! All features unlocked.';
+                toast.classList.remove('hidden');
+                setTimeout(() => { toast.textContent = '🎉 You\'re now a Pro user! All features unlocked.'; toast.classList.add('hidden'); }, 5000);
+            }
+        }
+    } catch (e) { console.error('Error saving single purchase:', e); }
 }
 
 // ── Send to email ──────────────────────────────────────────

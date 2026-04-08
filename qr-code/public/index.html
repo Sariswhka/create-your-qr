@@ -306,11 +306,17 @@
                     </button>
 
                     <div class="qr-result" id="qrContainer">
-                        <div class="qr-frame-wrapper" id="qrFrameWrapper">
-                            <div class="qr-frame" id="qrFrame">
-                                <div class="frame-text top" id="frameTextTop"></div>
-                                <div id="qrcode"></div>
-                                <div class="frame-text bottom" id="frameTextBottom"></div>
+                        <div class="qr-preview-wrap">
+                            <div class="qr-frame-wrapper" id="qrFrameWrapper">
+                                <div class="qr-frame" id="qrFrame">
+                                    <div class="frame-text top" id="frameTextTop"></div>
+                                    <div id="qrcode"></div>
+                                    <div class="frame-text bottom" id="frameTextBottom"></div>
+                                </div>
+                            </div>
+                            <div id="qrLockOverlay" class="qr-lock-overlay hidden">
+                                <span class="qr-lock-icon">🔒</span>
+                                <p class="qr-lock-msg">Using a Pro feature<br>Download this QR for <strong>₹10</strong></p>
                             </div>
                         </div>
                         <div class="url-display" id="urlDisplay"></div>
@@ -404,7 +410,13 @@
 
                         <!-- WhatsApp QR Result -->
                         <div id="wqResult" class="qr-result hidden">
-                            <div id="wqQRCode" class="wq-qr-code"></div>
+                            <div class="qr-preview-wrap">
+                                <div id="wqQRCode" class="wq-qr-code"></div>
+                                <div id="wqQRLockOverlay" class="qr-lock-overlay hidden">
+                                    <span class="qr-lock-icon">🔒</span>
+                                    <p class="qr-lock-msg">Using a Pro feature<br>Download this QR for <strong>₹10</strong></p>
+                                </div>
+                            </div>
                             <div class="wq-link-row">
                                 <span class="wq-link-label">Shareable link:</span>
                                 <a id="wqShortLink" href="#" target="_blank" class="wq-short-link"></a>
@@ -625,6 +637,44 @@
         <footer class="footer">
             <p>Made with care | QR Code Generator | <a href="https://imgtools.web.app">Image Resizer</a> | <a href="https://emstools.web.app">EMS Tools</a> | <a href="/privacy.html">Privacy Policy</a></p>
         </footer>
+    </div>
+
+    <!-- Download Modal (single purchase / pro) -->
+    <div id="downloadModal" class="upgrade-modal hidden">
+        <div class="upgrade-card" style="max-width:520px">
+            <button class="modal-close" id="closeDownloadModal">✕</button>
+            <div class="upgrade-icon">⬇️</div>
+            <h2>Download your QR Code</h2>
+            <p class="upgrade-sub">Choose how you'd like to get it</p>
+            <div class="dl-options">
+                <div class="dl-option dl-option-single">
+                    <div class="dl-price">₹10 <span>one-time</span></div>
+                    <div class="dl-name">Single Download</div>
+                    <ul class="dl-features">
+                        <li>✅ Download this QR</li>
+                        <li>✅ AI Improve included</li>
+                        <li>✅ Save to your library</li>
+                        <li>⭐ 5 purchases = auto Pro</li>
+                    </ul>
+                    <button class="btn btn-success" onclick="startSingleQRPayment()">Download — ₹10</button>
+                    <div id="singlePurchaseProgress" class="single-progress"></div>
+                </div>
+                <div class="dl-option dl-option-pro">
+                    <div class="dl-badge">Best Value</div>
+                    <div class="dl-price">₹49 <span>/year</span></div>
+                    <div class="dl-name">Pro Upgrade</div>
+                    <ul class="dl-features">
+                        <li>✅ Unlimited downloads</li>
+                        <li>✅ Hi-res PNG export</li>
+                        <li>✅ Logo &amp; custom colors</li>
+                        <li>✅ Unlimited AI Improve</li>
+                        <li>✅ All Pro features</li>
+                    </ul>
+                    <button class="btn btn-upgrade" onclick="startPayment('qr');document.getElementById('downloadModal').classList.add('hidden')">Get Pro — ₹49/year</button>
+                </div>
+            </div>
+            <p class="razorpay-note">Secure payment via Razorpay · UPI, Cards, Net Banking, Wallets</p>
+        </div>
     </div>
 
     <!-- QR Upgrade Modal -->

@@ -1,8 +1,14 @@
 # Tadda Portal — Project Context
 
+## Roles & Ownership
+- **Sachin (`parashar.sachin@gmail.com`)** — Product owner. Built OrderFlow (this platform) as a B2B SaaS product to sell to clients.
+- **Tadda** — First/pilot client. A print-on-demand and bulk clothing business. They use this platform to manage orders.
+- The platform is currently hosted under Sachin's Firebase account (`tadda-81f3e`) for the Tadda client.
+- Migration to Tadda's own Firebase account is planned (see `MIGRATION_RUNBOOK.md`).
+
 ## Overview
-Tadda is a **print-on-demand and bulk clothing order management portal**.
-Customers place orders; admin (Sachin) reviews, manages, and fulfills them through vendors.
+Tadda is a **print-on-demand and bulk clothing order management portal** — the first live client of the OrderFlow platform.
+Tadda's customers place orders; Tadda's admin reviews, manages, and fulfills them through vendors.
 
 There are **two web properties** for Tadda:
 | Property | URL | Directory | Purpose |
@@ -10,8 +16,8 @@ There are **two web properties** for Tadda:
 | Portal | https://taddaportal.web.app | `tadda/` | Order management app (login required) |
 | Marketing Website | https://tadda-web.web.app | `tadda-web/` | Public-facing brand/product website |
 
-- **Firebase Project:** `tadda-81f3e`
-- **Admin email:** `parashar.sachin@gmail.com`
+- **Firebase Project:** `tadda-81f3e` (Sachin's account — to be migrated to Tadda's account)
+- **Admin email:** `parashar.sachin@gmail.com` (Sachin's email, used as portal admin for Tadda)
 
 ---
 

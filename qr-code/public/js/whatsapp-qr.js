@@ -1,6 +1,8 @@
 // WhatsApp Dynamic QR — create, manage and track WhatsApp QR codes
 const wqDB = firebase.firestore();
 let wqEditingId = null;
+let wqLastSavedId = null;       // id of the most recently saved WQ code
+let wqCurrentPaidDownload = false; // true if the QR being edited has paidDownload
 let wqImageFile = null;
 let wqExistingImageUrl = null;
 let wqExistingAiTagline = null;
@@ -26,21 +28,14 @@ document.querySelectorAll('.qr-type-tab').forEach(tab => {
 function wqIsPro() { return typeof isQRPro !== 'undefined' && isQRPro; }
 
 function lockProWQFeatures() {
-    // Formatting toolbar
-    const toolbar = document.getElementById('fmtToolbar');
-    if (toolbar) toolbar.classList.toggle('pro-locked', !wqIsPro());
-
-    // Image upload
-    const imgBox = document.getElementById('imgUploadBox');
-    if (imgBox) imgBox.classList.toggle('pro-locked', !wqIsPro());
+    // All WhatsApp QR features are open to everyone — only download is paywalled
+    document.getElementById('fmtToolbar')?.classList.remove('pro-locked');
+    document.getElementById('imgUploadBox')?.classList.remove('pro-locked');
     const imgInput = document.getElementById('wqImage');
-    if (imgInput) imgInput.disabled = !wqIsPro();
-
-    // PIN input
+    if (imgInput) imgInput.disabled = false;
     const pinInput = document.getElementById('wqPin');
-    if (pinInput) pinInput.disabled = !wqIsPro();
-    const pinLock = document.getElementById('pinProLock');
-    if (pinLock) pinLock.classList.toggle('hidden', wqIsPro());
+    if (pinInput) pinInput.disabled = false;
+    document.getElementById('pinProLock')?.classList.add('hidden');
 }
 
 // ── Generate short ID ──────────────────────────────────────
@@ -48,7 +43,6 @@ function genId() { return Math.random().toString(36).substr(2, 8); }
 
 // ── Text formatting ────────────────────────────────────────
 function wqFormat(type) {
-    if (!wqIsPro()) { showQRUpgradeModal(); return; }
     const ta = document.getElementById('wqMessage');
     const start = ta.selectionStart, end = ta.selectionEnd;
     const sel = ta.value.substring(start, end);
@@ -61,7 +55,6 @@ function wqFormat(type) {
 
 // ── Image selection ────────────────────────────────────────
 function wqImageSelected(input) {
-    if (!wqIsPro()) { showQRUpgradeModal(); input.value = ''; return; }
     const file = input.files[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { alert('Image must be under 2MB.'); input.value = ''; return; }
@@ -136,8 +129,8 @@ function updateAIUsageDisplay(count) {
         const remaining = Math.max(0, AI_FREE_LIMIT - count);
         el.textContent = remaining > 0
             ? `${remaining} free AI use${remaining !== 1 ? 's' : ''} remaining`
-            : 'Free limit reached — upgrade for more';
-        el.style.color = remaining > 0 ? '#6b7280' : '#ef4444';
+            : '';
+        el.style.color = '#6b7280';
     }
 }
 
@@ -175,8 +168,15 @@ async function improveWithAI() {
     if (!message) { alert('Enter a message first.'); return; }
 
     const usageCount = await getAIUsageCount();
-    if (usageCount >= AI_FREE_LIMIT && !wqIsPro()) {
-        showQRUpgradeModal();
+    const aiAllowed = wqIsPro() || window.hasPaidSession || wqCurrentPaidDownload;
+
+    if (usageCount >= AI_FREE_LIMIT && !aiAllowed) {
+        // Show inline paywall message instead of generic upgrade modal
+        const infoEl = document.getElementById('aiUsageInfo');
+        if (infoEl) {
+            infoEl.innerHTML = '✨ Free uses exhausted. <a href="#" onclick="startPayment(\'qr\');return false;" style="color:#667eea">Upgrade to Pro (₹49/yr)</a> or <a href="#" onclick="showDownloadModal();return false;" style="color:#28a745">download this QR for ₹10</a> — AI Improve is included.';
+            infoEl.style.color = '#ef4444';
+        }
         return;
     }
 
@@ -216,7 +216,7 @@ async function saveWhatsappQR() {
     const name    = document.getElementById('wqName').value.trim();
     const phone   = document.getElementById('wqPhone').value.trim();
     const message = document.getElementById('wqMessage').value.trim();
-    const pin     = wqIsPro() ? document.getElementById('wqPin').value.trim() : '';
+    const pin     = document.getElementById('wqPin').value.trim();
     const errEl   = document.getElementById('wqError');
     const saveBtn = document.getElementById('wqSaveBtn');
 
@@ -241,7 +241,7 @@ async function saveWhatsappQR() {
 
         saveBtn.textContent = 'Processing…';
         const [imageUrl, aiTagline] = await Promise.all([
-            (wqImageFile && wqIsPro())
+            wqImageFile
                 ? compressImage(wqImageFile)
                 : Promise.resolve(wqExistingImageUrl || ''),
             generateAITagline(name, message)
@@ -265,6 +265,8 @@ async function saveWhatsappQR() {
 
         await wqDB.collection('qr_codes').doc(id).set(data, { merge: true });
 
+        wqLastSavedId = id;
+
         const redirectUrl = `https://create-your-qr.web.app/q/${id}`;
         const resultEl = document.getElementById('wqResult');
         const qrEl     = document.getElementById('wqQRCode');
@@ -275,6 +277,14 @@ async function saveWhatsappQR() {
         linkEl.textContent = redirectUrl;
         linkEl.href = redirectUrl;
         resultEl.classList.remove('hidden');
+
+        // Blur QR preview for non-pro users
+        if (!wqIsPro()) {
+            setTimeout(() => {
+                qrEl.classList.add('qr-blurred');
+                document.getElementById('wqQRLockOverlay')?.classList.remove('hidden');
+            }, 100);
+        }
 
         wqEditingId = null;
         wqImageFile = null;
@@ -298,12 +308,25 @@ async function saveWhatsappQR() {
 
 // ── Download WhatsApp QR ───────────────────────────────────
 function downloadWQR() {
+    if (wqIsPro() || window.hasPaidSession || wqCurrentPaidDownload) {
+        doDownloadWQR();
+        return;
+    }
+    window.pendingWQRId = wqLastSavedId;
+    window.pendingDownloadFn = () => doDownloadWQR();
+    showDownloadModal();
+}
+
+function doDownloadWQR() {
     const canvas = document.querySelector('#wqQRCode canvas');
     if (!canvas) return;
     const link = document.createElement('a');
     link.download = 'whatsapp-qr.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
+    // Remove blur after paid download
+    document.getElementById('wqQRCode')?.classList.remove('qr-blurred');
+    document.getElementById('wqQRLockOverlay')?.classList.add('hidden');
 }
 
 // ── Copy link ──────────────────────────────────────────────
@@ -380,6 +403,7 @@ async function editQR(id) {
     const doc = await wqDB.collection('qr_codes').doc(id).get();
     if (!doc.exists) return;
     const d = doc.data();
+    wqCurrentPaidDownload = d.paidDownload === true;
 
     document.getElementById('wqName').value      = d.name;
     document.getElementById('wqPhone').value     = d.phone;
@@ -420,7 +444,25 @@ async function deleteQR(id) {
 }
 
 // ── Download from card ─────────────────────────────────────
-function downloadQRCard(id, url) {
+async function downloadQRCard(id, url) {
+    if (wqIsPro() || window.hasPaidSession) {
+        doDownloadQRCard(id, url);
+        return;
+    }
+    // Check if this specific QR has paidDownload
+    try {
+        const doc = await wqDB.collection('qr_codes').doc(id).get();
+        if (doc.exists && doc.data().paidDownload) {
+            doDownloadQRCard(id, url);
+            return;
+        }
+    } catch (e) { /* fall through to modal */ }
+    window.pendingWQRId = id;
+    window.pendingDownloadFn = () => doDownloadQRCard(id, url);
+    showDownloadModal();
+}
+
+function doDownloadQRCard(id, url) {
     const tmp = document.createElement('div');
     tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
     document.body.appendChild(tmp);

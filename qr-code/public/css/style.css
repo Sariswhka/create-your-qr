@@ -1531,3 +1531,120 @@ body {
     font-weight: 600;
 }
 
+/* ── QR blur & lock overlay ────────────────────────────── */
+.qr-preview-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.qr-blurred {
+    filter: blur(8px);
+    pointer-events: none;
+    user-select: none;
+}
+
+.qr-lock-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    pointer-events: none;
+    background: rgba(255,255,255,0.18);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+.qr-lock-overlay.hidden { display: none; }
+.qr-lock-icon { font-size: 1.6rem; line-height: 1; }
+.qr-lock-msg {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.5;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+}
+.qr-lock-msg strong { color: #15803d; }
+
+/* ── Download modal options ────────────────────────────── */
+.dl-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0 8px;
+}
+
+.dl-option {
+    border-radius: 14px;
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+}
+
+.dl-option-single {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+}
+
+.dl-option-pro {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.dl-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fbbf24;
+    color: #1a1a1a;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.dl-price {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 2px;
+    line-height: 1;
+}
+.dl-option-single .dl-price { color: #1a1a1a; }
+.dl-option-pro .dl-price { color: #fff; }
+
+.dl-price span {
+    font-size: 0.82rem;
+    font-weight: 500;
+    opacity: 0.65;
+}
+
+.dl-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    opacity: 0.75;
+}
+
+.dl-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 14px;
+    font-size: 0.8rem;
+    text-align: left;
+}
+.dl-features li { margin-bottom: 5px; }
+.dl-option-single .dl-features li { color: #374151; }
+.dl-option-pro .dl-features li { color: rgba(255,255,255,0.88); }
+
+.single-progress {
+    font-size: 0.72rem;
+    color: #6b7280;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
