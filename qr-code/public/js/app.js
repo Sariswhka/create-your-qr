@@ -322,9 +322,10 @@ function generateQR() {
     qrContainer.classList.add('active');
     urlDisplay.textContent = url;
 
-    // Blur QR preview for non-pro users
+    // Blur QR preview only if a Pro feature was used by a non-pro user
     const lockOverlay = document.getElementById('qrLockOverlay');
-    if (!isQRPro) {
+    const usedProFeature = !!(logoDataUrl || customMsg);
+    if (!isQRPro && usedProFeature) {
         qrFrameWrapper.classList.add('qr-blurred');
         if (lockOverlay) lockOverlay.classList.remove('hidden');
     } else {

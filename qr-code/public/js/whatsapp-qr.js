@@ -278,8 +278,9 @@ async function saveWhatsappQR() {
         linkEl.href = redirectUrl;
         resultEl.classList.remove('hidden');
 
-        // Blur QR preview for non-pro users
-        if (!wqIsPro()) {
+        // Blur QR preview only if a Pro feature (PIN or image) was used by a non-pro user
+        const usedProFeature = !!(pin || wqImageFile);
+        if (!wqIsPro() && usedProFeature) {
             setTimeout(() => {
                 qrEl.classList.add('qr-blurred');
                 document.getElementById('wqQRLockOverlay')?.classList.remove('hidden');
