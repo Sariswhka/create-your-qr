@@ -10,6 +10,9 @@ jobs:
   deploy-qr-code:
     name: Deploy QR Code Generator
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'qr-code/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,6 +28,9 @@ jobs:
   deploy-image-resizer:
     name: Deploy Image Resizer
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'image-resizer/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,6 +46,9 @@ jobs:
   deploy-ems-tools:
     name: Deploy EMS Tools
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'ems-tools/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,6 +64,9 @@ jobs:
   deploy-tadda-portal:
     name: Deploy Tadda Portal
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'tadda/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -70,6 +82,9 @@ jobs:
   deploy-tadda-web:
     name: Deploy Tadda Marketing Website
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'tadda-web/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
