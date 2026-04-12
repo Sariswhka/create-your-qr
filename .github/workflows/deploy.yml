@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'workflow_dispatch' ||
-      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'qr-code/')
+      contains(toJson(github.event.commits), 'qr-code/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'workflow_dispatch' ||
-      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'image-resizer/')
+      contains(toJson(github.event.commits), 'image-resizer/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'workflow_dispatch' ||
-      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'ems-tools/')
+      contains(toJson(github.event.commits), 'ems-tools/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'workflow_dispatch' ||
-      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'tadda/')
+      contains(toJson(github.event.commits), 'tadda/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'workflow_dispatch' ||
-      contains(toJson(github.event.commits.*.modified + github.event.commits.*.added + github.event.commits.*.removed), 'tadda-web/')
+      contains(toJson(github.event.commits), 'tadda-web/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
