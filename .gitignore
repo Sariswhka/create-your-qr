@@ -12,9 +12,6 @@ package-lock.json
 .env.*.local
 *.env
 
-# Config files with secrets
-**/config.js
-**/js/config.js
 
 # IDE
 .idea/
