@@ -1,0 +1,52 @@
+name: Deploy Preview (Staging Branch)
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  preview-tadda-portal:
+    name: Preview Tadda Portal
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy preview channel
+        uses: w9jds/firebase-action@master
+        with:
+          args: hosting:channel:deploy staging --project tadda-81f3e --expires 7d
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY_TADDA }}
+          PROJECT_PATH: ./tadda
+
+  preview-tadda-web:
+    name: Preview Tadda Marketing Website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy preview channel
+        uses: w9jds/firebase-action@master
+        with:
+          args: hosting:channel:deploy staging --project tadda-81f3e --expires 7d
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY_TADDA }}
+          PROJECT_PATH: ./tadda-web
+
+  preview-qr-code:
+    name: Preview QR Code Generator
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy preview channel
+        uses: w9jds/firebase-action@master
+        with:
+          args: hosting:channel:deploy staging --project create-your-qr --expires 7d
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          PROJECT_PATH: ./qr-code
