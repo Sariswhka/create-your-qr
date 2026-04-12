@@ -228,13 +228,14 @@ git push origin main
 - Google Analytics verification used for create-your-qr; HTML tag for imgtools
 
 ## Deployment Notes
-- **GitHub Actions auto-deploy is broken** — FIREBASE_TOKEN secret is expired
-- **Manual deploy required** until token is refreshed:
+- **GitHub Actions auto-deploy is working** — uses `GCP_SA_KEY` service account secret (set in repo settings)
+- Push to `main` triggers auto-deploy to all three Firebase hosting sites
+- Manual deploy (if needed):
   ```bash
   cd qr-code && firebase deploy --only hosting:create-your-qr
   cd image-resizer && firebase deploy --only hosting:imgtools
+  cd ems-tools && firebase deploy --only hosting:emstools
   ```
-- To fix auto-deploy: run `firebase login:ci` locally, copy token, update `FIREBASE_TOKEN` secret in GitHub repo settings
 
 ## Notes
 - `config.js` files contain Firebase API keys — excluded from git via `.gitignore`
