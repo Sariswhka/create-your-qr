@@ -103,6 +103,38 @@
     </div>
 </div>
 
+<!-- Edit Design Modal -->
+<div class="modal-overlay hidden" id="editDesignModal">
+    <div class="modal-box" style="max-width:520px">
+        <div class="modal-header">
+            <h3 id="editDesignTitle">Edit Design</h3>
+            <button class="modal-close" onclick="closeEditDesign()">✕</button>
+        </div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">You can update the design files and mockup for this order. Product, colour and quantity cannot be changed.</p>
+
+        <div class="form-group">
+            <label style="font-weight:600">Design Files <span style="color:var(--muted);font-weight:400">(up to 6 images)</span></label>
+            <div id="currentDesigns" style="margin-bottom:8px;font-size:0.82rem;color:var(--muted)"></div>
+            <input type="file" id="editDesignFiles" accept="image/*" multiple style="width:100%;padding:8px;border:1.5px dashed var(--border);border-radius:8px;font-size:0.82rem">
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">Leave empty to keep existing design files</div>
+        </div>
+
+        <div class="form-group" style="margin-top:16px">
+            <label style="font-weight:600">Mockup Files <span style="color:var(--muted);font-weight:400">(up to 6 images, optional)</span></label>
+            <div id="currentMockups" style="margin-bottom:8px;font-size:0.82rem;color:var(--muted)"></div>
+            <input type="file" id="editMockupFiles" accept="image/*" multiple style="width:100%;padding:8px;border:1.5px dashed var(--border);border-radius:8px;font-size:0.82rem">
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">Leave empty to keep existing mockup files</div>
+        </div>
+
+        <div id="editDesignProgress" style="display:none;margin-top:12px;font-size:0.82rem;color:var(--primary)"></div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+            <button type="button" class="btn btn-ghost" onclick="closeEditDesign()">Cancel</button>
+            <button type="button" class="btn btn-primary" id="editDesignBtn" onclick="submitEditDesign()">Update Design</button>
+        </div>
+    </div>
+</div>
+
 <!-- Brand Owner Registration Modal -->
 <div class="modal-overlay hidden" id="brandOwnerModal">
     <div class="modal-box" style="max-width:520px">
@@ -173,10 +205,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script src="js/config.js"></script>
 <script>
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
 let allOrders = [];
 let currentUser = null;
 
@@ -354,6 +388,7 @@ function openModal(orderId) {
             ${o.mockupUrl ? `<a href="${o.mockupUrl}" target="_blank" class="btn btn-ghost btn-sm">🖼️ View Mockup</a>` : ''}
             ${o.neckLabelUrl ? `<a href="${o.neckLabelUrl}" target="_blank" class="btn btn-ghost btn-sm">👕 Neck Label</a>` : ''}
             ${o.shippingLabelUrl ? `<a href="${o.shippingLabelUrl}" target="_blank" class="btn btn-ghost btn-sm">📦 Shipping Label</a>` : ''}
+            ${['pending','confirmed'].includes(o.status) ? `<button class="btn btn-outline btn-sm" onclick="openEditDesign('${o.orderId}')">✏️ Edit Design</button>` : ''}
         </div>`;
     document.getElementById('orderModal').classList.remove('hidden');
 }
@@ -562,6 +597,104 @@ async function loadSavedDesigns(uid) {
                 <div style="padding:0 10px 8px;font-size:0.72rem;color:var(--muted)">${productLabel(m.productKey)}</div>
             </div>`).join('');
     } catch(e) { /* non-critical */ }
+}
+
+// ── Edit Design ──
+var editDesignOrderId = null;
+
+function openEditDesign(orderId) {
+    const o = allOrders.find(x => x.orderId === orderId);
+    if (!o) return;
+    editDesignOrderId = orderId;
+    document.getElementById('editDesignTitle').textContent = 'Edit Design — ' + orderId;
+
+    // Show existing file links
+    const designs = o.designUrls || (o.designUrl ? [o.designUrl] : []);
+    document.getElementById('currentDesigns').innerHTML = designs.length
+        ? 'Current: ' + designs.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--primary)">File ${i+1}</a>`).join(' · ')
+        : 'No design files yet.';
+
+    const mockups = o.mockupUrls || (o.mockupUrl ? [o.mockupUrl] : []);
+    document.getElementById('currentMockups').innerHTML = mockups.length
+        ? 'Current: ' + mockups.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--primary)">File ${i+1}</a>`).join(' · ')
+        : 'No mockup files.';
+
+    document.getElementById('editDesignFiles').value = '';
+    document.getElementById('editMockupFiles').value = '';
+    document.getElementById('editDesignProgress').style.display = 'none';
+    document.getElementById('editDesignBtn').disabled = false;
+    document.getElementById('editDesignBtn').textContent = 'Update Design';
+    document.getElementById('editDesignModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditDesign() {
+    document.getElementById('editDesignModal').classList.add('hidden');
+    document.body.style.overflow = '';
+    editDesignOrderId = null;
+}
+document.getElementById('editDesignModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('editDesignModal')) closeEditDesign();
+});
+
+async function submitEditDesign() {
+    if (!editDesignOrderId || !currentUser) return;
+    const designFiles  = Array.from(document.getElementById('editDesignFiles').files).slice(0, 6);
+    const mockupFiles  = Array.from(document.getElementById('editMockupFiles').files).slice(0, 6);
+
+    if (!designFiles.length && !mockupFiles.length) {
+        alert('Please select at least one new design or mockup file to update.');
+        return;
+    }
+
+    const btn = document.getElementById('editDesignBtn');
+    const progress = document.getElementById('editDesignProgress');
+    btn.disabled = true;
+    btn.textContent = 'Uploading…';
+    progress.style.display = 'block';
+
+    try {
+        const updates = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+
+        if (designFiles.length) {
+            progress.textContent = `Uploading ${designFiles.length} design file(s)…`;
+            const urls = await Promise.all(designFiles.map(async file => {
+                const ref = storage.ref(`orders/${editDesignOrderId}/${Date.now()}_${file.name}`);
+                await ref.put(file, { contentType: file.type });
+                return ref.getDownloadURL();
+            }));
+            updates.designUrl  = urls[0];
+            updates.designUrls = urls;
+        }
+
+        if (mockupFiles.length) {
+            progress.textContent = `Uploading ${mockupFiles.length} mockup file(s)…`;
+            const urls = await Promise.all(mockupFiles.map(async file => {
+                const ref = storage.ref(`orders/${editDesignOrderId}/${Date.now()}_mockup_${file.name}`);
+                await ref.put(file, { contentType: file.type });
+                return ref.getDownloadURL();
+            }));
+            updates.mockupUrl  = urls[0];
+            updates.mockupUrls = urls;
+        }
+
+        progress.textContent = 'Saving…';
+        await db.collection('orders').doc(editDesignOrderId).update(updates);
+
+        // Update local data
+        const o = allOrders.find(x => x.orderId === editDesignOrderId);
+        if (o) Object.assign(o, updates);
+
+        progress.textContent = '✅ Design updated successfully!';
+        btn.textContent = '✓ Updated';
+        setTimeout(() => closeEditDesign(), 1500);
+
+    } catch (err) {
+        console.error(err);
+        progress.textContent = 'Upload failed: ' + err.message;
+        btn.disabled = false;
+        btn.textContent = 'Update Design';
+    }
 }
 
 function statusLabel(val) {
