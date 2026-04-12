@@ -530,8 +530,8 @@ window.WEB3FORMS_KEY = '1c16ff01-bc48-4d2a-8671-23bf96569cf2';
 ---
 
 ## Known Issues / Notes
-- GitHub Actions auto-deploy is broken (FIREBASE_TOKEN expired) — use manual `firebase deploy` for now
-- To fix auto-deploy: run `firebase login:ci`, copy token, update `FIREBASE_TOKEN` secret in GitHub repo settings
+- GitHub Actions auto-deploy is working — uses `GCP_SA_KEY_TADDA` service account secret (tadda-81f3e project)
+- Push to `main` triggers auto-deploy to both taddaportal and tadda-web
 - Storage bucket was created manually via Google Cloud Console (region didn't support free-tier auto-creation)
 - `let` / `const` variables cause TDZ errors if referenced in inline `onclick=` handlers — use `var` for module-level state or move handlers to `addEventListener`
 - When adding multiple click handlers to the same element, use a flag variable (e.g. `alreadyRegistered`) to control behaviour rather than `onclick` which conflicts with `addEventListener`
