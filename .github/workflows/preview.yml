@@ -9,7 +9,6 @@ jobs:
   preview-tadda-portal:
     name: Preview Tadda Portal
     runs-on: ubuntu-latest
-    if: contains(toJson(github.event.commits), 'tadda/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,7 +24,6 @@ jobs:
   preview-tadda-web:
     name: Preview Tadda Marketing Website
     runs-on: ubuntu-latest
-    if: contains(toJson(github.event.commits), 'tadda-web/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,7 +39,6 @@ jobs:
   preview-qr-code:
     name: Preview QR Code Generator
     runs-on: ubuntu-latest
-    if: contains(toJson(github.event.commits), 'qr-code/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
