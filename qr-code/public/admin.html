@@ -278,6 +278,14 @@
                 <div class="card-label">Total Logins</div>
                 <div class="card-value red" id="statLogins">—</div>
             </div>
+            <div class="card">
+                <div class="card-label">Pro Subscribers (Yearly)</div>
+                <div class="card-value blue" id="statProSubs">—</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Single Purchase (Legacy)</div>
+                <div class="card-value green" id="statSinglePurchase">—</div>
+            </div>
         </div>
 
         <!-- Users Table -->
@@ -365,6 +373,18 @@ async function loadUsers() {
     document.getElementById('statUsers').textContent = allUsers.length;
     document.getElementById('usersCount').textContent = `${allUsers.length} users`;
     document.getElementById('usersRefresh').textContent = `as of ${new Date().toLocaleString()}`;
+
+    // Count Pro Subscribers (yearly — have an expiry field) vs Single Purchase (legacy — no expiry)
+    let proSubs = 0, singlePurchase = 0;
+    allUsers.forEach(u => {
+        const hasPro = u.isPro || u.isProQR || u.isProBundle;
+        if (!hasPro) return;
+        const hasExpiry = u.isProExpiresAt || u.isProQRExpiresAt || u.isProBundleExpiresAt;
+        if (hasExpiry) proSubs++;
+        else singlePurchase++;
+    });
+    document.getElementById('statProSubs').textContent        = proSubs;
+    document.getElementById('statSinglePurchase').textContent = singlePurchase;
 
     renderUsersTable(allUsers);
 }
