@@ -18,6 +18,7 @@ jobs:
 
       - name: Generate config.js
         run: |
+          mkdir -p qr-code/public/js
           cat > qr-code/public/js/config.js << 'EOF'
           const firebaseConfig = {
             apiKey: "${{ secrets.FIREBASE_API_KEY }}",
@@ -57,6 +58,7 @@ jobs:
 
       - name: Generate config.js
         run: |
+          mkdir -p image-resizer/public/js
           cat > image-resizer/public/js/config.js << 'EOF'
           const firebaseConfig = {
             apiKey: "${{ secrets.FIREBASE_API_KEY }}",
@@ -89,6 +91,7 @@ jobs:
 
       - name: Generate config.js
         run: |
+          mkdir -p ems-tools/public/js
           cat > ems-tools/public/js/config.js << 'EOF'
           const firebaseConfig = {
             apiKey: "${{ secrets.FIREBASE_API_KEY }}",
@@ -121,6 +124,7 @@ jobs:
 
       - name: Generate config.js
         run: |
+          mkdir -p tadda/public/js
           cat > tadda/public/js/config.js << 'EOF'
           const firebaseConfig = {
             apiKey: "${{ secrets.TADDA_FIREBASE_API_KEY }}",
@@ -155,6 +159,7 @@ jobs:
 
       - name: Generate config.js
         run: |
+          mkdir -p tadda-web/public/js
           cat > tadda-web/public/js/config.js << 'EOF'
           const firebaseConfig = {
             apiKey: "${{ secrets.TADDA_FIREBASE_API_KEY }}",
