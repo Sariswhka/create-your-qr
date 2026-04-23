@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allows manual trigger from GitHub
+  workflow_dispatch:
 
 jobs:
   deploy-qr-code:
@@ -14,8 +14,29 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       contains(toJson(github.event.commits), 'qr-code/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Generate config.js
+        run: |
+          cat > qr-code/public/js/config.js << 'EOF'
+          const firebaseConfig = {
+            apiKey: "${{ secrets.FIREBASE_API_KEY }}",
+            authDomain: "${{ secrets.FIREBASE_AUTH_DOMAIN }}",
+            projectId: "${{ secrets.FIREBASE_PROJECT_ID }}",
+            storageBucket: "${{ secrets.FIREBASE_STORAGE_BUCKET }}",
+            messagingSenderId: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}",
+            appId: "${{ secrets.FIREBASE_APP_ID }}",
+            measurementId: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
+          };
+          firebase.initializeApp(firebaseConfig);
+
+          const EMAILJS_PUBLIC_KEY = "${{ secrets.EMAILJS_PUBLIC_KEY }}";
+          const EMAILJS_SERVICE_ID = "${{ secrets.EMAILJS_SERVICE_ID }}";
+          const EMAILJS_TEMPLATE_ID = "${{ secrets.EMAILJS_TEMPLATE_ID }}";
+          emailjs.init(EMAILJS_PUBLIC_KEY);
+
+          window.GEMINI_API_KEY = "${{ secrets.GEMINI_API_KEY }}";
+          EOF
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
@@ -32,8 +53,22 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       contains(toJson(github.event.commits), 'image-resizer/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Generate config.js
+        run: |
+          cat > image-resizer/public/js/config.js << 'EOF'
+          const firebaseConfig = {
+            apiKey: "${{ secrets.FIREBASE_API_KEY }}",
+            authDomain: "${{ secrets.FIREBASE_AUTH_DOMAIN }}",
+            projectId: "${{ secrets.FIREBASE_PROJECT_ID }}",
+            storageBucket: "${{ secrets.FIREBASE_STORAGE_BUCKET }}",
+            messagingSenderId: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}",
+            appId: "${{ secrets.FIREBASE_APP_ID }}",
+            measurementId: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
+          };
+          firebase.initializeApp(firebaseConfig);
+          EOF
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
@@ -50,8 +85,22 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       contains(toJson(github.event.commits), 'ems-tools/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Generate config.js
+        run: |
+          cat > ems-tools/public/js/config.js << 'EOF'
+          const firebaseConfig = {
+            apiKey: "${{ secrets.FIREBASE_API_KEY }}",
+            authDomain: "${{ secrets.FIREBASE_AUTH_DOMAIN }}",
+            projectId: "${{ secrets.FIREBASE_PROJECT_ID }}",
+            storageBucket: "${{ secrets.FIREBASE_STORAGE_BUCKET }}",
+            messagingSenderId: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}",
+            appId: "${{ secrets.FIREBASE_APP_ID }}",
+            measurementId: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
+          };
+          firebase.initializeApp(firebaseConfig);
+          EOF
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
@@ -68,8 +117,24 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       contains(toJson(github.event.commits), 'tadda/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Generate config.js
+        run: |
+          cat > tadda/public/js/config.js << 'EOF'
+          const firebaseConfig = {
+            apiKey: "${{ secrets.TADDA_FIREBASE_API_KEY }}",
+            authDomain: "${{ secrets.TADDA_FIREBASE_AUTH_DOMAIN }}",
+            projectId: "${{ secrets.TADDA_FIREBASE_PROJECT_ID }}",
+            storageBucket: "${{ secrets.TADDA_FIREBASE_STORAGE_BUCKET }}",
+            messagingSenderId: "${{ secrets.TADDA_FIREBASE_MESSAGING_SENDER_ID }}",
+            appId: "${{ secrets.TADDA_FIREBASE_APP_ID }}",
+            measurementId: "${{ secrets.TADDA_FIREBASE_MEASUREMENT_ID }}"
+          };
+          firebase.initializeApp(firebaseConfig);
+          window.ADMIN_EMAIL = "${{ secrets.TADDA_ADMIN_EMAIL }}";
+          window.WEB3FORMS_KEY = "${{ secrets.WEB3FORMS_KEY }}";
+          EOF
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
@@ -86,8 +151,22 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       contains(toJson(github.event.commits), 'tadda-web/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Generate config.js
+        run: |
+          cat > tadda-web/public/js/config.js << 'EOF'
+          const firebaseConfig = {
+            apiKey: "${{ secrets.TADDA_FIREBASE_API_KEY }}",
+            authDomain: "${{ secrets.TADDA_FIREBASE_AUTH_DOMAIN }}",
+            projectId: "${{ secrets.TADDA_FIREBASE_PROJECT_ID }}",
+            storageBucket: "${{ secrets.TADDA_FIREBASE_STORAGE_BUCKET }}",
+            messagingSenderId: "${{ secrets.TADDA_FIREBASE_MESSAGING_SENDER_ID }}",
+            appId: "${{ secrets.TADDA_FIREBASE_APP_ID }}"
+          };
+          firebase.initializeApp(firebaseConfig);
+          window.WEB3FORMS_KEY = "${{ secrets.WEB3FORMS_KEY }}";
+          EOF
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
