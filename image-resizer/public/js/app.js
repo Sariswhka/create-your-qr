@@ -4,6 +4,7 @@ let originalImage = null;
 let originalWidth = 0;
 let originalHeight = 0;
 let originalFileSize = 0;
+let originalFileName = 'image';
 let aspectRatioLocked = true;
 let aspectRatio = 1;
 let cropper = null;
@@ -166,7 +167,355 @@ function showProToast(msg) {
     setTimeout(() => toast.classList.add('hidden'), 4000);
 }
 
-// DOM Elements
+// ── Bulk Resize ───────────────────────────────────────────
+let bulkFiles = [];
+
+const singleModeBtn   = document.getElementById('singleModeBtn');
+const bulkModeBtn     = document.getElementById('bulkModeBtn');
+const singleUploadArea = document.getElementById('singleUploadArea');
+const bulkUploadArea  = document.getElementById('bulkUploadArea');
+const bulkDropArea    = document.getElementById('bulkDropArea');
+const bulkFileInput   = document.getElementById('bulkFileInput');
+
+// Mode toggle
+singleModeBtn.addEventListener('click', () => {
+    singleModeBtn.classList.add('active');
+    bulkModeBtn.classList.remove('active');
+    singleUploadArea.classList.remove('hidden');
+    bulkUploadArea.classList.add('hidden');
+});
+
+bulkModeBtn.addEventListener('click', () => {
+    bulkModeBtn.classList.add('active');
+    singleModeBtn.classList.remove('active');
+    bulkUploadArea.classList.remove('hidden');
+    singleUploadArea.classList.add('hidden');
+});
+
+// Bulk file input
+bulkDropArea.addEventListener('click', () => bulkFileInput.click());
+
+bulkDropArea.addEventListener('dragover', e => { e.preventDefault(); bulkDropArea.classList.add('dragover'); });
+bulkDropArea.addEventListener('dragleave', () => bulkDropArea.classList.remove('dragover'));
+bulkDropArea.addEventListener('drop', e => {
+    e.preventDefault();
+    bulkDropArea.classList.remove('dragover');
+    handleBulkFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+});
+
+bulkFileInput.addEventListener('change', e => {
+    handleBulkFiles(Array.from(e.target.files));
+});
+
+document.getElementById('bulkQuality').addEventListener('input', e => {
+    document.getElementById('bulkQualityVal').textContent = e.target.value;
+});
+
+// Preset selector auto-fills dimensions
+document.getElementById('bulkPreset').addEventListener('change', e => {
+    const val = e.target.value;
+    if (!val) return;
+    const [w, h] = val.split(',');
+    document.getElementById('bulkWidth').value  = w;
+    document.getElementById('bulkHeight').value = h;
+});
+
+// Watermark toggle
+document.getElementById('bulkWmEnabled').addEventListener('change', e => {
+    document.getElementById('bulkWmPanel').classList.toggle('hidden', !e.target.checked);
+});
+
+// Watermark slider labels
+document.getElementById('bulkWmSize').addEventListener('input', e =>
+    document.getElementById('bulkWmSizeVal').textContent = e.target.value);
+document.getElementById('bulkWmOpacity').addEventListener('input', e =>
+    document.getElementById('bulkWmOpacityVal').textContent = e.target.value);
+
+function handleBulkFiles(files) {
+    const maxSize = isPro ? PRO_MAX_SIZE : FREE_MAX_SIZE;
+    const valid = files.filter(f => f.size <= maxSize);
+    const skipped = files.length - valid.length;
+
+    if (skipped > 0) showToast(`${skipped} file(s) skipped — exceed size limit`);
+    if (valid.length === 0) return;
+
+    bulkFiles = [...bulkFiles, ...valid];
+    renderBulkThumbnails();
+    document.getElementById('bulkSettings').classList.remove('hidden');
+}
+
+function renderBulkThumbnails() {
+    // Compact the drop area after first load
+    const dropArea = document.getElementById('bulkDropArea');
+    dropArea.classList.add('bulk-drop-compact');
+    dropArea.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span>Add more images</span>
+        <input type="file" id="bulkFileInput" accept="image/*" multiple hidden>
+    `;
+    // Re-bind click after innerHTML replace
+    dropArea.querySelector('input').addEventListener('change', e => handleBulkFiles(Array.from(e.target.files)));
+    dropArea.onclick = () => dropArea.querySelector('input').click();
+
+    const container = document.getElementById('bulkThumbnails');
+    container.classList.remove('hidden');
+    container.innerHTML = `<p class="bulk-count">${bulkFiles.length} image${bulkFiles.length > 1 ? 's' : ''} selected</p>`;
+
+    bulkFiles.forEach((file, idx) => {
+        const url = URL.createObjectURL(file);
+        const div = document.createElement('div');
+        div.className = 'bulk-thumb';
+        div.innerHTML = `
+            <img src="${url}" alt="${file.name}">
+            <span class="bulk-thumb-name">${file.name}</span>
+            <button class="bulk-thumb-remove" data-idx="${idx}">✕</button>
+        `;
+        container.appendChild(div);
+    });
+
+    // Remove individual image
+    container.querySelectorAll('.bulk-thumb-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+            bulkFiles.splice(parseInt(btn.dataset.idx), 1);
+            if (bulkFiles.length === 0) {
+                container.classList.add('hidden');
+                document.getElementById('bulkSettings').classList.add('hidden');
+                // Restore full drop area
+                const dropArea = document.getElementById('bulkDropArea');
+                dropArea.classList.remove('bulk-drop-compact');
+                dropArea.innerHTML = `
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <h3>Drop multiple images here</h3>
+                    <p>or click to browse</p>
+                    <p class="file-types">Select multiple files · JPG, PNG, WEBP · Max 5 MB each</p>
+                    <input type="file" id="bulkFileInput" accept="image/*" multiple hidden>
+                `;
+                dropArea.querySelector('input').addEventListener('change', e => handleBulkFiles(Array.from(e.target.files)));
+                dropArea.onclick = () => dropArea.querySelector('input').click();
+            } else {
+                renderBulkThumbnails();
+            }
+        });
+    });
+}
+
+function showToast(msg) {
+    const toast = document.getElementById('proToast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3500);
+}
+
+// Bulk download
+document.getElementById('bulkDownloadBtn').addEventListener('click', async () => {
+    if (bulkFiles.length === 0) return;
+
+    const btn        = document.getElementById('bulkDownloadBtn');
+    const progressEl = document.getElementById('bulkProgress');
+    const fillEl     = document.getElementById('bulkProgressFill');
+    const textEl     = document.getElementById('bulkProgressText');
+    const format     = document.getElementById('bulkFormat').value;
+    const quality    = parseInt(document.getElementById('bulkQuality').value) / 100;
+    const targetW    = parseInt(document.getElementById('bulkWidth').value)  || 0;
+    const targetH    = parseInt(document.getElementById('bulkHeight').value) || 0;
+
+    // Bulk watermark settings
+    const bulkWm = {
+        enabled:  document.getElementById('bulkWmEnabled').checked,
+        text:     document.getElementById('bulkWmText').value,
+        fontSize: parseInt(document.getElementById('bulkWmSize').value),
+        color:    document.getElementById('bulkWmColor').value,
+        opacity:  parseInt(document.getElementById('bulkWmOpacity').value) / 100,
+        position: document.getElementById('bulkWmPosition').value,
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Preparing...';
+    progressEl.classList.remove('hidden');
+    fillEl.style.width = '0%';
+
+    try {
+        if (!window.JSZip) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+        const zip = new JSZip();
+
+        for (let i = 0; i < bulkFiles.length; i++) {
+            fillEl.style.width = Math.round((i / bulkFiles.length) * 90) + '%';
+            textEl.textContent = `Processing ${i + 1} of ${bulkFiles.length}: ${bulkFiles[i].name}`;
+            const blob = await resizeFileToBlob(bulkFiles[i], targetW, targetH, format, quality, bulkWm);
+            const ext  = format === 'jpeg' ? 'jpg' : format;
+            const name = bulkFiles[i].name.replace(/\.[^.]+$/, '') + '.' + ext;
+            zip.file(name, blob);
+        }
+
+        fillEl.style.width = '95%';
+        textEl.textContent = 'Creating ZIP...';
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        triggerDownload(zipBlob, 'mockify-resized-images.zip');
+        fillEl.style.width = '100%';
+        textEl.textContent = `Done! ${bulkFiles.length} images downloaded.`;
+
+    } catch(e) {
+        textEl.textContent = 'Error: ' + e.message;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download All as ZIP`;
+    }
+});
+
+function resizeFileToBlob(file, targetW, targetH, format, quality, bulkWm) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = async () => {
+                try {
+                    let w = format === 'ico' ? 256 : (targetW || img.width);
+                    let h = format === 'ico' ? 256 : (targetH || img.height);
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, w, h);
+
+                    // Apply bulk watermark if enabled
+                    if (bulkWm && bulkWm.enabled && bulkWm.text) {
+                        ctx.globalAlpha = bulkWm.opacity;
+                        ctx.fillStyle   = bulkWm.color;
+                        ctx.font        = `bold ${bulkWm.fontSize}px Inter, sans-serif`;
+                        ctx.textBaseline = 'middle';
+                        const tw = ctx.measureText(bulkWm.text).width;
+                        const pad = Math.min(w, h) * 0.03;
+                        const [x, y] = getWatermarkXY(bulkWm.position, w, h, tw, bulkWm.fontSize, pad);
+                        ctx.fillText(bulkWm.text, x, y);
+                        ctx.globalAlpha = 1;
+                    }
+
+                    switch (format) {
+                        case 'jpeg':
+                            canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', quality);
+                            break;
+                        case 'png':
+                            canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png');
+                            break;
+                        case 'webp':
+                            canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/webp', quality);
+                            break;
+                        case 'avif':
+                            canvas.toBlob(b => b ? resolve(b) : reject(new Error('AVIF not supported')), 'image/avif', quality);
+                            break;
+                        case 'bmp':
+                            resolve(encodeBMP(ctx.getImageData(0, 0, w, h), w, h));
+                            break;
+                        case 'ico':
+                            resolve(encodeICO(ctx.getImageData(0, 0, 256, 256), 256, 256));
+                            break;
+                        case 'tiff': {
+                            if (!window.UTIF) await loadScript('https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js');
+                            const buf = UTIF.encodeImage(ctx.getImageData(0, 0, w, h).data, w, h);
+                            resolve(new Blob([buf], { type: 'image/tiff' }));
+                            break;
+                        }
+                        case 'gif': {
+                            if (!window.GIF) await loadScript('https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js');
+                            const workerResp = await fetch('https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js');
+                            const workerUrl  = URL.createObjectURL(await workerResp.blob());
+                            const gif = new GIF({ workers: 1, quality: 10, width: w, height: h, workerScript: workerUrl });
+                            gif.addFrame(canvas, { delay: 0 });
+                            gif.on('finished', blob => { URL.revokeObjectURL(workerUrl); resolve(blob); });
+                            gif.render();
+                            break;
+                        }
+                        case 'pdf': {
+                            if (!window.jspdf) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                            const { jsPDF } = window.jspdf;
+                            const pdf = new jsPDF({ orientation: w >= h ? 'landscape' : 'portrait', unit: 'px', format: [w, h], hotfixes: ['px_scaling'] });
+                            pdf.addImage(canvas.toDataURL('image/jpeg', quality), 'JPEG', 0, 0, w, h);
+                            resolve(pdf.output('blob'));
+                            break;
+                        }
+                        default:
+                            canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', quality);
+                    }
+                } catch(err) { reject(err); }
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// ── Image Comparison Slider ────────────────────────────────
+let beforeImageSrc = null;
+let compareActive = false;
+
+const compareBtn       = document.getElementById('compareBtn');
+const compareContainer = document.getElementById('compareContainer');
+const normalPreview    = document.getElementById('normalPreview');
+const compareAfterEl   = document.getElementById('compareAfter');
+const compareHandle    = document.getElementById('compareHandle');
+
+function captureBeforeState() {
+    if (previewImage && previewImage.src) {
+        beforeImageSrc = previewImage.src;
+    }
+}
+
+function enableCompareBtn() {
+    compareBtn.style.display = 'inline-flex';
+}
+
+compareBtn.addEventListener('click', () => {
+    compareActive = !compareActive;
+    if (compareActive) {
+        document.getElementById('compareBeforeImg').src = beforeImageSrc || previewImage.src;
+        document.getElementById('compareAfterImg').src  = previewImage.src;
+        normalPreview.classList.add('hidden');
+        compareContainer.classList.remove('hidden');
+        compareAfterEl.style.width = '50%';
+        compareHandle.style.left   = '50%';
+        compareBtn.textContent = '✕ Close Compare';
+    } else {
+        normalPreview.classList.remove('hidden');
+        compareContainer.classList.add('hidden');
+        compareBtn.textContent = '⇔ Compare';
+    }
+});
+
+// Drag logic
+let isDragging = false;
+
+compareHandle.addEventListener('mousedown',  () => isDragging = true);
+compareHandle.addEventListener('touchstart', () => isDragging = true, { passive: true });
+
+document.addEventListener('mouseup',  () => isDragging = false);
+document.addEventListener('touchend', () => isDragging = false);
+
+document.addEventListener('mousemove', moveSlider);
+document.addEventListener('touchmove', e => moveSlider(e.touches[0]), { passive: true });
+
+function moveSlider(e) {
+    if (!isDragging || !compareActive) return;
+    const rect = compareContainer.getBoundingClientRect();
+    let x = ((e.clientX - rect.left) / rect.width) * 100;
+    x = Math.max(2, Math.min(98, x));
+    compareAfterEl.style.width  = x + '%';
+    compareHandle.style.left    = x + '%';
+}
+
+// ── DOM Elements ───────────────────────────────────────────
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
 const uploadSection = document.getElementById('uploadSection');
@@ -227,6 +576,7 @@ function loadImage(file) {
     }
 
     originalFileSize = file.size;
+    originalFileName = file.name.replace(/\.[^.]+$/, ''); // store name without extension
     const reader = new FileReader();
 
     reader.onload = (e) => {
@@ -269,6 +619,14 @@ resetBtn.addEventListener('click', () => {
         cropper.destroy();
         cropper = null;
     }
+    // Reset compare state
+    compareActive = false;
+    beforeImageSrc = null;
+    compareBtn.style.display = 'none';
+    compareBtn.textContent = '⇔ Compare';
+    compareContainer.classList.add('hidden');
+    normalPreview.classList.remove('hidden');
+
     editorSection.classList.add('hidden');
     uploadSection.classList.remove('hidden');
     fileInput.value = '';
@@ -288,10 +646,45 @@ document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.add('active');
         document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
 
-        // Reinitialize cropper when crop tab is shown
+        // Reinitialize cropper when crop tab is shown — always on current image state
         if (tab.dataset.tab === 'crop' && originalImage) {
+            cropImage.src = previewImage.src;
             setTimeout(() => initCropper(), 100);
         }
+
+        // Restore current dimensions when switching back to resize tab
+        if (tab.dataset.tab === 'resize' && originalImage) {
+            widthInput.value = originalWidth;
+            heightInput.value = originalHeight;
+            updateNewDimensions();
+        }
+    });
+});
+
+// Social Media Presets
+document.querySelectorAll('.social-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const w = parseInt(btn.dataset.w);
+        const h = parseInt(btn.dataset.h);
+
+        // Highlight active preset
+        document.querySelectorAll('.social-preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Switch to dimensions method
+        document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.method-btn[data-method="dimensions"]').classList.add('active');
+        document.getElementById('dimensionsGroup').classList.remove('hidden');
+        document.getElementById('percentageGroup').classList.add('hidden');
+
+        // Unlock aspect ratio — preset dimensions override original ratio
+        aspectRatioLocked = false;
+        lockRatio.classList.remove('locked');
+
+        // Set dimensions
+        widthInput.value = w;
+        heightInput.value = h;
+        updateNewDimensions();
     });
 });
 
@@ -407,6 +800,7 @@ document.getElementById('upgradeAspectLink').addEventListener('click', (e) => {
 // Apply Crop
 document.getElementById('applyCrop').addEventListener('click', () => {
     if (cropper) {
+        captureBeforeState();
         const canvas = cropper.getCroppedCanvas();
         if (canvas) {
             originalImage = new Image();
@@ -421,6 +815,7 @@ document.getElementById('applyCrop').addEventListener('click', () => {
 
             document.getElementById('originalSize').textContent = `Cropped: ${originalWidth} x ${originalHeight}`;
             updateNewDimensions();
+            enableCompareBtn();
 
             // Switch to resize tab
             document.querySelector('.tab[data-tab="resize"]').click();
@@ -550,35 +945,43 @@ downloadBtn.addEventListener('click', async () => {
     const width  = parseInt(widthInput.value)  || originalWidth;
     const height = parseInt(heightInput.value) || originalHeight;
 
-    const canvas = document.createElement('canvas');
-    canvas.width  = width;
-    canvas.height = height;
+    // If watermark is active, use watermarked canvas
+    const baseCanvas = wmState.active
+        ? applyWatermarkToCanvas(originalImage, width, height)
+        : (() => {
+            const c = document.createElement('canvas');
+            c.width = width; c.height = height;
+            const cx = c.getContext('2d');
+            cx.imageSmoothingEnabled = true;
+            cx.imageSmoothingQuality = 'high';
+            cx.drawImage(originalImage, 0, 0, width, height);
+            return c;
+        })();
+
+    const canvas = baseCanvas;
     const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(originalImage, 0, 0, width, height);
 
     switch (currentFormat) {
 
         case 'jpeg': {
-            canvas.toBlob(blob => triggerDownload(blob, 'resized-image.jpg'), 'image/jpeg', currentQuality / 100);
+            canvas.toBlob(blob => triggerDownload(blob, `${originalFileName}_Updated.jpg`), 'image/jpeg', currentQuality / 100);
             break;
         }
 
         case 'png': {
-            canvas.toBlob(blob => triggerDownload(blob, 'resized-image.png'), 'image/png');
+            canvas.toBlob(blob => triggerDownload(blob, `${originalFileName}_Updated.png`), 'image/png');
             break;
         }
 
         case 'webp': {
-            canvas.toBlob(blob => triggerDownload(blob, 'resized-image.webp'), 'image/webp', currentQuality / 100);
+            canvas.toBlob(blob => triggerDownload(blob, `${originalFileName}_Updated.webp`), 'image/webp', currentQuality / 100);
             break;
         }
 
         case 'avif': {
             canvas.toBlob(blob => {
                 if (!blob) { alert('AVIF encoding failed. Try Chrome 94+ or Firefox 113+.'); return; }
-                triggerDownload(blob, 'resized-image.avif');
+                triggerDownload(blob, `${originalFileName}_Updated.avif`);
             }, 'image/avif', currentQuality / 100);
             break;
         }
@@ -595,7 +998,7 @@ downloadBtn.addEventListener('click', async () => {
                 const pdf = new jsPDF({ orientation, unit: 'px', format: [width, height], hotfixes: ['px_scaling'] });
                 const imgData = canvas.toDataURL('image/jpeg', currentQuality / 100);
                 pdf.addImage(imgData, 'JPEG', 0, 0, width, height);
-                pdf.save('resized-image.pdf');
+                pdf.save(`${originalFileName}_Updated.pdf`);
             } catch(e) {
                 alert('PDF generation failed: ' + e.message);
             } finally {
@@ -608,7 +1011,7 @@ downloadBtn.addEventListener('click', async () => {
         case 'bmp': {
             const imageData = ctx.getImageData(0, 0, width, height);
             const blob = encodeBMP(imageData, width, height);
-            triggerDownload(blob, 'resized-image.bmp');
+            triggerDownload(blob, `${originalFileName}_Updated.bmp`);
             break;
         }
 
@@ -622,7 +1025,7 @@ downloadBtn.addEventListener('click', async () => {
                 const imageData = ctx.getImageData(0, 0, width, height);
                 const tiffBuffer = UTIF.encodeImage(imageData.data, width, height);
                 const blob = new Blob([tiffBuffer], { type: 'image/tiff' });
-                triggerDownload(blob, 'resized-image.tiff');
+                triggerDownload(blob, `${originalFileName}_Updated.tiff`);
             } catch(e) {
                 alert('TIFF generation failed: ' + e.message);
             } finally {
@@ -648,7 +1051,7 @@ downloadBtn.addEventListener('click', async () => {
                 gif.addFrame(canvas, { delay: 0 });
                 gif.on('finished', blob => {
                     URL.revokeObjectURL(workerUrl);
-                    triggerDownload(blob, 'resized-image.gif');
+                    triggerDownload(blob, `${originalFileName}_Updated.gif`);
                     downloadBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Image`;
                     downloadBtn.disabled = false;
                 });
@@ -668,11 +1071,143 @@ downloadBtn.addEventListener('click', async () => {
             icoCanvas.getContext('2d').drawImage(originalImage, 0, 0, 256, 256);
             const icoImageData = icoCanvas.getContext('2d').getImageData(0, 0, 256, 256);
             const blob = encodeICO(icoImageData, 256, 256);
-            triggerDownload(blob, 'favicon.ico');
+            triggerDownload(blob, `${originalFileName}_Updated.ico`);
             break;
         }
     }
 });
+
+// ── Watermark ─────────────────────────────────────────────
+const wmState = {
+    active: false,
+    mode: 'text',         // 'text' | 'logo'
+    text: '',
+    fontSize: 24,
+    color: '#ffffff',
+    opacity: 0.7,
+    position: 'center',
+    logoImage: null,
+    logoSize: 0.2,
+};
+
+// Mode toggle
+document.getElementById('wmTextMode').addEventListener('click', () => {
+    wmState.mode = 'text';
+    document.getElementById('wmTextMode').classList.add('active');
+    document.getElementById('wmLogoMode').classList.remove('active');
+    document.getElementById('wmTextPanel').classList.remove('hidden');
+    document.getElementById('wmLogoPanel').classList.add('hidden');
+});
+
+document.getElementById('wmLogoMode').addEventListener('click', () => {
+    wmState.mode = 'logo';
+    document.getElementById('wmLogoMode').classList.add('active');
+    document.getElementById('wmTextMode').classList.remove('active');
+    document.getElementById('wmLogoPanel').classList.remove('hidden');
+    document.getElementById('wmTextPanel').classList.add('hidden');
+});
+
+// Input bindings
+document.getElementById('wmText').addEventListener('input', e => wmState.text = e.target.value);
+document.getElementById('wmFontSize').addEventListener('input', e => {
+    wmState.fontSize = parseInt(e.target.value);
+    document.getElementById('wmFontSizeVal').textContent = e.target.value;
+});
+document.getElementById('wmColor').addEventListener('input', e => wmState.color = e.target.value);
+document.getElementById('wmOpacity').addEventListener('input', e => {
+    wmState.opacity = parseInt(e.target.value) / 100;
+    document.getElementById('wmOpacityVal').textContent = e.target.value;
+});
+document.getElementById('wmLogoSize').addEventListener('input', e => {
+    wmState.logoSize = parseInt(e.target.value) / 100;
+    document.getElementById('wmLogoSizeVal').textContent = e.target.value;
+});
+document.getElementById('wmLogoInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => { wmState.logoImage = img; };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Position grid
+document.querySelectorAll('.wm-pos-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.wm-pos-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        wmState.position = btn.dataset.pos;
+    });
+});
+
+// Preview button
+document.getElementById('wmPreviewBtn').addEventListener('click', () => {
+    if (!originalImage) return;
+    const canvas = applyWatermarkToCanvas(originalImage, originalWidth, originalHeight);
+    previewImage.src = canvas.toDataURL('image/png');
+    wmState.active = true;
+});
+
+// Clear button
+document.getElementById('wmClearBtn').addEventListener('click', () => {
+    wmState.active = false;
+    previewImage.src = originalImage.src;
+    document.getElementById('wmText').value = '';
+    document.getElementById('wmLogoInput').value = '';
+    wmState.logoImage = null;
+    wmState.text = '';
+});
+
+function applyWatermarkToCanvas(image, width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width  = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(image, 0, 0, width, height);
+
+    ctx.globalAlpha = wmState.opacity;
+    const pad = Math.min(width, height) * 0.03;
+
+    if (wmState.mode === 'text' && wmState.text) {
+        ctx.fillStyle   = wmState.color;
+        ctx.font        = `bold ${wmState.fontSize}px Inter, sans-serif`;
+        ctx.textBaseline = 'middle';
+        const metrics   = ctx.measureText(wmState.text);
+        const tw = metrics.width;
+        const th = wmState.fontSize;
+        const [x, y] = getWatermarkXY(wmState.position, width, height, tw, th, pad);
+        ctx.fillText(wmState.text, x, y);
+
+    } else if (wmState.mode === 'logo' && wmState.logoImage) {
+        const lw = width * wmState.logoSize;
+        const lh = wmState.logoImage.height * (lw / wmState.logoImage.width);
+        const [x, y] = getWatermarkXY(wmState.position, width, height, lw, lh, pad);
+        ctx.drawImage(wmState.logoImage, x, y, lw, lh);
+    }
+
+    ctx.globalAlpha = 1;
+    return canvas;
+}
+
+function getWatermarkXY(position, imgW, imgH, elW, elH, pad) {
+    const positions = {
+        'top-left':      [pad,                pad + elH / 2],
+        'top-center':    [imgW / 2 - elW / 2, pad + elH / 2],
+        'top-right':     [imgW - elW - pad,   pad + elH / 2],
+        'middle-left':   [pad,                imgH / 2],
+        'center':        [imgW / 2 - elW / 2, imgH / 2],
+        'middle-right':  [imgW - elW - pad,   imgH / 2],
+        'bottom-left':   [pad,                imgH - pad - elH / 2],
+        'bottom-center': [imgW / 2 - elW / 2, imgH - pad - elH / 2],
+        'bottom-right':  [imgW - elW - pad,   imgH - pad - elH / 2],
+    };
+    return positions[position] || positions['center'];
+}
 
 // ── Helper: trigger file download ─────────────────────────
 function triggerDownload(blob, filename) {
@@ -833,6 +1368,7 @@ removeBgBtn.addEventListener('click', async () => {
         alert('Please upload an image first');
         return;
     }
+    captureBeforeState();
 
     // Show progress, hide result
     bgProgress.classList.remove('hidden');
@@ -903,6 +1439,7 @@ removeBgBtn.addEventListener('click', async () => {
             progressFill.style.width = '100%';
             bgProgress.classList.add('hidden');
             bgResult.classList.remove('hidden');
+            enableCompareBtn();
 
             // Reinitialize cropper if needed
             if (cropper) {
