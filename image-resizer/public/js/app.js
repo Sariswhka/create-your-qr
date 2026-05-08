@@ -455,12 +455,57 @@ document.querySelectorAll('.format-btn').forEach(btn => {
             showUpgradeModal();
             return;
         }
+        // AVIF: check browser support before selecting
+        if (btn.dataset.format === 'avif' && !isAvifSupported()) {
+            alert('AVIF encoding is not supported in your browser.\nPlease use Chrome 94+ or Firefox 113+.');
+            return;
+        }
         document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentFormat = btn.dataset.format;
+
+        // ICO: auto-set dimensions to 256x256
+        if (currentFormat === 'ico') {
+            widthInput.value = 256;
+            heightInput.value = 256;
+            updateNewDimensions();
+            showFormatNote('ICO format: dimensions set to 256×256 (standard favicon size)');
+        } else {
+            hideFormatNote();
+        }
+
+        // GIF: quality slider doesn't apply
+        if (currentFormat === 'gif') {
+            showFormatNote('GIF uses a 256-colour palette — quality slider does not apply');
+        }
+
+        // PDF: estimated size not applicable
         updateEstimatedSize();
     });
 });
+
+function showFormatNote(msg) {
+    let note = document.getElementById('formatNote');
+    if (!note) {
+        note = document.createElement('p');
+        note.id = 'formatNote';
+        note.style.cssText = 'font-size:12px;color:#6b7280;margin:6px 0 0;';
+        document.querySelector('.format-group').appendChild(note);
+    }
+    note.textContent = msg;
+    note.style.display = 'block';
+}
+
+function hideFormatNote() {
+    const note = document.getElementById('formatNote');
+    if (note) note.style.display = 'none';
+}
+
+function isAvifSupported() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1; canvas.height = 1;
+    return canvas.toDataURL('image/avif').startsWith('data:image/avif');
+}
 
 let estimateTimeout = null;
 
@@ -479,9 +524,16 @@ function updateEstimatedSize() {
         canvas.height = h;
         canvas.getContext('2d').drawImage(originalImage, 0, 0, w, h);
 
+        // PDF, BMP, TIFF, GIF, ICO — can't estimate via canvas.toBlob
+        if (['pdf', 'bmp', 'tiff', 'gif', 'ico'].includes(currentFormat)) {
+            document.getElementById('estimatedSize').textContent = 'varies';
+            return;
+        }
+
         let mimeType = 'image/jpeg';
-        if (currentFormat === 'png') mimeType = 'image/png';
+        if (currentFormat === 'png')  mimeType = 'image/png';
         else if (currentFormat === 'webp') mimeType = 'image/webp';
+        else if (currentFormat === 'avif') mimeType = 'image/avif';
 
         canvas.toBlob((blob) => {
             if (blob) {
@@ -492,42 +544,234 @@ function updateEstimatedSize() {
 }
 
 // Download
-downloadBtn.addEventListener('click', () => {
+downloadBtn.addEventListener('click', async () => {
     if (!originalImage) return;
 
-    const width = parseInt(widthInput.value) || originalWidth;
+    const width  = parseInt(widthInput.value)  || originalWidth;
     const height = parseInt(heightInput.value) || originalHeight;
 
-    // Create canvas and resize
     const canvas = document.createElement('canvas');
-    canvas.width = width;
+    canvas.width  = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
-
-    // Draw image
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(originalImage, 0, 0, width, height);
 
-    // Get mime type
-    let mimeType = 'image/jpeg';
-    let extension = 'jpg';
-    if (currentFormat === 'png') {
-        mimeType = 'image/png';
-        extension = 'png';
-    } else if (currentFormat === 'webp') {
-        mimeType = 'image/webp';
-        extension = 'webp';
+    switch (currentFormat) {
+
+        case 'jpeg': {
+            canvas.toBlob(blob => triggerDownload(blob, 'resized-image.jpg'), 'image/jpeg', currentQuality / 100);
+            break;
+        }
+
+        case 'png': {
+            canvas.toBlob(blob => triggerDownload(blob, 'resized-image.png'), 'image/png');
+            break;
+        }
+
+        case 'webp': {
+            canvas.toBlob(blob => triggerDownload(blob, 'resized-image.webp'), 'image/webp', currentQuality / 100);
+            break;
+        }
+
+        case 'avif': {
+            canvas.toBlob(blob => {
+                if (!blob) { alert('AVIF encoding failed. Try Chrome 94+ or Firefox 113+.'); return; }
+                triggerDownload(blob, 'resized-image.avif');
+            }, 'image/avif', currentQuality / 100);
+            break;
+        }
+
+        case 'pdf': {
+            downloadBtn.textContent = 'Generating PDF…';
+            downloadBtn.disabled = true;
+            try {
+                if (!window.jspdf) {
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                }
+                const { jsPDF } = window.jspdf;
+                const orientation = width >= height ? 'landscape' : 'portrait';
+                const pdf = new jsPDF({ orientation, unit: 'px', format: [width, height], hotfixes: ['px_scaling'] });
+                const imgData = canvas.toDataURL('image/jpeg', currentQuality / 100);
+                pdf.addImage(imgData, 'JPEG', 0, 0, width, height);
+                pdf.save('resized-image.pdf');
+            } catch(e) {
+                alert('PDF generation failed: ' + e.message);
+            } finally {
+                downloadBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Image`;
+                downloadBtn.disabled = false;
+            }
+            break;
+        }
+
+        case 'bmp': {
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const blob = encodeBMP(imageData, width, height);
+            triggerDownload(blob, 'resized-image.bmp');
+            break;
+        }
+
+        case 'tiff': {
+            downloadBtn.textContent = 'Generating TIFF…';
+            downloadBtn.disabled = true;
+            try {
+                if (!window.UTIF) {
+                    await loadScript('https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js');
+                }
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const tiffBuffer = UTIF.encodeImage(imageData.data, width, height);
+                const blob = new Blob([tiffBuffer], { type: 'image/tiff' });
+                triggerDownload(blob, 'resized-image.tiff');
+            } catch(e) {
+                alert('TIFF generation failed: ' + e.message);
+            } finally {
+                downloadBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Image`;
+                downloadBtn.disabled = false;
+            }
+            break;
+        }
+
+        case 'gif': {
+            downloadBtn.textContent = 'Generating GIF…';
+            downloadBtn.disabled = true;
+            try {
+                if (!window.GIF) {
+                    await loadScript('https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js');
+                }
+                // Fetch worker script and create blob URL to bypass CORS restrictions
+                const workerResp = await fetch('https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js');
+                const workerBlob = await workerResp.blob();
+                const workerUrl = URL.createObjectURL(workerBlob);
+
+                const gif = new GIF({ workers: 2, quality: 10, width, height, workerScript: workerUrl });
+                gif.addFrame(canvas, { delay: 0 });
+                gif.on('finished', blob => {
+                    URL.revokeObjectURL(workerUrl);
+                    triggerDownload(blob, 'resized-image.gif');
+                    downloadBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Image`;
+                    downloadBtn.disabled = false;
+                });
+                gif.render();
+            } catch(e) {
+                alert('GIF generation failed: ' + e.message);
+                downloadBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Image`;
+                downloadBtn.disabled = false;
+            }
+            break;
+        }
+
+        case 'ico': {
+            // ICO: always 256x256
+            const icoCanvas = document.createElement('canvas');
+            icoCanvas.width = 256; icoCanvas.height = 256;
+            icoCanvas.getContext('2d').drawImage(originalImage, 0, 0, 256, 256);
+            const icoImageData = icoCanvas.getContext('2d').getImageData(0, 0, 256, 256);
+            const blob = encodeICO(icoImageData, 256, 256);
+            triggerDownload(blob, 'favicon.ico');
+            break;
+        }
+    }
+});
+
+// ── Helper: trigger file download ─────────────────────────
+function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+// ── Helper: load external script ──────────────────────────
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`Failed to load: ${src}`));
+        document.head.appendChild(script);
+    });
+}
+
+// ── BMP encoder (pure JS, no library) ─────────────────────
+function encodeBMP(imageData, width, height) {
+    const rowSize = Math.floor((24 * width + 31) / 32) * 4;
+    const pixelDataSize = rowSize * height;
+    const fileSize = 54 + pixelDataSize;
+    const buffer = new ArrayBuffer(fileSize);
+    const view = new DataView(buffer);
+
+    // File header
+    view.setUint8(0, 0x42); view.setUint8(1, 0x4D); // 'BM'
+    view.setUint32(2, fileSize, true);
+    view.setUint32(6, 0, true);
+    view.setUint32(10, 54, true);
+
+    // DIB header (BITMAPINFOHEADER)
+    view.setUint32(14, 40, true);
+    view.setInt32(18, width, true);
+    view.setInt32(22, -height, true); // negative = top-down
+    view.setUint16(26, 1, true);
+    view.setUint16(28, 24, true); // 24-bit
+    view.setUint32(30, 0, true);
+    view.setUint32(34, pixelDataSize, true);
+    view.setInt32(38, 2835, true);
+    view.setInt32(42, 2835, true);
+    view.setUint32(46, 0, true);
+    view.setUint32(50, 0, true);
+
+    // Pixel data (BGR order)
+    const data = imageData.data;
+    let offset = 54;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            view.setUint8(offset++, data[i + 2]); // B
+            view.setUint8(offset++, data[i + 1]); // G
+            view.setUint8(offset++, data[i]);     // R
+        }
+        // Row padding
+        for (let p = 0; p < (rowSize - width * 3); p++) view.setUint8(offset++, 0);
     }
 
-    // Convert to blob and download
-    canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `resized-image.${extension}`;
-        link.href = url;
-        link.click();
-        URL.revokeObjectURL(url);
-    }, mimeType, currentQuality / 100);
-});
+    return new Blob([buffer], { type: 'image/bmp' });
+}
+
+// ── ICO encoder (pure JS, 256x256 single frame) ───────────
+function encodeICO(imageData, width, height) {
+    // ICO with embedded PNG for 256x256 (browser standard)
+    const pngCanvas = document.createElement('canvas');
+    pngCanvas.width = width; pngCanvas.height = height;
+    const pngCtx = pngCanvas.getContext('2d');
+    pngCtx.putImageData(imageData, 0, 0);
+
+    // Get PNG data
+    const pngData = pngCanvas.toDataURL('image/png');
+    const pngBytes = atob(pngData.split(',')[1]);
+    const pngArray = new Uint8Array(pngBytes.length);
+    for (let i = 0; i < pngBytes.length; i++) pngArray[i] = pngBytes.charCodeAt(i);
+
+    // ICO header + directory
+    const icoHeader = new ArrayBuffer(6 + 16);
+    const view = new DataView(icoHeader);
+    view.setUint16(0, 0, true);   // reserved
+    view.setUint16(2, 1, true);   // type: ICO
+    view.setUint16(4, 1, true);   // 1 image
+
+    // Directory entry
+    view.setUint8(6, 0);    // width (0 = 256)
+    view.setUint8(7, 0);    // height (0 = 256)
+    view.setUint8(8, 0);    // color count
+    view.setUint8(9, 0);    // reserved
+    view.setUint16(10, 1, true);  // planes
+    view.setUint16(12, 32, true); // bit count
+    view.setUint32(14, pngArray.length, true); // size of image data
+    view.setUint32(18, 22, true); // offset to image data
+
+    return new Blob([icoHeader, pngArray], { type: 'image/x-icon' });
+}
 
 // Utility Functions
 function formatFileSize(bytes) {

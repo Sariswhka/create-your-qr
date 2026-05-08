@@ -823,6 +823,21 @@ body {
 }
 .upgrade-btn:hover { opacity: 0.88; }
 
+.format-btns {
+    flex-wrap: wrap;
+}
+
+.avif-note {
+    display: inline-block;
+    font-size: 9px;
+    background: #6366f1;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: 2px;
+    vertical-align: middle;
+}
+
 .pro-lock {
     display: inline-block;
     font-size: 9px;
