@@ -86,16 +86,152 @@
             <div class="container">
                 <!-- Upload Section -->
                 <div class="upload-section" id="uploadSection">
-                    <div class="upload-area" id="uploadArea">
-                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        <h3>Drop your image here</h3>
-                        <p>or click to browse</p>
-                        <p class="file-types">Supports: JPG, PNG, WEBP, GIF · <span id="maxSizeLabel">Max 5 MB</span></p>
-                        <input type="file" id="fileInput" accept="image/*" hidden>
+
+                    <!-- Mode Toggle -->
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" id="singleModeBtn">Single Image</button>
+                        <button class="mode-btn" id="bulkModeBtn">Bulk Resize</button>
+                    </div>
+
+                    <!-- Single upload -->
+                    <div id="singleUploadArea">
+                        <div class="upload-area" id="uploadArea">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <h3>Drop your image here</h3>
+                            <p>or click to browse</p>
+                            <p class="file-types">Supports: JPG, PNG, WEBP, GIF · <span id="maxSizeLabel">Max 5 MB</span></p>
+                            <input type="file" id="fileInput" accept="image/*" hidden>
+                        </div>
+                    </div>
+
+                    <!-- Bulk upload -->
+                    <div id="bulkUploadArea" class="hidden">
+                        <div class="upload-area" id="bulkDropArea">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <h3>Drop multiple images here</h3>
+                            <p>or click to browse</p>
+                            <p class="file-types">Select multiple files · JPG, PNG, WEBP · Max 5 MB each</p>
+                            <input type="file" id="bulkFileInput" accept="image/*" multiple hidden>
+                        </div>
+
+                        <!-- Bulk thumbnails -->
+                        <div id="bulkThumbnails" class="bulk-thumbnails hidden"></div>
+
+                        <!-- Bulk settings -->
+                        <div id="bulkSettings" class="bulk-settings hidden">
+
+                            <!-- Social media presets -->
+                            <h4>Quick Presets</h4>
+                            <select id="bulkPreset" class="bulk-select">
+                                <option value="">Custom dimensions</option>
+                                <option value="1080,1080">📷 Instagram Post — 1080×1080</option>
+                                <option value="1080,1920">📱 Instagram Story — 1080×1920</option>
+                                <option value="800,800">💬 WhatsApp DP — 800×800</option>
+                                <option value="1584,396">💼 LinkedIn Cover — 1584×396</option>
+                                <option value="1500,500">🐦 Twitter/X Banner — 1500×500</option>
+                                <option value="1280,720">▶️ YouTube Thumbnail — 1280×720</option>
+                            </select>
+
+                            <!-- Dimensions -->
+                            <h4 style="margin-top:14px;">Dimensions</h4>
+                            <div class="bulk-settings-row">
+                                <div class="input-group">
+                                    <label>Width (px)</label>
+                                    <input type="number" id="bulkWidth" min="1" max="10000" placeholder="original">
+                                </div>
+                                <span style="align-self:flex-end;padding-bottom:8px;color:#999;">×</span>
+                                <div class="input-group">
+                                    <label>Height (px)</label>
+                                    <input type="number" id="bulkHeight" min="1" max="10000" placeholder="original">
+                                </div>
+                            </div>
+                            <p style="font-size:12px;color:#6b7280;margin:0 0 12px;">Leave blank to keep original dimensions</p>
+
+                            <!-- Format & Quality -->
+                            <h4>Output Format</h4>
+                            <div class="bulk-settings-row">
+                                <div class="input-group">
+                                    <label>Format</label>
+                                    <select id="bulkFormat" class="bulk-select">
+                                        <option value="jpeg">JPG</option>
+                                        <option value="png">PNG</option>
+                                        <option value="webp">WebP</option>
+                                        <option value="pdf">PDF</option>
+                                        <option value="bmp">BMP</option>
+                                        <option value="tiff">TIFF</option>
+                                        <option value="gif">GIF</option>
+                                        <option value="ico">ICO (256×256)</option>
+                                        <option value="avif">AVIF</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Quality: <span id="bulkQualityVal">80</span>%</label>
+                                    <input type="range" id="bulkQuality" min="10" max="100" value="80" class="slider">
+                                </div>
+                            </div>
+
+                            <!-- Watermark -->
+                            <h4 style="margin-top:4px;">Watermark</h4>
+                            <div class="bulk-wm-row">
+                                <label class="bulk-wm-toggle">
+                                    <input type="checkbox" id="bulkWmEnabled">
+                                    <span>Apply watermark to all images</span>
+                                </label>
+                            </div>
+                            <div id="bulkWmPanel" class="hidden" style="margin-top:10px;">
+                                <div class="control-group">
+                                    <input type="text" id="bulkWmText" placeholder="© Your Name" style="width:100%;padding:8px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;margin-bottom:8px;">
+                                    <div class="bulk-settings-row">
+                                        <div class="input-group">
+                                            <label>Font Size: <span id="bulkWmSizeVal">24</span>px</label>
+                                            <input type="range" id="bulkWmSize" min="10" max="120" value="24" class="slider">
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Opacity: <span id="bulkWmOpacityVal">70</span>%</label>
+                                            <input type="range" id="bulkWmOpacity" min="10" max="100" value="70" class="slider">
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+                                        <label style="font-size:13px;color:#374151;">Colour</label>
+                                        <input type="color" id="bulkWmColor" value="#ffffff" style="width:40px;height:28px;border:none;cursor:pointer;border-radius:4px;">
+                                        <label style="font-size:13px;color:#374151;">Position</label>
+                                        <select id="bulkWmPosition" style="padding:5px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;flex:1;">
+                                            <option value="bottom-right">Bottom Right</option>
+                                            <option value="bottom-left">Bottom Left</option>
+                                            <option value="center">Center</option>
+                                            <option value="top-right">Top Right</option>
+                                            <option value="top-left">Top Left</option>
+                                            <option value="bottom-center">Bottom Center</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" id="bulkDownloadBtn" style="width:100%;margin-top:14px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                Download All as ZIP
+                            </button>
+
+                            <!-- Progress -->
+                            <div id="bulkProgress" class="hidden" style="margin-top:12px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="bulkProgressFill" style="width:0%"></div>
+                                </div>
+                                <p class="progress-text" id="bulkProgressText">Processing...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -106,18 +242,42 @@
                         <div class="preview-panel">
                             <div class="preview-header">
                                 <h3>Preview</h3>
-                                <button class="btn-icon" id="resetBtn" title="Upload new image">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                                        <polyline points="17 8 12 3 7 8"/>
-                                        <line x1="12" y1="3" x2="12" y2="15"/>
-                                    </svg>
-                                    New Image
-                                </button>
+                                <div class="preview-header-actions">
+                                    <button class="btn-icon" id="compareBtn" title="Compare before/after" style="display:none;">
+                                        ⇔ Compare
+                                    </button>
+                                    <button class="btn-icon" id="resetBtn" title="Upload new image">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                            <polyline points="17 8 12 3 7 8"/>
+                                            <line x1="12" y1="3" x2="12" y2="15"/>
+                                        </svg>
+                                        New Image
+                                    </button>
+                                </div>
                             </div>
-                            <div class="preview-container">
+
+                            <!-- Normal preview -->
+                            <div class="preview-container" id="normalPreview">
                                 <img id="previewImage" src="" alt="Preview">
                             </div>
+
+                            <!-- Comparison slider (hidden until edit applied) -->
+                            <div class="compare-container hidden" id="compareContainer">
+                                <div class="compare-before">
+                                    <img id="compareBeforeImg" src="" alt="Before">
+                                    <span class="compare-label compare-label-before">Before</span>
+                                </div>
+                                <div class="compare-after" id="compareAfter">
+                                    <img id="compareAfterImg" src="" alt="After">
+                                    <span class="compare-label compare-label-after">After</span>
+                                </div>
+                                <div class="compare-handle" id="compareHandle">
+                                    <div class="compare-handle-line"></div>
+                                    <div class="compare-handle-circle">⇔</div>
+                                </div>
+                            </div>
+
                             <div class="image-info" id="imageInfo">
                                 <span id="originalSize">Original: 0 x 0</span>
                                 <span id="fileSize">Size: 0 KB</span>
@@ -132,10 +292,49 @@
                                 <button class="tab" data-tab="crop">Crop</button>
                                 <button class="tab" data-tab="compress">Compress</button>
                                 <button class="tab" data-tab="bgremove">Remove BG <span class="pro-lock" id="bgLock">PRO</span></button>
+                                <button class="tab" data-tab="watermark">Watermark</button>
                             </div>
 
                             <!-- Resize Tab -->
                             <div class="tab-content active" id="resizeTab">
+
+                                <!-- Social Media Presets -->
+                                <div class="control-group">
+                                    <label>Social Media Presets</label>
+                                    <div class="preset-grid">
+                                        <button class="social-preset-btn" data-w="1080" data-h="1080" data-label="Instagram Post">
+                                            <span class="preset-icon">📷</span>
+                                            <span class="preset-name">Instagram Post</span>
+                                            <span class="preset-dim">1080×1080</span>
+                                        </button>
+                                        <button class="social-preset-btn" data-w="1080" data-h="1920" data-label="Instagram Story">
+                                            <span class="preset-icon">📱</span>
+                                            <span class="preset-name">Instagram Story</span>
+                                            <span class="preset-dim">1080×1920</span>
+                                        </button>
+                                        <button class="social-preset-btn" data-w="800" data-h="800" data-label="WhatsApp DP">
+                                            <span class="preset-icon">💬</span>
+                                            <span class="preset-name">WhatsApp DP</span>
+                                            <span class="preset-dim">800×800</span>
+                                        </button>
+                                        <button class="social-preset-btn" data-w="1584" data-h="396" data-label="LinkedIn Cover">
+                                            <span class="preset-icon">💼</span>
+                                            <span class="preset-name">LinkedIn Cover</span>
+                                            <span class="preset-dim">1584×396</span>
+                                        </button>
+                                        <button class="social-preset-btn" data-w="1500" data-h="500" data-label="Twitter/X Banner">
+                                            <span class="preset-icon">🐦</span>
+                                            <span class="preset-name">Twitter/X Banner</span>
+                                            <span class="preset-dim">1500×500</span>
+                                        </button>
+                                        <button class="social-preset-btn" data-w="1280" data-h="720" data-label="YouTube Thumbnail">
+                                            <span class="preset-icon">▶️</span>
+                                            <span class="preset-name">YouTube Thumbnail</span>
+                                            <span class="preset-dim">1280×720</span>
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div class="control-group">
                                     <label>Resize Method</label>
                                     <div class="method-btns">
@@ -244,6 +443,72 @@
                                 </div>
                                 <div class="bg-result hidden" id="bgResult">
                                     <p class="success-text">Background removed successfully!</p>
+                                </div>
+                            </div>
+
+                            <!-- Watermark Tab -->
+                            <div class="tab-content" id="watermarkTab">
+                                <!-- Mode toggle -->
+                                <div class="control-group">
+                                    <label>Watermark Type</label>
+                                    <div class="method-btns">
+                                        <button class="method-btn active" id="wmTextMode">Text</button>
+                                        <button class="method-btn" id="wmLogoMode">Logo / Image</button>
+                                    </div>
+                                </div>
+
+                                <!-- Text mode -->
+                                <div id="wmTextPanel">
+                                    <div class="control-group">
+                                        <label>Watermark Text</label>
+                                        <input type="text" id="wmText" placeholder="© Your Name" style="width:100%;padding:8px;border:1px solid #e0e0e0;border-radius:6px;font-size:14px;">
+                                    </div>
+                                    <div class="control-group">
+                                        <label>Font Size: <span id="wmFontSizeVal">24</span>px</label>
+                                        <input type="range" id="wmFontSize" min="10" max="120" value="24" class="slider">
+                                    </div>
+                                    <div class="control-group">
+                                        <label>Text Colour</label>
+                                        <input type="color" id="wmColor" value="#ffffff" style="width:48px;height:32px;border:none;cursor:pointer;border-radius:4px;">
+                                    </div>
+                                </div>
+
+                                <!-- Logo mode -->
+                                <div id="wmLogoPanel" class="hidden">
+                                    <div class="control-group">
+                                        <label>Upload Logo (PNG recommended)</label>
+                                        <input type="file" id="wmLogoInput" accept="image/*" style="font-size:13px;">
+                                    </div>
+                                    <div class="control-group">
+                                        <label>Logo Size: <span id="wmLogoSizeVal">20</span>% of image width</label>
+                                        <input type="range" id="wmLogoSize" min="5" max="60" value="20" class="slider">
+                                    </div>
+                                </div>
+
+                                <!-- Shared controls -->
+                                <div class="control-group">
+                                    <label>Opacity: <span id="wmOpacityVal">70</span>%</label>
+                                    <input type="range" id="wmOpacity" min="10" max="100" value="70" class="slider">
+                                </div>
+
+                                <div class="control-group">
+                                    <label>Position</label>
+                                    <div class="wm-position-grid">
+                                        <button class="wm-pos-btn" data-pos="top-left">↖</button>
+                                        <button class="wm-pos-btn" data-pos="top-center">↑</button>
+                                        <button class="wm-pos-btn" data-pos="top-right">↗</button>
+                                        <button class="wm-pos-btn" data-pos="middle-left">←</button>
+                                        <button class="wm-pos-btn active" data-pos="center">⊙</button>
+                                        <button class="wm-pos-btn" data-pos="middle-right">→</button>
+                                        <button class="wm-pos-btn" data-pos="bottom-left">↙</button>
+                                        <button class="wm-pos-btn" data-pos="bottom-center">↓</button>
+                                        <button class="wm-pos-btn" data-pos="bottom-right">↘</button>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;gap:8px;margin-top:8px;">
+                                    <button class="btn btn-secondary" id="wmPreviewBtn" style="flex:1;">Preview Watermark</button>
+                                    <button class="btn btn-icon" id="wmClearBtn" style="flex:1;">Clear Watermark</button>
                                 </div>
                             </div>
 
