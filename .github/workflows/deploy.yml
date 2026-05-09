@@ -16,6 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
       - name: Generate config.js
         run: |
           mkdir -p qr-code/public/js
@@ -40,12 +47,10 @@ jobs:
           EOF
 
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only hosting --project create-your-qr
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          PROJECT_PATH: ./qr-code
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > sa-key.json
+          GOOGLE_APPLICATION_CREDENTIALS=sa-key.json firebase deploy --only hosting --project create-your-qr
+        working-directory: ./qr-code
 
   deploy-image-resizer:
     name: Deploy Image Resizer
@@ -55,6 +60,13 @@ jobs:
       contains(toJson(github.event.commits), 'image-resizer/')
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
 
       - name: Generate config.js
         run: |
@@ -73,12 +85,10 @@ jobs:
           EOF
 
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only hosting --project create-your-qr
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          PROJECT_PATH: ./image-resizer
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > sa-key.json
+          GOOGLE_APPLICATION_CREDENTIALS=sa-key.json firebase deploy --only hosting --project create-your-qr
+        working-directory: ./image-resizer
 
   deploy-ems-tools:
     name: Deploy EMS Tools
@@ -88,6 +98,13 @@ jobs:
       contains(toJson(github.event.commits), 'ems-tools/')
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
 
       - name: Generate config.js
         run: |
@@ -106,12 +123,10 @@ jobs:
           EOF
 
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only hosting --project create-your-qr
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          PROJECT_PATH: ./ems-tools
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > sa-key.json
+          GOOGLE_APPLICATION_CREDENTIALS=sa-key.json firebase deploy --only hosting --project create-your-qr
+        working-directory: ./ems-tools
 
   deploy-tadda-portal:
     name: Deploy Tadda Portal
@@ -121,6 +136,13 @@ jobs:
       contains(toJson(github.event.commits), 'tadda/')
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
 
       - name: Generate config.js
         run: |
@@ -141,12 +163,10 @@ jobs:
           EOF
 
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only hosting --project tadda-81f3e
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY_TADDA }}
-          PROJECT_PATH: ./tadda
+        run: |
+          echo '${{ secrets.GCP_SA_KEY_TADDA }}' > sa-key.json
+          GOOGLE_APPLICATION_CREDENTIALS=sa-key.json firebase deploy --only hosting --project tadda-81f3e
+        working-directory: ./tadda
 
   deploy-tadda-web:
     name: Deploy Tadda Marketing Website
@@ -156,6 +176,13 @@ jobs:
       contains(toJson(github.event.commits), 'tadda-web/')
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
 
       - name: Generate config.js
         run: |
@@ -174,9 +201,7 @@ jobs:
           EOF
 
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only hosting --project tadda-81f3e
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY_TADDA }}
-          PROJECT_PATH: ./tadda-web
+        run: |
+          echo '${{ secrets.GCP_SA_KEY_TADDA }}' > sa-key.json
+          GOOGLE_APPLICATION_CREDENTIALS=sa-key.json firebase deploy --only hosting --project tadda-81f3e
+        working-directory: ./tadda-web
