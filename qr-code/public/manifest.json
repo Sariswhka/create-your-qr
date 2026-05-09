@@ -8,6 +8,7 @@
   "theme_color": "#6366f1",
   "orientation": "portrait-primary",
   "categories": ["utilities", "productivity", "business"],
+  "id": "/",
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -26,6 +27,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create QR Code",
+      "url": "/",
+      "description": "Generate a free QR code",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

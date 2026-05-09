@@ -28,13 +28,13 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
+  "id": "/",
+  "shortcuts": [
     {
-      "src": "images/screenshot-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "imgtools desktop view"
+      "name": "Resize Image",
+      "url": "/",
+      "description": "Resize and convert images",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
