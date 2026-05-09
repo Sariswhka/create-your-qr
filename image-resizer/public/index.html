@@ -90,7 +90,7 @@
                     <!-- Mode Toggle -->
                     <div class="mode-toggle">
                         <button class="mode-btn active" id="singleModeBtn">Single Image</button>
-                        <button class="mode-btn" id="bulkModeBtn">Bulk Resize</button>
+                        <button class="mode-btn" id="bulkModeBtn">Bulk Resize <span class="pro-lock">PRO</span></button>
                     </div>
 
                     <!-- Single upload -->
@@ -292,7 +292,7 @@
                                 <button class="tab" data-tab="crop">Crop</button>
                                 <button class="tab" data-tab="compress">Compress</button>
                                 <button class="tab" data-tab="bgremove">Remove BG <span class="pro-lock" id="bgLock">PRO</span></button>
-                                <button class="tab" data-tab="watermark">Watermark</button>
+                                <button class="tab" data-tab="watermark">Watermark <span class="pro-lock" id="watermarkLock">PRO</span></button>
                             </div>
 
                             <!-- Resize Tab -->
@@ -568,7 +568,20 @@
             <button class="modal-close" id="closeUpgradeModal">✕</button>
             <div class="upgrade-icon">⭐</div>
             <h2>Unlock Pro Features</h2>
-            <p class="upgrade-sub">Annual subscription · Renew each year · Cancel anytime</p>
+
+            <!-- Trial CTA — shown to non-trial users -->
+            <div id="trialOfferBlock">
+                <div style="background:#ecfdf5;border:2px solid #10b981;border-radius:12px;padding:16px 20px;margin:12px 0 20px;text-align:center;">
+                    <p style="font-size:1.1rem;font-weight:700;color:#065f46;margin-bottom:4px;">🎉 Start your 15-day free trial</p>
+                    <p style="font-size:0.85rem;color:#047857;margin-bottom:14px;">All Pro features unlocked · No credit card · No auto-deduction</p>
+                    <button id="startTrialBtn" class="btn btn-primary" style="background:#10b981;font-size:1rem;padding:12px 32px;width:100%;max-width:300px;">
+                        Start Free Trial — Give it a go!
+                    </button>
+                </div>
+                <p style="text-align:center;color:#9ca3af;font-size:12px;margin-bottom:8px;">— or subscribe directly —</p>
+            </div>
+
+            <p class="upgrade-sub">Annual subscription · Cancel anytime</p>
 
             <div class="pricing-grid">
                 <!-- Image Resizer Only -->

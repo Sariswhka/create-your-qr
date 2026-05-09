@@ -25,9 +25,14 @@ function applyProStatus(status) {
     document.getElementById('upgradeBtn').classList.toggle('hidden', isPro);
 
     // Lock indicators on tabs and format buttons
-    ['bgLock','pngLock','webpLock'].forEach(id => {
+    ['bgLock','pngLock','webpLock','watermarkLock'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.classList.toggle('hidden', isPro);
+        if (el) el.classList.toggle('hidden', isPro || window.isOnTrial);
+    });
+
+    // Bulk mode PRO lock
+    document.querySelectorAll('#bulkModeBtn .pro-lock').forEach(el => {
+        el.classList.toggle('hidden', isPro || window.isOnTrial);
     });
 
     // Crop aspect ratio pro locks
@@ -62,6 +67,11 @@ function getBundleLabelImg() {
 
 // ── Upgrade modal ─────────────────────────────────────────
 function showUpgradeModal() {
+    // Hide trial offer if already on trial or paid Pro
+    const trialBlock = document.getElementById('trialOfferBlock');
+    if (trialBlock) {
+        trialBlock.style.display = (isPro || window.isOnTrial) ? 'none' : 'block';
+    }
     const { price, desc } = getBundleLabelImg();
     const priceEl = document.getElementById('bundlePriceImg');
     const descEl  = document.getElementById('bundleDescImg');
@@ -74,6 +84,41 @@ function showUpgradeModal() {
 
 document.getElementById('closeUpgradeModal').addEventListener('click', () => {
     document.getElementById('upgradeModal').classList.add('hidden');
+});
+
+// Start free trial button
+document.getElementById('startTrialBtn')?.addEventListener('click', async () => {
+    const user = window.currentUser;
+    if (!user) return;
+    try {
+        // Record trial start in Firestore if not already set
+        const ref = db.collection('users').doc(user.uid);
+        const doc = await ref.get();
+        const data = doc.exists ? doc.data() : {};
+        if (!data.trialStartedAt) {
+            await ref.set({ trialStartedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        }
+        window.isOnTrial = true;
+        window.trialDaysLeft = 15;
+
+        // Unlock UI
+        applyProStatus(false);
+        document.getElementById('upgradeModal').classList.add('hidden');
+
+        // Show trial banner
+        const existing = document.getElementById('trialBanner');
+        if (!existing) {
+            const banner = document.createElement('div');
+            banner.id = 'trialBanner';
+            banner.style.cssText = 'background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-align:center;padding:10px 16px;font-size:0.85rem;font-weight:600;';
+            banner.innerHTML = `🎉 Free Pro Trial active — <strong>15 days remaining</strong> · No credit card needed · <a href="#" onclick="showUpgradeModal();return false;" style="color:#d1fae5;text-decoration:underline;">Upgrade to keep access</a>`;
+            document.body.prepend(banner);
+        }
+
+        showProToast('🎉 15-day free trial activated! All Pro features unlocked.');
+    } catch(e) {
+        alert('Could not start trial. Please try again.');
+    }
 });
 
 document.getElementById('upgradeBtn').addEventListener('click', showUpgradeModal);
@@ -186,6 +231,10 @@ singleModeBtn.addEventListener('click', () => {
 });
 
 bulkModeBtn.addEventListener('click', () => {
+    if (!hasProAccess()) {
+        showUpgradeModal();
+        return;
+    }
     bulkModeBtn.classList.add('active');
     singleModeBtn.classList.remove('active');
     bulkUploadArea.classList.remove('hidden');
@@ -636,7 +685,7 @@ resetBtn.addEventListener('click', () => {
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         // Gate pro-only tabs
-        if (!isPro && tab.dataset.tab === 'bgremove') {
+        if (!hasProAccess() && (tab.dataset.tab === 'bgremove' || tab.dataset.tab === 'watermark')) {
             showUpgradeModal();
             return;
         }
@@ -878,6 +927,10 @@ document.querySelectorAll('.format-btn').forEach(btn => {
         updateEstimatedSize();
     });
 });
+
+function hasProAccess() {
+    return isPro || window.isOnTrial === true;
+}
 
 function showFormatNote(msg) {
     let note = document.getElementById('formatNote');
