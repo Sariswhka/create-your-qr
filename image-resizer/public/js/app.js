@@ -25,9 +25,14 @@ function applyProStatus(status) {
     document.getElementById('upgradeBtn').classList.toggle('hidden', isPro);
 
     // Lock indicators on tabs and format buttons
-    ['bgLock','pngLock','webpLock'].forEach(id => {
+    ['bgLock','pngLock','webpLock','watermarkLock'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.classList.toggle('hidden', isPro);
+        if (el) el.classList.toggle('hidden', isPro || window.isOnTrial);
+    });
+
+    // Bulk mode PRO lock
+    document.querySelectorAll('#bulkModeBtn .pro-lock').forEach(el => {
+        el.classList.toggle('hidden', isPro || window.isOnTrial);
     });
 
     // Crop aspect ratio pro locks
@@ -186,6 +191,10 @@ singleModeBtn.addEventListener('click', () => {
 });
 
 bulkModeBtn.addEventListener('click', () => {
+    if (!hasProAccess()) {
+        showUpgradeModal();
+        return;
+    }
     bulkModeBtn.classList.add('active');
     singleModeBtn.classList.remove('active');
     bulkUploadArea.classList.remove('hidden');
@@ -636,7 +645,7 @@ resetBtn.addEventListener('click', () => {
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         // Gate pro-only tabs
-        if (!isPro && tab.dataset.tab === 'bgremove') {
+        if (!hasProAccess() && (tab.dataset.tab === 'bgremove' || tab.dataset.tab === 'watermark')) {
             showUpgradeModal();
             return;
         }
@@ -878,6 +887,10 @@ document.querySelectorAll('.format-btn').forEach(btn => {
         updateEstimatedSize();
     });
 });
+
+function hasProAccess() {
+    return isPro || window.isOnTrial === true;
+}
 
 function showFormatNote(msg) {
     let note = document.getElementById('formatNote');

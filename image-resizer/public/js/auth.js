@@ -48,22 +48,42 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         window.currentUser = user;
         showApp(user);
-        // Check pro status in Firestore
         try {
-            const doc = await db.collection('users').doc(user.uid).get();
+            const ref = db.collection('users').doc(user.uid);
+            const doc = await ref.get();
             const data = doc.exists ? doc.data() : {};
-            const isImgProActive    = checkProExpiry(data.isPro,       data.isProExpiresAt);
-            const isBundleActive    = checkProExpiry(data.isProBundle, data.isProBundleExpiresAt);
+
+            // Start trial on first login if not already set
+            if (!data.trialStartedAt) {
+                await ref.set({ trialStartedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                data.trialStartedAt = new Date();
+            }
+
+            // Calculate trial status
+            const trialStart   = data.trialStartedAt?.toDate ? data.trialStartedAt.toDate() : new Date(data.trialStartedAt);
+            const daysElapsed  = (Date.now() - trialStart.getTime()) / (1000 * 60 * 60 * 24);
+            const trialDaysLeft = Math.max(0, Math.ceil(15 - daysElapsed));
+            window.isOnTrial   = trialDaysLeft > 0;
+            window.trialDaysLeft = trialDaysLeft;
+
+            // Pro status
+            const isImgProActive = checkProExpiry(data.isPro,       data.isProExpiresAt);
+            const isBundleActive = checkProExpiry(data.isProBundle, data.isProBundleExpiresAt);
             window.userProData = {
                 isProQR:     checkProExpiry(data.isProQR, data.isProQRExpiresAt),
                 isPro:       isImgProActive,
                 isProBundle: isBundleActive
             };
+
             const isPro = isImgProActive || isBundleActive;
             if (typeof applyProStatus === 'function') applyProStatus(isPro);
             showRenewalBanner(data, isPro);
+            showTrialBanner(isPro, trialDaysLeft);
+
         } catch (e) {
             window.userProData = { isProQR: false, isPro: false, isProBundle: false };
+            window.isOnTrial   = false;
+            window.trialDaysLeft = 0;
             if (typeof applyProStatus === 'function') applyProStatus(false);
         }
     } else {
@@ -77,6 +97,17 @@ function checkProExpiry(flag, expiresAt) {
     if (!expiresAt) return true;
     const expiry = expiresAt.toDate ? expiresAt.toDate() : new Date(expiresAt);
     return expiry > new Date();
+}
+
+function showTrialBanner(isPro, trialDaysLeft) {
+    if (isPro || trialDaysLeft <= 0) return;
+    const existing = document.getElementById('trialBanner');
+    if (existing) return;
+    const banner = document.createElement('div');
+    banner.id = 'trialBanner';
+    banner.style.cssText = 'background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-align:center;padding:10px 16px;font-size:0.85rem;font-weight:600;';
+    banner.innerHTML = `🎉 Free Pro Trial — <strong>${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} remaining</strong> · All Pro features unlocked · No credit card needed · <a href="#" onclick="showUpgradeModal();return false;" style="color:#d1fae5;text-decoration:underline;">Upgrade to keep access</a>`;
+    document.body.prepend(banner);
 }
 
 function showRenewalBanner(data, isPro) {
