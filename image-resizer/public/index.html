@@ -14,6 +14,20 @@
     <meta name="author" content="Create Your QR">
     <meta name="robots" content="index, follow">
 
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="imgtools">
+    <meta name="theme-color" content="#10b981">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Free Image Resizer - Resize, Crop & Compress Images Online">
@@ -183,6 +197,9 @@
                                 <option value="1584,396">💼 LinkedIn Cover — 1584×396</option>
                                 <option value="1500,500">🐦 Twitter/X Banner — 1500×500</option>
                                 <option value="1280,720">▶️ YouTube Thumbnail — 1280×720</option>
+                                <option value="512,512">📱 App Icon Large — 512×512</option>
+                                <option value="192,192">🔲 App Icon Small — 192×192</option>
+                                <option value="32,32">⭐ Favicon — 32×32</option>
                             </select>
 
                             <!-- Dimensions -->
@@ -376,6 +393,21 @@
                                             <span class="preset-icon">▶️</span>
                                             <span class="preset-name">YouTube Thumbnail</span>
                                             <span class="preset-dim">1280×720</span>
+                                        </button>
+                                        <button class="social-preset-btn" data-w="512" data-h="512" data-label="App Icon Large">
+                                            <span class="preset-icon">📱</span>
+                                            <span class="preset-name">App Icon</span>
+                                            <span class="preset-dim">512×512</span>
+                                        </button>
+                                        <button class="social-preset-btn" data-w="192" data-h="192" data-label="App Icon Small">
+                                            <span class="preset-icon">🔲</span>
+                                            <span class="preset-name">App Icon SM</span>
+                                            <span class="preset-dim">192×192</span>
+                                        </button>
+                                        <button class="social-preset-btn" data-w="32" data-h="32" data-label="Favicon">
+                                            <span class="preset-icon">⭐</span>
+                                            <span class="preset-name">Favicon</span>
+                                            <span class="preset-dim">32×32</span>
                                         </button>
                                     </div>
                                 </div>
@@ -701,5 +733,15 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Register Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .catch(err => console.log('SW registration failed:', err));
+        });
+      }
+    </script>
 </body>
 </html>
