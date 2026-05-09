@@ -458,6 +458,10 @@ body {
 #qrcode canvas,
 #qrcode img {
     border-radius: 8px;
+    max-width: 220px;
+    max-height: 220px;
+    width: 100%;
+    height: auto;
 }
 
 .url-display {

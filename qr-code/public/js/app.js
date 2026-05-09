@@ -276,8 +276,8 @@ function generateQR() {
 
     qrcode = new QRCode(qrcodeDiv, {
         text: url,
-        width: 200,
-        height: 200,
+        width: 512,
+        height: 512,
         colorDark:  resolvedFg,
         colorLight: resolvedBg,
         correctLevel: QRCode.CorrectLevel.H
@@ -350,15 +350,24 @@ function applyLogoToQR(container, logoSrc, attempt = 0) {
         const logoSize = size * 0.22;
         const x = (size - logoSize) / 2;
         const y = (size - logoSize) / 2;
+        const pad = size * 0.012;
+        const radius = size * 0.018;
+
+        // White rounded background behind logo
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(x - 4, y - 4, logoSize + 8, logoSize + 8, 6);
+            ctx.roundRect(x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2, radius);
         } else {
-            ctx.rect(x - 4, y - 4, logoSize + 8, logoSize + 8);
+            ctx.rect(x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2);
         }
         ctx.fill();
+
+        // Draw logo with high quality smoothing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+
         // Update the display img if QRCode.js created one
         const displayImg = container.querySelector('img');
         if (displayImg) displayImg.src = canvas.toDataURL('image/png');
