@@ -34,7 +34,104 @@ googleLoginBtn.addEventListener('click', async () => {
     }
 });
 
-// Logout
+// ── Email Auth ─────────────────────────────────────────────
+let authMode = 'signin'; // 'signin' | 'signup'
+
+const signInToggle  = document.getElementById('signInToggle');
+const signUpToggle  = document.getElementById('signUpToggle');
+const emailAuthBtn  = document.getElementById('emailAuthBtn');
+const authError     = document.getElementById('authError');
+const authSuccess   = document.getElementById('authSuccess');
+
+signInToggle.addEventListener('click', () => {
+    authMode = 'signin';
+    signInToggle.classList.add('active');
+    signUpToggle.classList.remove('active');
+    emailAuthBtn.textContent = 'Sign In';
+    document.getElementById('nameField').classList.add('hidden');
+    document.getElementById('forgotPasswordLink').classList.remove('hidden');
+    clearAuthMessages();
+});
+
+signUpToggle.addEventListener('click', () => {
+    authMode = 'signup';
+    signUpToggle.classList.add('active');
+    signInToggle.classList.remove('active');
+    emailAuthBtn.textContent = 'Create Account';
+    document.getElementById('nameField').classList.remove('hidden');
+    document.getElementById('forgotPasswordLink').classList.add('hidden');
+    clearAuthMessages();
+});
+
+emailAuthBtn.addEventListener('click', async () => {
+    const email    = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const name     = document.getElementById('authName').value.trim();
+
+    if (!email || !password) { showAuthError('Please enter email and password.'); return; }
+    if (authMode === 'signup' && password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+
+    emailAuthBtn.disabled = true;
+    emailAuthBtn.textContent = authMode === 'signup' ? 'Creating account...' : 'Signing in...';
+    clearAuthMessages();
+
+    try {
+        if (authMode === 'signup') {
+            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            if (name) await cred.user.updateProfile({ displayName: name });
+        } else {
+            await auth.signInWithEmailAndPassword(email, password);
+        }
+    } catch(e) {
+        showAuthError(friendlyAuthError(e.code));
+        emailAuthBtn.disabled = false;
+        emailAuthBtn.textContent = authMode === 'signup' ? 'Create Account' : 'Sign In';
+    }
+});
+
+document.getElementById('forgotPassword').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('authEmail').value.trim();
+    if (!email) { showAuthError('Enter your email address above first.'); return; }
+    try {
+        await auth.sendPasswordResetEmail(email);
+        showAuthSuccess('Password reset email sent — check your inbox.');
+    } catch(e) {
+        showAuthError(friendlyAuthError(e.code));
+    }
+});
+
+function showAuthError(msg) {
+    authError.textContent = msg;
+    authError.classList.remove('hidden');
+    authSuccess.classList.add('hidden');
+}
+
+function showAuthSuccess(msg) {
+    authSuccess.textContent = msg;
+    authSuccess.classList.remove('hidden');
+    authError.classList.add('hidden');
+}
+
+function clearAuthMessages() {
+    authError.classList.add('hidden');
+    authSuccess.classList.add('hidden');
+}
+
+function friendlyAuthError(code) {
+    const map = {
+        'auth/user-not-found':       'No account found with this email.',
+        'auth/wrong-password':       'Incorrect password. Try again.',
+        'auth/email-already-in-use': 'This email is already registered. Sign in instead.',
+        'auth/invalid-email':        'Please enter a valid email address.',
+        'auth/weak-password':        'Password must be at least 6 characters.',
+        'auth/too-many-requests':    'Too many attempts. Please try again later.',
+        'auth/invalid-credential':   'Incorrect email or password.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+}
+
+// ── Logout ─────────────────────────────────────────────────
 logoutBtn.addEventListener('click', async () => {
     try {
         await auth.signOut();

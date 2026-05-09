@@ -57,8 +57,131 @@ body {
 
 .subtitle {
     color: #666;
-    margin-bottom: 35px;
+    margin-bottom: 12px;
     font-size: 15px;
+}
+
+.tagline {
+    font-size: 14px;
+    font-weight: 700;
+    color: #10b981;
+    margin-bottom: 20px;
+    letter-spacing: 0.01em;
+}
+
+.feature-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.pill {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #065f46;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.trial-badge {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 25px;
+    margin-bottom: 24px;
+    display: inline-block;
+}
+
+/* Auth divider */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+    color: #9ca3af;
+    font-size: 13px;
+}
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+}
+
+/* Email auth form */
+.email-auth-form {
+    width: 100%;
+    max-width: 320px;
+    text-align: left;
+}
+
+.auth-toggle {
+    display: flex;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.auth-toggle-btn {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.auth-toggle-btn.active {
+    background: #10b981;
+    color: #fff;
+    font-weight: 600;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.auth-input:focus {
+    border-color: #10b981;
+}
+
+.auth-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.auth-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #16a34a;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
 }
 
 /* Buttons */
