@@ -180,6 +180,26 @@ service cloud.firestore {
 - Background removal uses `@imgly/background-removal@1.5.1` loaded dynamically (CDN, ~5 MB AI model)
 - Razorpay redirect flow: on payment, redirects to `?rzp_success=<plan>` and saves pro status to Firestore
 
+### Analytics (added v1.6)
+- **File:** `js/analytics.js` — loaded before `auth.js` in index.html
+- **Geo:** fetches country/city from `https://ipapi.co/json/` once at login, cached in `window._analyticsGeo`
+- **Firestore collection:** `/imgtools_events/{auto-id}` — one doc per action
+- **User doc updates:** `lastSeen`, `loginCount`, `country`, `city` written to `/users/{uid}` on login
+- **Tracked events:**
+
+| Event | Trigger | Extra fields |
+|---|---|---|
+| `login` | every sign-in | country, city |
+| `image_upload` | file loaded | fileSizeMB, fileType |
+| `image_download` | download button | format, width, height, quality |
+| `crop_applied` | Apply Crop clicked | — |
+| `bg_remove` | Remove Background clicked | — |
+| `watermark_applied` | Preview watermark clicked | mode (text/logo) |
+| `bulk_download` | bulk ZIP downloaded | count, format, dimensions |
+| `pro_upgrade` | payment completed | plan, paymentId |
+
+- Every event includes: `userId`, `userEmail`, `isPro`, `isOnTrial`, `country`, `city`, `timestamp`
+
 ## EMS Tools Features
 1. **TL1 Parser/Builder** - Parse and build TL1 commands
 2. **Alarm Mapper** - Map EMS alarms to OSS format
