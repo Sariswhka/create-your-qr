@@ -145,6 +145,7 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         window.currentUser = user;
         showApp(user);
+        if (typeof trackLogin === 'function') trackLogin(user);
         try {
             const ref = db.collection('users').doc(user.uid);
             const doc = await ref.get();

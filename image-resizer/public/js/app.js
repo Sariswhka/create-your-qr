@@ -185,6 +185,7 @@ async function saveImgProAndUnlock(plan, paymentId) {
     document.getElementById('upgradeModal').classList.add('hidden');
     if (plan === 'imgtools' || plan === 'bundle') { applyProStatus(true); showProToast(); }
     else showProToast('🎉 QR Generator Pro unlocked! Visit create-your-qr.web.app to use it.');
+    if (typeof trackEvent === 'function') trackEvent('pro_upgrade', { plan, paymentId });
     window.history.replaceState({}, document.title, window.location.pathname);
 }
 
@@ -409,6 +410,7 @@ document.getElementById('bulkDownloadBtn').addEventListener('click', async () =>
         textEl.textContent = 'Creating ZIP...';
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         triggerDownload(zipBlob, 'mockify-resized-images.zip');
+        if (typeof trackEvent === 'function') trackEvent('bulk_download', { count: bulkFiles.length, format, targetWidth: targetW, targetHeight: targetH });
         fillEl.style.width = '100%';
         textEl.textContent = `Done! ${bulkFiles.length} images downloaded.`;
 
@@ -652,6 +654,7 @@ function loadImage(file) {
             // Show editor
             uploadSection.classList.add('hidden');
             editorSection.classList.remove('hidden');
+            if (typeof trackEvent === 'function') trackEvent('image_upload', { fileSizeMB: +(file.size / 1048576).toFixed(2), fileType: file.type });
 
             // Initialize cropper when crop tab is opened
             initCropper();
@@ -850,6 +853,7 @@ document.getElementById('upgradeAspectLink').addEventListener('click', (e) => {
 document.getElementById('applyCrop').addEventListener('click', () => {
     if (cropper) {
         captureBeforeState();
+        if (typeof trackEvent === 'function') trackEvent('crop_applied');
         const canvas = cropper.getCroppedCanvas();
         if (canvas) {
             originalImage = new Image();
@@ -997,6 +1001,7 @@ downloadBtn.addEventListener('click', async () => {
 
     const width  = parseInt(widthInput.value)  || originalWidth;
     const height = parseInt(heightInput.value) || originalHeight;
+    if (typeof trackEvent === 'function') trackEvent('image_download', { format: currentFormat, width, height, quality: currentQuality });
 
     // If watermark is active, use watermarked canvas
     const baseCanvas = wmState.active
@@ -1199,6 +1204,7 @@ document.querySelectorAll('.wm-pos-btn').forEach(btn => {
 // Preview button
 document.getElementById('wmPreviewBtn').addEventListener('click', () => {
     if (!originalImage) return;
+    if (typeof trackEvent === 'function') trackEvent('watermark_applied', { mode: wmState.mode });
     const canvas = applyWatermarkToCanvas(originalImage, originalWidth, originalHeight);
     previewImage.src = canvas.toDataURL('image/png');
     wmState.active = true;
@@ -1422,6 +1428,7 @@ removeBgBtn.addEventListener('click', async () => {
         return;
     }
     captureBeforeState();
+    if (typeof trackEvent === 'function') trackEvent('bg_remove');
 
     // Show progress, hide result
     bgProgress.classList.remove('hidden');
